@@ -1,0 +1,43 @@
+.rbc-calendar {
+  background-color: #fff;
+}
+
+.rbc-toolbar button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+}
+
+.rbc-toolbar-label {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.rbc-day-bg {
+  background-color: #f9f9f9;
+}
+
+.rbc-month-view {
+  border: none;
+}
+
+.rbc-header {
+  font-weight: bold;
+}
+.rbc-btn-group {
+  margin-right: 30px;
+}
+.rbc-toolbar {
+  margin: 30px 15px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.rbc-toolbar-label {
+  width: 300px;
+  justify-items: center;
+}
+.view-option {
+  width: 200px;
+  text-align: center;
+  justify-items: right;
+}
