@@ -19,6 +19,10 @@ const cols = [
     dataIndex: 'to',
   },
   {
+    title: 'Created At',
+    dataIndex: 'createdAt',
+  },
+  {
     title: 'Status',
     dataIndex: 'status',
   },
@@ -52,6 +56,7 @@ const Request = () => {
         from: item.group.groupName,
         to: item.to,
         content: item.content,
+        createdAt: getTime(item.createDate),
         status: getStatusTag(item.isAccepted),
         event: item.event,
         group: item.group,
@@ -71,7 +76,7 @@ const Request = () => {
 
   const getTime = (dateString) => {
     if (!dateString) return 'N/A';
-    return moment(dateString).format('DD-MM-YYYY HH:mm');
+    return moment(dateString).format('DD/MM/YYYY - HH:mm');
   };
 
   const getStatusTag = (status) => {

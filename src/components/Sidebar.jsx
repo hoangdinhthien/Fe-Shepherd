@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { MdKeyboardArrowLeft, MdDashboard, MdGroup } from 'react-icons/md';
-import { FaClipboardList, FaComments, FaCalendarAlt } from 'react-icons/fa';
+import { FaCalendarAlt, FaClipboardList, FaComments } from 'react-icons/fa';
+import { MdDashboard, MdGroup } from 'react-icons/md';
 import { RxActivityLog } from 'react-icons/rx';
-import HeaderLogo from '../assets/header-logo-img.png';
-import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import HeaderLogo from '../assets/header-logo-img.png';
 
 const userMenuItems = [
   { icon: MdDashboard, title: 'Dashboard', path: '/user/dashboard' },

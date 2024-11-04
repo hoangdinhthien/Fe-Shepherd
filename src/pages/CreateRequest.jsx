@@ -175,7 +175,7 @@ export default function CreateRequest() {
         />
 
         <DatePicker.RangePicker
-          format="DD-MM-YYYY HH:mm"
+          format="DD/MM/YYYY - HH:mm"
           value={[formData.fromDate, formData.toDate]}
           onChange={(date) => setFormData((prev) => (
             { ...prev, fromDate: date ? date[0] : null, toDate: date ? date[1] : null }))}

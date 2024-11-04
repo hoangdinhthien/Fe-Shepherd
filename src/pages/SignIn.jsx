@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import OAuth from '../components/OAuth';
 import AuthAPI from '../apis/auth_api';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
@@ -7,6 +7,7 @@ import storageService from '../config/local_storage';
 import { useDispatch } from 'react-redux';
 import { logIn } from '../redux/user/userSlice';
 import { jwtDecode } from 'jwt-decode';
+import HeaderLogo from '../assets/header-logo-img.png';
 
 export default function SignIn() {
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -45,7 +46,7 @@ export default function SignIn() {
 
       // Decode the token to extract user data
       const decodedUser = jwtDecode(token);
-      console.log('Decoded User:', decodedUser); 
+      console.log('Decoded User:', decodedUser);
 
       dispatch(logIn(res.data));
       navigate('/');
@@ -58,6 +59,25 @@ export default function SignIn() {
 
   return (
     <div className='w-full h-screen bg-gray-300'>
+      {/* HEADER */}
+      <header
+        className={` bg-amber-400 shadow-md shadow-slate-300 pr-4 pl-24 py-2 border-b border-blue-gray-700`}
+      >
+        <div
+          className={`flex gap-x-4 items-center justify-start`}
+        >
+          <img
+            src={HeaderLogo}
+            alt=''
+            className={`cursor-pointer duration-300 h-14 w-14`}
+          />
+          <h1
+            className={`flex justify-center font-extrabold uppercase text-3xl`}
+          >
+            Shepherd
+          </h1>
+        </div>
+      </header>
       <div className='p-2 pt-20 max-w-2xl mx-auto'>
         {/* SIGN IN TITLE */}
         <h1 className='text-3xl text-center font-semibold my-8'>Sign In</h1>
