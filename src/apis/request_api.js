@@ -1,5 +1,14 @@
-import BaseAPI from "../config/baseAPI";
+import BaseAPI from '../config/baseAPI';
 
-const RequestAPI = new BaseAPI('request');
+class RequestAPI extends BaseAPI {
+  constructor() {
+    super(`request`);
+  }
 
-export default RequestAPI;
+  createRequest(id, data) {
+    const url = `${this.url}/CreateEvent?groupId=${id}`;
+    return super.postCustom(url, data);
+  }
+}
+
+export default new RequestAPI();
