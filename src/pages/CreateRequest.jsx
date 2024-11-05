@@ -4,7 +4,7 @@ import { IoArrowBack } from 'react-icons/io5';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import group_api from '../apis/group_api';
-import EventAPI from '../apis/event_api';
+import RequestAPI from '../apis/request_api';
 
 const { Option } = Select;
 
@@ -53,7 +53,7 @@ export default function CreateRequest() {
     eventName: '',
     description: '',
     fromDate: null,
-    toDate: null
+    toDate: null,
   });
 
   const handleChange = (e) => {
@@ -62,9 +62,15 @@ export default function CreateRequest() {
   };
 
   const LEADER = import.meta.env.VITE_ROLE_GROUP_LEADER;
-  const groupIds = currentUser.listGroupRole
-    .filter(({ roleName }) => roleName === LEADER)
-    .map(({ groupId }) => groupId) || [];
+  const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
+
+  const groupIds =
+    currentUser.listGroupRole
+      .filter(
+        ({ roleName, groupName }) =>
+          roleName === LEADER || groupName?.includes(COUNCIL)
+      )
+      .map(({ groupId }) => groupId) || [];
 
   const data = {
     eventName: formData.eventName,
@@ -73,14 +79,19 @@ export default function CreateRequest() {
     toDate: formData.toDate ? formData.toDate.toISOString() : null,
     isPublic: true,
     totalCost: 0,
-    groupIds: groupIds,
-    ceremonyID: null
+    // groupIds: groupIds,
+    ceremonyID: null,
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     // Validate date range
-    if (!formData.fromDate || !formData.toDate || !formData.eventName || !formData.description) {
+    if (
+      !formData.fromDate ||
+      !formData.toDate ||
+      !formData.eventName ||
+      !formData.description
+    ) {
       message.error('Please fill all the fields.'); // Show error message
       return;
     }
@@ -89,12 +100,22 @@ export default function CreateRequest() {
 
     try {
       setLoading(true);
-      message.loading({ content: 'Submitting request...', key: loadingKey, duration: 0 }); // Show loading message
-      await EventAPI.createEvent(groupIds[0], data);
-      message.success({ content: 'Request submitted successfully!', key: loadingKey }); // Show success message
+      message.loading({
+        content: 'Submitting request...',
+        key: loadingKey,
+        duration: 0,
+      }); // Show loading message
+      await RequestAPI.createRequest(groupIds[0], data);
+      message.success({
+        content: 'Request submitted successfully!',
+        key: loadingKey,
+      }); // Show success message
       console.log('Request submitted:', data);
     } catch (error) {
-      message.error({ content: `Error submitting request: ${error.message}`, key: loadingKey }); // Show error message
+      message.error({
+        content: `Error submitting request: ${error.message}`,
+        key: loadingKey,
+      }); // Show error message
       console.error('Error submitting request:', error);
     } finally {
       setLoading(false);
@@ -102,16 +123,23 @@ export default function CreateRequest() {
   };
 
   const onReset = () => {
-    setFormData({ eventName: '', description: '', fromDate: null, toDate: null });
-  }
-
+    setFormData({
+      eventName: '',
+      description: '',
+      fromDate: null,
+      toDate: null,
+    });
+  };
 
   return (
     <form className='p-6 max-w-6xl mx-auto '>
       {/* First section */}
       <div className='flex justify-between items-center mb-6'>
         <div className='flex items-center'>
-          <Link to='/dashboard' className='mr-4'>
+          <Link
+            to='/dashboard'
+            className='mr-4'
+          >
             <IoArrowBack className='text-2xl' />
           </Link>
           <h1 className='text-2xl font-bold'>Create Request</h1>
@@ -158,7 +186,11 @@ export default function CreateRequest() {
             placeholder='Select a group'
           >
             {groups?.map((group) => (
-              <Option key={group.id} value={group.id} className='text-black text-xl'>
+              <Option
+                key={group.id}
+                value={group.id}
+                className='text-black text-xl'
+              >
                 {group.groupName}
               </Option>
             ))}
@@ -175,13 +207,18 @@ export default function CreateRequest() {
         />
 
         <DatePicker.RangePicker
-          format="DD/MM/YYYY - HH:mm"
+          format='DD/MM/YYYY - HH:mm'
           value={[formData.fromDate, formData.toDate]}
-          onChange={(date) => setFormData((prev) => (
-            { ...prev, fromDate: date ? date[0] : null, toDate: date ? date[1] : null }))}
+          onChange={(date) =>
+            setFormData((prev) => ({
+              ...prev,
+              fromDate: date ? date[0] : null,
+              toDate: date ? date[1] : null,
+            }))
+          }
           placeholder={['Event Start Time', 'Event End Time']}
           size='large'
-          className="border border-[#EEE] p-2 rounded w-full mb-4 font-semibold"
+          className='border border-[#EEE] p-2 rounded w-full mb-4 font-semibold'
         />
 
         <textarea
@@ -194,16 +231,30 @@ export default function CreateRequest() {
       </div>
 
       {/* Buttons */}
-      {!loading &&
-        (<div className='flex justify-center items-center space-x-4'>
-          <button onClick={onSubmit} className='bg-blue-500 text-white px-4 py-2 rounded-full'>
+      {!loading && (
+        <div className='flex justify-center items-center space-x-4'>
+          <button
+            onClick={onSubmit}
+            className='bg-blue-500 text-white px-4 py-2 rounded-full'
+          >
             Add Request
           </button>
-          <button onClick={onReset} type="button" className='bg-gray-300 px-4 py-2 rounded-full'>Reset</button>
-          <button onClick={onReset} type="button" className='bg-red-500 text-white px-4 py-2 rounded-full'>
+          <button
+            onClick={onReset}
+            type='button'
+            className='bg-gray-300 px-4 py-2 rounded-full'
+          >
+            Reset
+          </button>
+          <button
+            onClick={onReset}
+            type='button'
+            className='bg-red-500 text-white px-4 py-2 rounded-full'
+          >
             Cancel
           </button>
-        </div>)}
+        </div>
+      )}
     </form>
   );
 }
