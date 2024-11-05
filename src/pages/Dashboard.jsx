@@ -67,21 +67,27 @@ export default function Dashboard() {
     { id: 4, text: 'New meeting scheduled at 3 PM', unread: true },
   ];
 
-  // Fetch events for the selected group(s)
+  // set the first group as the default group selected when groups are fetched
   useEffect(() => {
-    const fetchEvents = async () => {
-      if (!selectedGroup) return;
+    if (groups.length > 0 && !selectedGroup) {
+      setSelectedGroup(groups[0].id);
+    }
+  }, [groups, selectedGroup]),
+    // Fetch events for the selected group(s)
+    useEffect(() => {
+      const fetchEvents = async () => {
+        if (!selectedGroup) return;
 
-      try {
-        const response = await EventAPI.getEventsByGroup(selectedGroup);
-        setEvents(response.data || []);
-      } catch (error) {
-        console.error('Error fetching events:', error);
-      }
-    };
+        try {
+          const response = await EventAPI.getEventsByGroup(selectedGroup);
+          setEvents(response.data || []);
+        } catch (error) {
+          console.error('Error fetching events:', error);
+        }
+      };
 
-    fetchEvents();
-  }, [selectedGroup]);
+      fetchEvents();
+    }, [selectedGroup]);
 
   const daysOfWeek = ['Mon', 'Tues', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'];
 
