@@ -22,25 +22,29 @@ export default function Header({
   console.log(isFixed);
   const ADMIN = import.meta.env.VITE_ROLE_ADMIN;
   const LEADER = import.meta.env.VITE_ROLE_GROUP_LEADER;
+  const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
 
   return (
     <header
-      className={`${isFixed && 'fixed top-0 right-0 left-0 z-40'
-        } bg-amber-400 shadow-md shadow-slate-300 pr-4 ${sidebarOpen ? 'pl-52' : 'pl-24'
-        } py-2 border-b border-blue-gray-700`}
+      className={`${
+        isFixed && 'fixed top-0 right-0 left-0 z-40'
+      } bg-amber-400 shadow-md shadow-slate-300 pr-4 ${
+        sidebarOpen ? 'pl-52' : 'pl-24'
+      } py-2 border-b border-blue-gray-700`}
     >
       <div className='flex justify-between items-center max-w-full mx-auto p-3'>
         {/* NAVIGATE */}
         <MdKeyboardArrowLeft
-          className={`w-7 h-7 rounded-full bg-white border-2 border-blue-gray-700 transition-transform hover:scale-125 duration-300 ${sidebarOpen ? '' : 'rotate-180'
-            }`}
+          className={`w-7 h-7 rounded-full bg-white border-2 border-blue-gray-700 transition-transform hover:scale-125 duration-300 ${
+            sidebarOpen ? '' : 'rotate-180'
+          }`}
           onClick={() => setSidebarOpen(!sidebarOpen)}
         />
         <div className='flex justify-between items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8'>
           {/* CREATE ACTIVITY */}
-          {currentUser.user.role !== ADMIN && (
+          {currentUser.user.role === COUNCIL && (
             <Tooltip
-              content='Create a activity'
+              content='Create an activity'
               placement='bottom'
             >
               <Link to='/user/create-activity'>
@@ -51,18 +55,19 @@ export default function Header({
           {/* CREATE ACTIVITY */}
           {/*  */}
           {/* CREATE REQUEST */}
-          {currentUser.listGroupRole.find(({ roleName }) => roleName === LEADER)
-            && (
-              <Tooltip
-                content="Create a request"
-                placement="bottom"
-              >
-                <Link to="/user/create-request">
-                  <IoDocumentText className="h-8 w-8 text-slate-700 duration-300 hover:scale-125" />
-                </Link>
-              </Tooltip>
-            )}
-
+          {(currentUser.listGroupRole.find(
+            ({ roleName }) => roleName === LEADER
+          ) ||
+            currentUser.user.role === COUNCIL) && (
+            <Tooltip
+              content='Create a request'
+              placement='bottom'
+            >
+              <Link to='/user/create-request'>
+                <IoDocumentText className='h-8 w-8 text-slate-700 duration-300 hover:scale-125' />
+              </Link>
+            </Tooltip>
+          )}
           {/* CREATE REQUEST */}
           {/*  */}
           {/* NOTIFICATION */}
