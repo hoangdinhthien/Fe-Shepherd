@@ -10,7 +10,7 @@ import TaskCreateButton from '../components/task/TaskCreateButton';
 const { Option } = Select;
 
 export default function Activity() {
-  // ------STATE------
+  // ------STATES------
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -25,6 +25,7 @@ export default function Activity() {
   const currentUser = useSelector((state) => state.user.currentUser);
   const rehydrated = useSelector((state) => state._persist?.rehydrated);
 
+  // Fetch groups
   const fetchGroups = async () => {
     if (!currentUser || !currentUser.user?.id) return;
 
@@ -50,8 +51,7 @@ export default function Activity() {
     }
   }, [currentUser, rehydrated]);
 
-  // Fetch tasks based on selected group
-  // Fetch tasks based on selected group
+  // fetch task base on groups
   const fetchTasks = async () => {
     if (!selectedGroup) return;
 

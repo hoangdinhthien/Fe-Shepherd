@@ -53,7 +53,7 @@ const Request = () => {
   const fetchRequest = async () => {
     setIsLoading(true);
     try {
-      const res = await RequestAPI.getAll({
+      const res = await RequestAPI.getRequests({
         PageNumber: currentPage,
         PageSize: pageSize,
       });

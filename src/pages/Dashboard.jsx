@@ -79,7 +79,9 @@ export default function Dashboard() {
         if (!selectedGroup) return;
 
         try {
-          const response = await EventAPI.getEventsByGroup(selectedGroup);
+          const response = await EventAPI.getEventsByGroup({
+            groupId: selectedGroup, // => pass directly id
+          });
           setEvents(response.data || []);
         } catch (error) {
           console.error('Error fetching events:', error);
