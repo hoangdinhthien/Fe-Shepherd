@@ -6,7 +6,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 import LayoutMain from './layout/LayoutMain';
-import Activity from './pages/Activity';
+import Task from './pages/Task';
 import ChatHome from './pages/ChatHome';
 import CreateActivity from './pages/CreateActivity';
 import CreateRequest from './pages/CreateRequest';
@@ -27,6 +27,7 @@ import LayoutAdmin from './layout/LayoutAdmin';
 import { jwtDecode } from 'jwt-decode';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistor, store } from './redux/store';
+import Event from './pages/Event';
 
 const AppRoutes = () => {
   const roles = [
@@ -65,7 +66,7 @@ const AppRoutes = () => {
   useEffect(() => {
     const token = storageService.getAccessToken();
     console.log(user);
-    
+
     if (!user && token) {
       const decodedUser = jwtDecode(token);
       console.log('Decoded User in App.jsx:', decodedUser); // Add this line
@@ -166,9 +167,14 @@ const AppRoutes = () => {
           element={<ChatHome />}
         />
         <Route
-          path='activity'
-          element={<Activity />}
+          path='task'
+          element={<Task />}
         />
+        <Route
+          path='event'
+          element={<Event />}
+        />
+
         <Route
           path='create-request'
           element={<CreateRequest />}

@@ -33,6 +33,17 @@ class EventAPI extends BaseAPI {
       })
     );
   }
+
+  getEvents() {
+    return this.handleRequest(
+      axiosClient.get('event', {
+        params: {
+          PageNumber: 1,
+          PageSize: 20,
+        },
+      })
+    );
+  }
 }
 
 export default new EventAPI();
