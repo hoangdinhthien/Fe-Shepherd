@@ -17,6 +17,8 @@ import Request from './pages/Request';
 import SignIn from './pages/SignIn';
 import WelcomePage from './pages/Welcome';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminRequest from './pages/admin/AdminRequest';
+import AdminCalendar from './pages/admin/AdminCalendar';
 import Calendar from './pages/calendar/Calendar';
 import storageService from './config/local_storage';
 import { useEffect, useState } from 'react';
@@ -65,7 +67,7 @@ const AppRoutes = () => {
   useEffect(() => {
     const token = storageService.getAccessToken();
     console.log(user);
-    
+
     if (!user && token) {
       const decodedUser = jwtDecode(token);
       console.log('Decoded User in App.jsx:', decodedUser); // Add this line
@@ -77,35 +79,16 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route
-        path='/'
-        element={<Navigate to={getRoute()} />}
-      />
+      <Route path='/' element={<Navigate to={getRoute()} />} />
       <Route
         path='/welcome'
         element={
-          isAuthenticated ? (
-            <Navigate
-              replace
-              to='/user'
-            />
-          ) : (
-            <WelcomePage />
-          )
+          isAuthenticated ? <Navigate replace to='/user' /> : <WelcomePage />
         }
       />
       <Route
         path='/sign-in'
-        element={
-          isAuthenticated ? (
-            <Navigate
-              replace
-              to='/user'
-            />
-          ) : (
-            <SignIn />
-          )
-        }
+        element={isAuthenticated ? <Navigate replace to='/user' /> : <SignIn />}
       />
 
       <Route
@@ -118,19 +101,11 @@ const AppRoutes = () => {
           )
         }
       >
-        <Route
-          path='dashboard'
-          index
-          element={<AdminDashboard />}
-        />
-        <Route
-          path='profile'
-          element={<Profile />}
-        />
-        <Route
-          path=''
-          element={<Navigate to='dashboard' />}
-        />
+        <Route path='dashboard' index element={<AdminDashboard />} />
+        <Route path='request' index element={<AdminRequest />} />
+        <Route path='calendar' index element={<AdminCalendar />} />
+        <Route path='profile' element={<Profile />} />
+        <Route path='' element={<Navigate to='dashboard' />} />
       </Route>
 
       <Route
@@ -143,54 +118,19 @@ const AppRoutes = () => {
           )
         }
       >
-        <Route
-          path='dashboard'
-          index
-          element={<Dashboard />}
-        />
-
-        <Route
-          path='request'
-          element={<Request />}
-        />
-        <Route
-          path='calendar'
-          element={<Calendar />}
-        />
-        <Route
-          path='group'
-          element={<Group />}
-        />
-        <Route
-          path='chat'
-          element={<ChatHome />}
-        />
-        <Route
-          path='activity'
-          element={<Activity />}
-        />
-        <Route
-          path='create-request'
-          element={<CreateRequest />}
-        />
-        <Route
-          path='create-activity'
-          element={<CreateActivity />}
-        />
-        <Route
-          path='profile'
-          element={<Profile />}
-        />
-        <Route
-          path=''
-          element={<Navigate to='dashboard' />}
-        />
+        <Route path='dashboard' index element={<Dashboard />} />
+        <Route path='request' element={<Request />} />
+        <Route path='calendar' element={<Calendar />} />
+        <Route path='group' element={<Group />} />
+        <Route path='chat' element={<ChatHome />} />
+        <Route path='activity' element={<Activity />} />
+        <Route path='create-request' element={<CreateRequest />} />
+        <Route path='create-activity' element={<CreateActivity />} />
+        <Route path='profile' element={<Profile />} />
+        <Route path='' element={<Navigate to='dashboard' />} />
       </Route>
 
-      <Route
-        path='*'
-        element={<Navigate to='/' />}
-      />
+      <Route path='*' element={<Navigate to='/' />} />
     </Routes>
   );
 };
@@ -198,10 +138,7 @@ const AppRoutes = () => {
 function App() {
   return (
     <Provider store={store}>
-      <PersistGate
-        loading={null}
-        persistor={persistor}
-      >
+      <PersistGate loading={null} persistor={persistor}>
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>

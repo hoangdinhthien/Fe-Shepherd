@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { FaCalendarAlt, FaClipboardList, FaComments } from 'react-icons/fa';
-import { MdDashboard, MdGroup } from 'react-icons/md';
+import {
+  MdKeyboardArrowLeft,
+  MdDashboard,
+  MdGroup,
+  MdRequestPage,
+} from 'react-icons/md';
 import { RxActivityLog } from 'react-icons/rx';
 import { useSelector } from 'react-redux';
 import { Link, NavLink, useLocation } from 'react-router-dom';
@@ -17,6 +22,8 @@ const userMenuItems = [
 
 const adminMenuItems = [
   { icon: MdDashboard, title: 'Dashboard', path: '/admin/dashboard' },
+  { icon: MdRequestPage, title: 'Request', path: '/admin/request' },
+  { icon: FaCalendarAlt, title: 'Calendar', path: '/admin/calendar' },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
