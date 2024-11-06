@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { FaCalendarAlt, FaUser } from 'react-icons/fa';
 import GroupAPI from '../apis/group_api';
@@ -9,7 +9,7 @@ import TaskCreateButton from '../components/task/TaskCreateButton';
 
 const { Option } = Select;
 
-export default function Activity() {
+export default function Task() {
   // ------STATES------
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -21,22 +21,17 @@ export default function Activity() {
     Completed: [],
   });
 
-  // Select `currentUser` and rehydration state separately
   const currentUser = useSelector((state) => state.user.currentUser);
   const rehydrated = useSelector((state) => state._persist?.rehydrated);
 
-  // Fetch groups
   const fetchGroups = async () => {
     if (!currentUser || !currentUser.user?.id) return;
-
-    console.log('hi');
-
     try {
       setLoading(true);
       const response = await GroupAPI.getGroupsForUser(currentUser.user.id);
       setGroups(response.result);
       if (response.result.length > 0) {
-        setSelectedGroup(response.result[0].id); // Set initial group selection
+        setSelectedGroup(response.result[0].id);
       }
     } catch (error) {
       console.error('Error fetching groups:', error);
@@ -51,51 +46,47 @@ export default function Activity() {
     }
   }, [currentUser, rehydrated]);
 
-  // fetch task base on groups
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     if (!selectedGroup) return;
+    const initialColumns = {
+      Todo: [],
+      'In Progress': [],
+      Pending: [],
+      Completed: [],
+    };
 
     try {
       setLoading(true);
       const response = await TaskAPI.getTasksByGroup(selectedGroup);
-
-      // Dynamically initialize columns based on task statuses
-      const newColumns = {
-        Todo: [],
-        'In Progress': [],
-        Pending: [],
-        Completed: [],
-      };
-
-      if (response.result?.length > 0) {
-        response.result.forEach((task) => {
-          const status = task.status || 'Todo'; // Ensure consistent casing with the column names
-          if (!newColumns[status]) {
-            newColumns[status] = []; // Initialize array if status doesn't exist
-          }
-          newColumns[status].push({
-            ...task,
-            title: task.description, // Assuming `description` is the task title
-            assignedUser: task.groupUser?.name || 'Unassigned',
-            dueDate: task.dueDate || '2023-06-10', // Placeholder date or task.dueDate
-          });
+      response.result.forEach((task) => {
+        const status = task.status || 'Todo';
+        initialColumns[status].push({
+          ...task,
+          title: task.description,
+          assignedUser: task.userName || 'Unassigned',
+          dueDate: task.dueDate || 'No due date',
         });
-      }
-
-      setColumns(newColumns);
+      });
+      setColumns(initialColumns);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedGroup]);
 
   useEffect(() => {
     fetchTasks();
-  }, [selectedGroup]);
+  }, [fetchTasks, selectedGroup]);
 
   const handleGroupChange = (value) => {
     setSelectedGroup(value);
+    setColumns({
+      Todo: [],
+      'In Progress': [],
+      Pending: [],
+      Completed: [],
+    });
   };
 
   const onDragEnd = (result) => {
@@ -103,28 +94,23 @@ export default function Activity() {
     const { source, destination } = result;
 
     if (source.droppableId !== destination.droppableId) {
-      const sourceColumn = columns[source.droppableId];
-      const destColumn = columns[destination.droppableId];
-      const sourceItems = [...sourceColumn];
-      const destItems = [...destColumn];
+      const sourceItems = [...columns[source.droppableId]];
+      const destItems = [...columns[destination.droppableId]];
       const [removed] = sourceItems.splice(source.index, 1);
-      destItems.splice(destination.index, 0, {
-        ...removed,
-        status: destination.droppableId,
-      });
+      removed.status = destination.droppableId;
+      destItems.splice(destination.index, 0, removed);
       setColumns({
         ...columns,
         [source.droppableId]: sourceItems,
         [destination.droppableId]: destItems,
       });
     } else {
-      const column = columns[source.droppableId];
-      const copiedItems = [...column];
-      const [removed] = copiedItems.splice(source.index, 1);
-      copiedItems.splice(destination.index, 0, removed);
+      const column = [...columns[source.droppableId]];
+      const [removed] = column.splice(source.index, 1);
+      column.splice(destination.index, 0, removed);
       setColumns({
         ...columns,
-        [source.droppableId]: copiedItems,
+        [source.droppableId]: column,
       });
     }
   };
@@ -134,7 +120,6 @@ export default function Activity() {
       <h1 className='text-xl'>Task</h1>
       <div className='flex justify-between'>
         <TaskCreateButton />
-
         <div className='mb-4'>
           <label className='mr-2'>Select Group:</label>
           <Select
@@ -158,66 +143,50 @@ export default function Activity() {
         spinning={loading}
         tip='Loading...'
       >
-        <DragDropContext
-          onDragEnd={onDragEnd}
-          className='flex flex-col h-screen'
-        >
-          <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-            {Object.entries(columns)?.map(([columnId, tasks]) => (
-              <div
-                key={columnId}
-                className='bg-gray-300 p-4 rounded-lg mt-2'
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className='grid grid-cols-4 gap-4'>
+            {Object.keys(columns).map((status) => (
+              <Droppable
+                key={status}
+                droppableId={status}
               >
-                <h2 className='text-xl font-semibold mb-4'>{columnId}</h2>
-                <Droppable droppableId={columnId}>
-                  {(provided) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className='min-h-[300px]'
-                    >
-                      {tasks?.length > 0 ? (
-                        tasks?.map((task, index) => (
-                          <Draggable
-                            key={task.id}
-                            draggableId={task.id.toString()}
-                            index={index}
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className='p-4 border rounded bg-gray-100'
+                  >
+                    <h2 className='text-lg font-semibold'>{status}</h2>
+                    {columns[status].map((task, index) => (
+                      <Draggable
+                        key={task.id}
+                        draggableId={task.id}
+                        index={index}
+                      >
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className='p-2 mt-2 bg-white rounded shadow-md'
                           >
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className='bg-white p-4 rounded-lg shadow-sm mb-4 hover:shadow-lg transition-shadow duration-300'
-                              >
-                                <h3 className='text-lg font-semibold mb-2'>
-                                  {task.title}
-                                </h3>
-                                <p className='text-gray-600 mb-2'>
-                                  {task.description}
-                                </p>
-                                <div className='flex items-center text-sm text-gray-500 mb-2'>
-                                  <FaUser className='mr-2' />
-                                  <span>{task.assignedUser}</span>
-                                </div>
-                                <div className='flex items-center text-sm text-gray-500 mb-2'>
-                                  <FaCalendarAlt className='mr-2' />
-                                  <span>{task.dueDate}</span>
-                                </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))
-                      ) : (
-                        <div className='text-gray-500 text-center mt-4'>
-                          No tasks available
-                        </div>
-                      )}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </div>
+                            <h3 className='font-medium'>{task.title}</h3>
+                            <p className='text-sm text-gray-600'>
+                              <FaUser className='inline mr-1' />{' '}
+                              {task.assignedUser}
+                            </p>
+                            <p className='text-sm text-gray-600'>
+                              <FaCalendarAlt className='inline mr-1' />{' '}
+                              {task.dueDate}
+                            </p>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
             ))}
           </div>
         </DragDropContext>
