@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FaCalendarAlt, FaClipboardList, FaComments } from 'react-icons/fa';
-import { MdDashboard, MdGroup } from 'react-icons/md';
+import { MdCelebration, MdDashboard, MdGroup } from 'react-icons/md';
 import { RxActivityLog } from 'react-icons/rx';
 import { useSelector } from 'react-redux';
 import { Link, NavLink, useLocation } from 'react-router-dom';
@@ -8,7 +8,8 @@ import HeaderLogo from '../assets/header-logo-img.png';
 
 const userMenuItems = [
   { icon: MdDashboard, title: 'Dashboard', path: '/user/dashboard' },
-  { icon: RxActivityLog, title: 'Task', path: '/user/activity' },
+  { icon: RxActivityLog, title: 'Task', path: '/user/task' },
+  { icon: MdCelebration, title: 'Events and Activities', path: '/user/event' },
   { icon: FaClipboardList, title: 'Request', path: '/user/request' },
   { icon: FaCalendarAlt, title: 'Calendar', path: '/user/calendar' },
   { icon: MdGroup, title: 'Group', path: '/user/group' },

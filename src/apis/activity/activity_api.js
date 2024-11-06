@@ -1,5 +1,14 @@
 import BaseAPI from '../../config/baseAPI';
+import axiosClient from '../../config/axios';
 
-const activityAPI = new BaseAPI('activity');
+class ActivityAPI extends BaseAPI {
+  constructor() {
+    super('activity');
+  }
 
-export default activityAPI;
+  getActivities() {
+    return this.handleRequest(axiosClient.get('activity/calendar'));
+  }
+}
+
+export default new ActivityAPI();

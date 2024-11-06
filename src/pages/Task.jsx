@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { FaCalendarAlt, FaUser } from 'react-icons/fa';
-import ActivityCreateButton from '../components/activity/ActivityCreateButton';
 import GroupAPI from '../apis/group_api';
 import TaskAPI from '../apis/task_api';
 import { useSelector } from 'react-redux';
 import { Select, Spin } from 'antd';
+import TaskCreateButton from '../components/task/TaskCreateButton';
 
 const { Option } = Select;
 
@@ -45,7 +45,6 @@ export default function Activity() {
   };
 
   useEffect(() => {
-
     if (rehydrated && currentUser) {
       fetchGroups();
     }
@@ -92,7 +91,6 @@ export default function Activity() {
   };
 
   useEffect(() => {
-
     fetchTasks();
   }, [selectedGroup]);
 
@@ -135,7 +133,7 @@ export default function Activity() {
     <div className='mx-auto p-4'>
       <h1 className='text-xl'>Task</h1>
       <div className='flex justify-between'>
-        <ActivityCreateButton />
+        <TaskCreateButton />
 
         <div className='mb-4'>
           <label className='mr-2'>Select Group:</label>
@@ -156,11 +154,20 @@ export default function Activity() {
           </Select>
         </div>
       </div>
-      <Spin spinning={loading} tip='Loading...'>
-        <DragDropContext onDragEnd={onDragEnd} className='flex flex-col h-screen'>
+      <Spin
+        spinning={loading}
+        tip='Loading...'
+      >
+        <DragDropContext
+          onDragEnd={onDragEnd}
+          className='flex flex-col h-screen'
+        >
           <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
             {Object.entries(columns)?.map(([columnId, tasks]) => (
-              <div key={columnId} className='bg-gray-300 p-4 rounded-lg mt-2'>
+              <div
+                key={columnId}
+                className='bg-gray-300 p-4 rounded-lg mt-2'
+              >
                 <h2 className='text-xl font-semibold mb-4'>{columnId}</h2>
                 <Droppable droppableId={columnId}>
                   {(provided) => (
@@ -171,7 +178,11 @@ export default function Activity() {
                     >
                       {tasks?.length > 0 ? (
                         tasks?.map((task, index) => (
-                          <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
+                          <Draggable
+                            key={task.id}
+                            draggableId={task.id.toString()}
+                            index={index}
+                          >
                             {(provided) => (
                               <div
                                 ref={provided.innerRef}
@@ -179,8 +190,12 @@ export default function Activity() {
                                 {...provided.dragHandleProps}
                                 className='bg-white p-4 rounded-lg shadow-sm mb-4 hover:shadow-lg transition-shadow duration-300'
                               >
-                                <h3 className='text-lg font-semibold mb-2'>{task.title}</h3>
-                                <p className='text-gray-600 mb-2'>{task.description}</p>
+                                <h3 className='text-lg font-semibold mb-2'>
+                                  {task.title}
+                                </h3>
+                                <p className='text-gray-600 mb-2'>
+                                  {task.description}
+                                </p>
                                 <div className='flex items-center text-sm text-gray-500 mb-2'>
                                   <FaUser className='mr-2' />
                                   <span>{task.assignedUser}</span>
@@ -194,7 +209,9 @@ export default function Activity() {
                           </Draggable>
                         ))
                       ) : (
-                        <div className='text-gray-500 text-center mt-4'>No tasks available</div>
+                        <div className='text-gray-500 text-center mt-4'>
+                          No tasks available
+                        </div>
                       )}
                       {provided.placeholder}
                     </div>
@@ -207,5 +224,4 @@ export default function Activity() {
       </Spin>
     </div>
   );
-
 }
