@@ -207,6 +207,7 @@ export default function CreateRequest() {
         />
 
         <DatePicker.RangePicker
+          showTime
           format='DD/MM/YYYY - HH:mm'
           value={[formData.fromDate, formData.toDate]}
           onChange={(date) =>

@@ -33,8 +33,8 @@ export default function SignIn() {
 
     try {
       const res = await AuthAPI.login({
-        username: formData.username,
-        password: formData.password,
+        username: formData.username.trim(),
+        password: formData.password.trim(),
       });
       // // logic successful
       // console.log(res);
