@@ -14,12 +14,7 @@ export default function Task() {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [columns, setColumns] = useState({
-    Todo: [],
-    'In Progress': [],
-    Pending: [],
-    Completed: [],
-  });
+  const [columns, setColumns] = useState({}); // Initialize as an empty object
 
   const currentUser = useSelector((state) => state.user.currentUser);
   const rehydrated = useSelector((state) => state._persist?.rehydrated);
@@ -48,26 +43,40 @@ export default function Task() {
 
   const fetchTasks = useCallback(async () => {
     if (!selectedGroup) return;
-    const initialColumns = {
-      Todo: [],
-      'In Progress': [],
-      Pending: [],
-      Completed: [],
-    };
 
     try {
       setLoading(true);
       const response = await TaskAPI.getTasksByGroup(selectedGroup);
-      response.result.forEach((task) => {
-        const status = task.status || 'Todo';
-        initialColumns[status].push({
-          ...task,
-          title: task.description,
-          assignedUser: task.userName || 'Unassigned',
-          dueDate: task.dueDate || 'No due date',
+
+      if (response && Array.isArray(response.result)) {
+        // Initialize an empty object to hold tasks by status
+        const columnsData = {};
+
+        response.result.forEach((task) => {
+          const status = task.status || 'Uncategorized'; // Default to 'Uncategorized' if no status
+
+          // Create an array for each unique status if it doesn't exist yet
+          if (!columnsData[status]) {
+            columnsData[status] = [];
+          }
+
+          // Push the task into the correct status array
+          columnsData[status].push({
+            ...task,
+            title: task.description || 'Untitled Task',
+            assignedUser: task.userName || 'Unassigned',
+            dueDate: task.dueDate || 'No due date',
+          });
         });
-      });
-      setColumns(initialColumns);
+
+        // Update columns state with the dynamically generated columns
+        setColumns(columnsData);
+      } else {
+        console.error(
+          'Unexpected response format or result is undefined:',
+          response
+        );
+      }
     } catch (error) {
       console.error('Error fetching tasks:', error);
     } finally {
@@ -81,12 +90,7 @@ export default function Task() {
 
   const handleGroupChange = (value) => {
     setSelectedGroup(value);
-    setColumns({
-      Todo: [],
-      'In Progress': [],
-      Pending: [],
-      Completed: [],
-    });
+    setColumns({}); // Reset columns when changing groups
   };
 
   const onDragEnd = (result) => {
@@ -114,6 +118,7 @@ export default function Task() {
       });
     }
   };
+  const columnOrder = ['To Do', 'In-Progress', 'Review', 'Done'];
 
   return (
     <div className='mx-auto p-4'>
@@ -145,49 +150,51 @@ export default function Task() {
       >
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='grid grid-cols-4 gap-4'>
-            {Object.keys(columns).map((status) => (
-              <Droppable
-                key={status}
-                droppableId={status}
-              >
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className='p-4 border rounded bg-gray-100'
-                  >
-                    <h2 className='text-lg font-semibold'>{status}</h2>
-                    {columns[status].map((task, index) => (
-                      <Draggable
-                        key={task.id}
-                        draggableId={task.id}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className='p-2 mt-2 bg-white rounded shadow-md'
-                          >
-                            <h3 className='font-medium'>{task.title}</h3>
-                            <p className='text-sm text-gray-600'>
-                              <FaUser className='inline mr-1' />{' '}
-                              {task.assignedUser}
-                            </p>
-                            <p className='text-sm text-gray-600'>
-                              <FaCalendarAlt className='inline mr-1' />{' '}
-                              {task.dueDate}
-                            </p>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            ))}
+            {Object.keys(columns)
+              .sort((a, b) => columnOrder.indexOf(a) - columnOrder.indexOf(b))
+              .map((status) => (
+                <Droppable
+                  key={status}
+                  droppableId={status}
+                >
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className='p-4 border rounded bg-gray-100'
+                    >
+                      <h2 className='text-lg font-semibold'>{status}</h2>
+                      {columns[status].map((task, index) => (
+                        <Draggable
+                          key={task.id}
+                          draggableId={task.id}
+                          index={index}
+                        >
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className='p-2 mt-2 bg-white rounded shadow-md'
+                            >
+                              <h3 className='font-medium'>{task.title}</h3>
+                              <p className='text-sm text-gray-600'>
+                                <FaUser className='inline mr-1' />{' '}
+                                {task.assignedUser}
+                              </p>
+                              <p className='text-sm text-gray-600'>
+                                <FaCalendarAlt className='inline mr-1' />{' '}
+                                {task.dueDate}
+                              </p>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              ))}
           </div>
         </DragDropContext>
       </Spin>
