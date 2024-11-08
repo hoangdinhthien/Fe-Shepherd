@@ -17,6 +17,9 @@ class BaseAPI {
   async handleRequest(request, getDataKey = true) {
     try {
       const response = await request;
+      if (typeof response !== 'object' || response === null) {
+        throw new Error('Response target must be an object');
+      }
       if (response.status === 200) {
         if (!(response?.data?.success ?? true)) {
           throw new Error(response.data?.message || 'Request failed');

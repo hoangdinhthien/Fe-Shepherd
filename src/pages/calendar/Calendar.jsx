@@ -1,4 +1,3 @@
-// MyCalendar.jsx
 import { useState, useEffect } from 'react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -59,15 +58,15 @@ const MyCalendar = () => {
     fetchEvents(currentDate, selectedGroup);
   }, [currentDate, selectedGroup]);
 
+  const handleGroupChange = (value) => {
+    setSelectedGroup(value);
+  };
+
   const handleWeekChange = (value) => {
     const newWeek = parseInt(value);
     setSelectedWeek(newWeek);
     const { start: newStart } = getWeekRange(newWeek);
     setCurrentDate(newStart.toDate());
-  };
-
-  const handleGroupChange = (value) => {
-    setSelectedGroup(value);
   };
 
   const handleNavigate = (action) => {
@@ -134,10 +133,7 @@ const MyCalendar = () => {
       {/* Event Details Modal */}
       <Modal
         title={
-          <Title
-            level={3}
-            className='text-center text-blue-600'
-          >
+          <Title level={3} className='text-center text-blue-600'>
             {selectedEvent?.eventName}
           </Title>
         }

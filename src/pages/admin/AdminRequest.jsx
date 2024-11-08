@@ -11,7 +11,6 @@ const AdminRequest = () => {
       try {
         const data = await RequestAPI.getAllRequests();
         console.log('Fetched data:', data);
-
         // Ensure the data is an array before setting it
         setRequests(Array.isArray(data['result']) ? data['result'] : []);
       } catch (error) {
@@ -35,21 +34,21 @@ const AdminRequest = () => {
         (acc, request) => {
           if (request.isAccepted === true) acc.approved += 1;
           else if (request.isAccepted === false) acc.rejected += 1;
-          else acc.inProgress += 1;
+          else acc.pending += 1;
           return acc;
         },
-        { approved: 0, rejected: 0, inProgress: 0 }
+        { approved: 0, rejected: 0, pending: 0 }
       )
-    : { approved: 0, rejected: 0, inProgress: 0 };
+    : { approved: 0, rejected: 0, pending: 0 };
 
   const pieData = {
-    labels: ['Approve', 'Reject', 'In Progress'],
+    labels: ['Approve', 'Reject', 'Pending'],
     datasets: [
       {
         data: [
           statusCounts.approved,
           statusCounts.rejected,
-          statusCounts.inProgress,
+          statusCounts.pending,
         ],
         backgroundColor: ['#4caf50', '#f44336', '#ff9800'],
       },
@@ -60,6 +59,9 @@ const AdminRequest = () => {
     plugins: {
       legend: {
         position: 'right',
+        labels: {
+          padding: 20, // Add spacing between the chart and the legend items
+        },
       },
     },
     responsive: true,
@@ -67,8 +69,6 @@ const AdminRequest = () => {
 
   return (
     <div style={{ width: '80%', margin: 'auto', paddingTop: '20px' }}>
-      <h2>Requests</h2>
-
       <div
         style={{
           display: 'flex',
@@ -76,7 +76,19 @@ const AdminRequest = () => {
           marginBottom: '20px',
         }}
       >
-        <div style={{ width: '300px', height: '300px' }}>
+        <div
+          style={{
+            width: '600px', // Adjust width to make the box wider
+            height: '320px',
+            padding: '20px',
+            backgroundColor: '#C0C0C0',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           <Pie data={pieData} options={pieOptions} />
         </div>
       </div>
@@ -121,7 +133,7 @@ const AdminRequest = () => {
                   ? 'Approve'
                   : request.isAccepted === false
                   ? 'Reject'
-                  : 'In Progress'}
+                  : 'Pending'}
               </td>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                 {request.to}

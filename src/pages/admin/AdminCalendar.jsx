@@ -1,13 +1,10 @@
-// MyCalendar.jsx
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Modal, Typography } from 'antd';
-import '../../pages/calendar/calendar.css';
-import useFetchGroups from '../../hooks/useFetchGroups';
-import EventAPI from '../../apis/event_api';
-import CustomToolbar from '../../components/calendar/CustomToolBar';
+import AdminCalendarAPI from '../../apis/admin/admin_calendar_api';
+import CustomAdminHeaderBar from '../../components/calendar/CustomAdminHeaderBar';
 
 const { Title, Text } = Typography;
 const localizer = momentLocalizer(moment);
@@ -21,54 +18,42 @@ const getWeekRange = (weekNumber) => {
   return { start: startOfWeek, end: endOfWeek };
 };
 
-const MyCalendar = () => {
-  const { groups, loading: loadingGroups } = useFetchGroups();
-  const [myEvents, setMyEvents] = useState([]);
+const AdminCalendar = () => {
+  const [ceremonies, setCeremonies] = useState([]);
+  const [selectedCeremony, setSelectedCeremony] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(moment().week());
   const [currentDate, setCurrentDate] = useState(
     moment().startOf('week').toDate()
   );
-  const [selectedGroup, setSelectedGroup] = useState('');
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const fetchEvents = async (date, groupId) => {
+  const fetchCeremonies = async () => {
     try {
-      const chosenDate = moment(date).toISOString();
-      const events = await EventAPI.getEventsByGroupAndDate(
-        chosenDate,
-        groupId || '',
-        1,
-        false,
-        true
-      );
-      setMyEvents(
-        events.data.map((event) => ({
-          ...event,
-          title: event.eventName,
-          start: new Date(event.fromDate),
-          end: new Date(event.toDate),
-        }))
-      );
+      const ceremonies = await AdminCalendarAPI.getAllCeremonies();
+      console.log('Fetched data:', ceremonies);
+
+      // Kiểm tra xem ceremonies có chứa dữ liệu không và là một mảng
+      const ceremonyData = Array.isArray(ceremonies['result'])
+        ? ceremonies['result'].map((ceremony) => ({
+            id: ceremony.id,
+            title: ceremony.name,
+            start: new Date(ceremony.date),
+            end: new Date(ceremony.date),
+            description: ceremony.description,
+            activities: ceremony.activityPresets || [], // Sử dụng activityPresets nếu có
+          }))
+        : [];
+      setCeremonies(ceremonyData); // Cập nhật trực tiếp danh sách ceremonies
+      console.log('Fetched data:', ceremonies['result']);
     } catch (error) {
-      console.error('Failed to fetch events:', error);
+      console.error('Failed to fetch ceremonies:', error);
     }
   };
 
+  // Gọi fetchCeremonies mỗi khi currentDate thay đổi
   useEffect(() => {
-    fetchEvents(currentDate, selectedGroup);
-  }, [currentDate, selectedGroup]);
-
-  const handleWeekChange = (value) => {
-    const newWeek = parseInt(value);
-    setSelectedWeek(newWeek);
-    const { start: newStart } = getWeekRange(newWeek);
-    setCurrentDate(newStart.toDate());
-  };
-
-  const handleGroupChange = (value) => {
-    setSelectedGroup(value);
-  };
+    fetchCeremonies(currentDate);
+  }, [currentDate]);
 
   const handleNavigate = (action) => {
     if (action === 'PREV') {
@@ -93,37 +78,42 @@ const MyCalendar = () => {
     }
   };
 
-  const handleEventSelect = (event) => {
-    setSelectedEvent(event);
+  const handleWeekChange = (value) => {
+    const newWeek = parseInt(value);
+    setSelectedWeek(newWeek);
+    const { start: newStart } = getWeekRange(newWeek);
+    setCurrentDate(newStart.toDate());
+  };
+
+  const handleCeremonySelect = (ceremony) => {
+    setSelectedCeremony(ceremony);
     setIsModalVisible(true);
   };
 
   const handleModalClose = () => {
     setIsModalVisible(false);
-    setSelectedEvent(null);
+    setSelectedCeremony(null);
   };
 
   return (
     <div style={{ height: '100vh' }}>
       <BigCalendar
         localizer={localizer}
-        events={myEvents}
+        events={ceremonies}
         startAccessor='start'
         endAccessor='end'
         defaultView='week'
         step={60}
         showMultiDayTimes
         date={currentDate}
-        onSelectEvent={handleEventSelect}
+        onNavigate={handleNavigate}
+        onSelectEvent={handleCeremonySelect}
         components={{
           toolbar: (props) => (
-            <CustomToolbar
+            <CustomAdminHeaderBar
               {...props}
               currentWeek={selectedWeek}
               handleWeekChange={handleWeekChange}
-              selectedGroup={selectedGroup}
-              handleGroupChange={handleGroupChange}
-              groups={groups}
               onNavigate={handleNavigate}
             />
           ),
@@ -131,37 +121,29 @@ const MyCalendar = () => {
         style={{ height: '100vh' }}
       />
 
-      {/* Event Details Modal */}
       <Modal
-        title={
-          <Title level={3} className='text-center text-blue-600'>
-            {selectedEvent?.eventName}
-          </Title>
-        }
+        title={<Title level={3}>{selectedCeremony?.title}</Title>}
         open={isModalVisible}
         onCancel={handleModalClose}
         footer={null}
-        width={800} // Make the modal wider
-        centered // Center the modal on the screen
-        className=' bg-gray-100 rounded-lg shadow-lg'
+        width={800}
+        centered
       >
-        {selectedEvent && (
-          <div className='px-6 py-8 mb-8  bg-white rounded-lg shadow-md'>
+        {selectedCeremony && (
+          <div>
             <Text className='block text-lg font-semibold mb-4 text-gray-800'>
-              {selectedEvent.description}
+              {selectedCeremony.description}
             </Text>
-            <Text className='block mb-4 text-gray-600'>
-              <strong>Date:</strong> {selectedEvent.status}
-            </Text>
-            <div className='mt-4'>
-              <Title
-                level={4}
-                className='text-lg font-semibold text-blue-500 mb-2'
-              >
-                Activities
-              </Title>
+            <Title
+              level={4}
+              className='text-lg font-semibold text-blue-500 mb-2'
+            >
+              Activities
+            </Title>
+            {Array.isArray(selectedCeremony.activities) &&
+            selectedCeremony.activities.length > 0 ? (
               <ul className='space-y-3'>
-                {selectedEvent.activities.map((activity) => (
+                {selectedCeremony.activities.map((activity) => (
                   <li
                     key={activity.id}
                     className='p-3 bg-gray-50 border-l-4 border-blue-500 rounded-lg shadow-sm'
@@ -173,13 +155,15 @@ const MyCalendar = () => {
                       <span className='block'>{activity.description}</span>
                       <span>
                         {moment(activity.startTime, 'HH:mm:ss').format('HH:mm')}{' '}
-                        -{moment(activity.endTime, 'HH:mm:ss').format('HH:mm')}
+                        - {moment(activity.endTime, 'HH:mm:ss').format('HH:mm')}
                       </span>
                     </div>
                   </li>
                 ))}
               </ul>
-            </div>
+            ) : (
+              <Text>No activities available</Text>
+            )}
           </div>
         )}
       </Modal>
@@ -187,4 +171,4 @@ const MyCalendar = () => {
   );
 };
 
-export default MyCalendar;
+export default AdminCalendar;
