@@ -5,6 +5,7 @@ import {
   MdDashboard,
   MdGroup,
   MdRequestPage,
+  MdCelebration,
 } from 'react-icons/md';
 import { RxActivityLog } from 'react-icons/rx';
 import { useSelector } from 'react-redux';
