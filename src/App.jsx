@@ -17,6 +17,8 @@ import Request from './pages/Request';
 import SignIn from './pages/SignIn';
 import WelcomePage from './pages/Welcome';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminRequest from './pages/admin/AdminRequest';
+import AdminCalendar from './pages/admin/AdminCalendar';
 import Calendar from './pages/calendar/Calendar';
 import storageService from './config/local_storage';
 import { useEffect, useState } from 'react';
@@ -125,6 +127,16 @@ const AppRoutes = () => {
           element={<AdminDashboard />}
         />
         <Route
+          path='request'
+          index
+          element={<AdminRequest />}
+        />
+        <Route
+          path='calendar'
+          index
+          element={<AdminCalendar />}
+        />
+        <Route
           path='profile'
           element={<Profile />}
         />
@@ -167,14 +179,9 @@ const AppRoutes = () => {
           element={<ChatHome />}
         />
         <Route
-          path='task'
-          element={<Task />}
+          path='activity'
+          element={<Activity />}
         />
-        <Route
-          path='event'
-          element={<Event />}
-        />
-
         <Route
           path='create-request'
           element={<CreateRequest />}
