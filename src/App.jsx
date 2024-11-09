@@ -179,9 +179,14 @@ const AppRoutes = () => {
           element={<ChatHome />}
         />
         <Route
-          path='activity'
-          element={<Activity />}
+          path='task'
+          element={<Task />}
         />
+        <Route
+          path='event'
+          element={<Event />}
+        />
+
         <Route
           path='create-request'
           element={<CreateRequest />}
