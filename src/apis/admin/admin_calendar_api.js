@@ -2,8 +2,8 @@ import BaseAPI from '../../config/baseAPI';
 
 class AdminCalendarAPI extends BaseAPI {
   getAllCeremonies() {
-    const url = '/ceremony';
-    return this.getCust(url);
+    const url = '/ceremony/calendar';
+    return this.getCustom(url);
   }
 }
 

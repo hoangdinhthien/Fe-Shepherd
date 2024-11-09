@@ -33,18 +33,17 @@ const AdminCalendar = () => {
       console.log('Fetched data:', ceremonies);
 
       // Kiểm tra xem ceremonies có chứa dữ liệu không và là một mảng
-      const ceremonyData = Array.isArray(ceremonies['result'])
-        ? ceremonies['result'].map((ceremony) => ({
+      const ceremonyData = Array.isArray(ceremonies)
+        ? ceremonies.map((ceremony) => ({
             id: ceremony.id,
             title: ceremony.name,
-            start: new Date(ceremony.date),
-            end: new Date(ceremony.date),
+            start: new Date(ceremony.fromDate),
+            end: new Date(ceremony.toDate),
             description: ceremony.description,
             activities: ceremony.activityPresets || [], // Sử dụng activityPresets nếu có
           }))
         : [];
       setCeremonies(ceremonyData); // Cập nhật trực tiếp danh sách ceremonies
-      console.log('Fetched data:', ceremonies['result']);
     } catch (error) {
       console.error('Failed to fetch ceremonies:', error);
     }
