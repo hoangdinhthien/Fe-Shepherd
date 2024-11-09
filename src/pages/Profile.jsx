@@ -35,7 +35,7 @@ export default function Profile() {
       <div className='p-6 max-w-lg w-full bg-white shadow-2xl rounded-lg border'>
         {/* PAGE TITLE */}
         <h1 className='text-3xl font-semibold text-center my-7 text-gray-800'>
-          Profile
+          Trang Cá Nhân
         </h1>
 
         {/* USER INFORMATION FORM */}
@@ -59,7 +59,7 @@ export default function Profile() {
               htmlFor='name'
               className='text-gray-500 text-sm'
             >
-              Name
+              Tên
             </label>
             <input
               id='name'
@@ -76,7 +76,7 @@ export default function Profile() {
               htmlFor='phone'
               className='text-gray-500 text-sm'
             >
-              Phone
+              Số điện thoại
             </label>
             <input
               id='phone'
@@ -110,7 +110,7 @@ export default function Profile() {
               htmlFor='password'
               className='text-gray-500 text-sm'
             >
-              Password
+              Mật khẩu
             </label>
             <input
               id='password'
@@ -128,7 +128,7 @@ export default function Profile() {
             onClick={logout}
             className='bg-red-600 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-red-700 transition duration-200 ease-in-out'
           >
-            Sign Out
+            Đăng xuất
           </button>
         </div>
       </div>
