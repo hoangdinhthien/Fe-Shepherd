@@ -1,5 +1,10 @@
 import BaseAPI from '../../config/baseAPI';
+import axiosClient from '../../config/axios';
 
-const activityAPI = new BaseAPI('activity');
+class ActivityAPI extends BaseAPI {
+  constructor() {
+    super('activity');
+  }
+}
 
-export default activityAPI;
+export default new ActivityAPI();

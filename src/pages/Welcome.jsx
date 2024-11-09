@@ -17,17 +17,18 @@ export default function WelcomePage() {
         <div className='flex flex-col flex-grow justify-between p-6'>
           <div className='space-y-4'>
             <h1 className='text-3xl font-semibold text-center text-green-400'>
-              Welcome to Sheperd
+              Chào Mừng Bạn tới Sheperd
             </h1>
             <p className='text-center text-gray-600'>
-              Blessed are the kind of heart, for theirs is the kingdom of heaven
+              Tôi chính là Mục Tử nhân lành. Tôi biết chiên của tôi, và chiên
+              của tôi biết tôi
             </p>
           </div>
           <button
             className='w-full py-3 bg-green-500 hover:bg-green-600 text-white text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200'
             onClick={() => navigate('/sign-in')}
           >
-            Sign In
+            Đăng Nhập
           </button>
         </div>
       </div>

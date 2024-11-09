@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import ActivityCreatePopUp from './ActivityCreatePopUp';
+import TaskCreatePopUp from './TaskCreatePopUp';
 import { FaPlus } from 'react-icons/fa';
 
-export default function ActivityCreateButton() {
+export default function TaskCreateButton() {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -47,7 +47,7 @@ export default function ActivityCreateButton() {
         <FaPlus className='mr-2' />
         {loading ? 'Loading...' : 'Create'}
       </button>
-      <ActivityCreatePopUp
+      <TaskCreatePopUp
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />

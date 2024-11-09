@@ -34,13 +34,14 @@ const MyCalendar = () => {
   const fetchEvents = async (date, groupId) => {
     try {
       const chosenDate = moment(date).toISOString();
-      const events = await EventAPI.getEventsByGroupAndDate(
-        chosenDate,
-        groupId || '',
-        1,
-        false,
-        true
-      );
+      const events = await EventAPI.getEventsByGroup({
+        ChosenDate: chosenDate,
+        GroupId: groupId || '',
+        CalendarTypeEnum: 1,
+        UserOnly: false,
+        GetUpcoming: true,
+      });
+
       setMyEvents(
         events.data.map((event) => ({
           ...event,

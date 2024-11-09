@@ -1,38 +1,19 @@
-import axiosClient from '../config/axios';
 import BaseAPI from '../config/baseAPI';
 
 class EventAPI extends BaseAPI {
-  // Existing method to fetch events by group and date
-  getEventsByGroupAndDate(
-    chosenDate,
-    groupId,
-    calendarTypeEnum = 1,
-    userOnly = false,
-    getUpcoming = false
-  ) {
-    return this.handleRequest(
-      axiosClient.get(`event/calendar`, {
-        params: {
-          ChosenDate: chosenDate,
-          GroupId: groupId,
-          CalendarTypeEnum: calendarTypeEnum,
-          UserOnly: userOnly,
-          GetUpcoming: getUpcoming,
-        },
-      })
-    );
+  constructor() {
+    super('event');
   }
 
-  // New method to fetch events by group without date
-  getEventsByGroup(groupId) {
-    return this.handleRequest(
-      axiosClient.get(`event/calendar`, {
-        params: {
-          GroupId: groupId,
-        },
-      })
-    );
+  getEventsByGroup(params) {
+    const url = `${this.url}/calendar`; // => axios => base url + event/calendar (custom url)
+    return super.getCustom(url, params); // => shortcut
+  }
+
+  getEvents(params) {
+    return super.getAll(params);
   }
 }
 
-export default new EventAPI();
+export default new EventAPI('event');
+// export default new EventAPI('event'); // why new EventAPI ? => instance of EventAPI if use constructor

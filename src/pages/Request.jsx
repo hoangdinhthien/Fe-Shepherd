@@ -6,24 +6,24 @@ import moment from 'moment'; // Ensure moment is imported
 
 const cols = [
   {
-    title: 'Subject',
+    title: 'Tiêu Đề',
     dataIndex: 'title',
     render: (text) => <a>{text}</a>,
   },
   {
-    title: 'From',
+    title: 'Đoàn Thể Yêu Cầu',
     dataIndex: 'from',
   },
   {
-    title: 'To',
+    title: 'Tới Đoàn Thể',
     dataIndex: 'to',
   },
   {
-    title: 'Created At',
+    title: 'Ngày Tạo',
     dataIndex: 'createdAt',
   },
   {
-    title: 'Status',
+    title: 'Trạng Thái',
     dataIndex: 'status',
   },
 ];
@@ -53,7 +53,7 @@ const Request = () => {
   const fetchRequest = async () => {
     setIsLoading(true);
     try {
-      const res = await RequestAPI.getAll({
+      const res = await RequestAPI.getRequests({
         PageNumber: currentPage,
         PageSize: pageSize,
       });
@@ -114,7 +114,9 @@ const Request = () => {
 
   return (
     <div className='flex flex-col'>
-      <h1 className='text-xl font-semibold mt-3 mb-6 ml-4'>List Requests</h1>
+      <h1 className='text-xl font-semibold mt-3 mb-6 ml-4'>
+        Danh Sách Các Yêu Cầu
+      </h1>
       <Table
         loading={isLoading}
         columns={cols}

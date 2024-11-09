@@ -22,7 +22,7 @@ export default function Group() {
   // Fetch members when selectedGroup changes
   const fetchMembers = async () => {
     console.log('Fetching members for group:', selectedGroup);
-    
+
     if (!selectedGroup) return;
     try {
       setLoading(true);
@@ -44,19 +44,19 @@ export default function Group() {
   };
 
   const columns = [
-    { title: 'Name', dataIndex: 'name', key: 'name' },
+    { title: 'Tên Thành Viên', dataIndex: 'name', key: 'name' },
     { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Phone', dataIndex: 'phone', key: 'phone' },
-    { title: 'Role', dataIndex: 'groupRole', key: 'groupRole' },
+    { title: 'Số Điện Thoại', dataIndex: 'phone', key: 'phone' },
+    { title: 'Vai Trò/Chức Vụ', dataIndex: 'groupRole', key: 'groupRole' },
     { title: 'Status', dataIndex: 'status', key: 'status' },
   ];
 
   return (
     <div className='p-4'>
-      <h1 className='text-2xl font-bold mb-4'>Group Members</h1>
+      <h1 className='text-2xl font-bold mb-4'>Danh Sách Các Thành Viên</h1>
 
       <div className='mb-4'>
-        <label className='mr-2'>Select Group:</label>
+        <label className='mr-2'>Chọn Đoàn Thể của bạn:</label>
         <Select
           value={selectedGroup}
           onChange={handleGroupChange}
