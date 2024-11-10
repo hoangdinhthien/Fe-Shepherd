@@ -8,7 +8,6 @@ import { useDispatch } from 'react-redux';
 import storageService from '../config/local_storage';
 import { jwtDecode } from 'jwt-decode';
 import { logIn } from '../redux/user/userSlice';
-import { path } from 'framer-motion/client';
 
 export default function LayoutMain() {
   const dispatch = useDispatch();
@@ -67,7 +66,7 @@ export default function LayoutMain() {
     console.log(pathName);
   });
 
-  const isFixedHeader = pathName !== '/user/chat';
+  const isFixedHeader = pathName !== '/user/chat' && pathName !== '/user/event';
 
   return (
     <div className='flex'>
@@ -99,7 +98,7 @@ export default function LayoutMain() {
           className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${
             isFixedHeader
               ? 'mt-20 px-4 py-2'
-              : ' flex overflow-auto'
+              : 'h-full overflow-auto flex justify-center items-center'
           } duration-300`}
         >
           <Outlet />

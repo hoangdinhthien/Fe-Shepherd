@@ -30,9 +30,9 @@ export default function EventActivityPage() {
   const { currentUser } = useSelector((state) => state.user);
   const groupIds =
     currentUser.listGroupRole
-      .filter(
-        ({ groupName }) => groupName?.includes(COUNCIL)
-      )
+      // .filter(
+      //   ({ groupName }) => groupName?.includes(COUNCIL)
+      // )
       .map(({ groupId }) => groupId) || [];
   const groups = groupIds.map((groupId) => ({ groupID: groupId, cost: 0 })) || [];
 
@@ -112,7 +112,7 @@ export default function EventActivityPage() {
   const fetchActivities = async () => {
     try {
       setLoading(true);
-      const response = await ActivityAPI.getAll({ PageNumber: currentPage, PageSize: 8 });
+      const response = await ActivityAPI.getAll({ PageNumber: currentPage, PageSize: 8, FilterBy: filter });
       setActivities(response.result);
       setFilteredActivities(response.result);
       setTotal(response.pagination.totalCount);
@@ -147,26 +147,26 @@ export default function EventActivityPage() {
   };
 
   return (
-    <div className='px-6 py-2 w-full shadow-lg bg-[#e3e3e3] rounded-3xl'>
-      <EventHeader
-        setActiveTab={setActiveTab}
-        filter={filter}
-        setFilter={setFilter}
-        currentPage={currentPage}
-        total={total}
-        setCurrentPage={setCurrentPage} />
+    <div className='h-full w-full p-4'>
+      <div className='w-full h-full p-4 flex flex-col shadow-inner shadow-gray-600 bg-[#e3e3e3] rounded-3xl'>
+        <EventHeader
+          setActiveTab={setActiveTab}
+          filter={filter}
+          setFilter={setFilter}
+          currentPage={currentPage}
+          total={total}
+          setCurrentPage={setCurrentPage} />
 
-      <div className={`grid w-full grid-cols-4 px-4 pb-3 gap-${loading ? '0' : '4'}`}>
-        {loading ? (
-          <div className="col-span-4 h-[75vh] flex justify-center items-center">
-            <Spinner className="h-[40px]" spinning="true" />
-          </div>
-        ) : (
-          (activeTab === 'events' ? filteredEvents : filteredActivities)?.map((item) => (
+        {loading && (<div className="h-full w-full flex justify-center items-center">
+          <Spinner className="h-[40px] w-[40px]" spinning="true" />
+        </div>)}
+
+        {!loading && <div className={`grid w-full h-full grid-cols-4 grid-rows-2 px-4  gap-4`}>
+          {(activeTab === 'events' ? filteredEvents : filteredActivities)?.map((item) => (
             <Card
               key={item.id}
               hoverable
-              className="rounded-2xl overflow-hidden shadow-md h-[345px]"
+              className="rounded-2xl overflow-hidden shadow-md"
               onClick={() => {
                 showModal(item);
                 setShowCreateActivity(false);
@@ -182,10 +182,8 @@ export default function EventActivityPage() {
                 </div>
               }
             >
-              <div className='flex gap-4'>
-                <Title ellipsis={{ rows: 2 }} level={4}>{item.eventName || item.activityName}</Title>
 
-              </div>
+              <Title ellipsis={{ rows: 1 }} level={4}>{item.eventName || item.activityName}</Title>
               <div className="flex items-center w-full text-gray-500 mb-1">
                 <CalendarFilled className="mr-2" />
                 <span>{moment(item.fromDate || item.startDate).format('DD/MM/YYYY')}</span>
@@ -197,27 +195,26 @@ export default function EventActivityPage() {
                 <Paragraph ellipsis={{ rows: 1 }}>{item.description ?? 'N/A'}</Paragraph>
               </div>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>}
 
-      <CreateActivityModal
-        isUpdate={isUpdate}
-        setIsUpdate={setIsUpdate}
-        groupIds={groupIds}
-        image={ALT}
-        loading={loading}
-        isModalVisible={isModalVisible}
-        handleModalClose={handleModalClose}
-        selectedItem={selectedItem}
-        showCreateActivity={showCreateActivity}
-        setShowCreateActivity={setShowCreateActivity}
-        activeTab={activeTab}
-        formData={formData}
-        setFormData={setFormData}
-        handleChange={handleChange}
-        onSubmit={onSubmit}
-      />
+        <CreateActivityModal
+          isUpdate={isUpdate}
+          setIsUpdate={setIsUpdate}
+          image={ALT}
+          loading={loading}
+          isModalVisible={isModalVisible}
+          handleModalClose={handleModalClose}
+          selectedItem={selectedItem}
+          showCreateActivity={showCreateActivity}
+          setShowCreateActivity={setShowCreateActivity}
+          activeTab={activeTab}
+          formData={formData}
+          setFormData={setFormData}
+          handleChange={handleChange}
+          onSubmit={onSubmit}
+        />
+      </div>
     </div>
   );
 }

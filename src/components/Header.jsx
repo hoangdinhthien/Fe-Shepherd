@@ -32,7 +32,7 @@ export default function Header({
         sidebarOpen ? 'pl-52' : 'pl-24'
       } py-2 border-b border-blue-gray-700`}
     >
-      <div className='flex justify-between items-center max-w-full mx-auto p-3'>
+      <div className='flex justify-between items-center w-full p-3'>
         {/* NAVIGATE */}
         <MdKeyboardArrowLeft
           className={`w-7 h-7 rounded-full bg-white border-2 border-blue-gray-700 transition-transform hover:scale-125 duration-300 ${
