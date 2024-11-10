@@ -30,9 +30,9 @@ export default function EventActivityPage() {
   const { currentUser } = useSelector((state) => state.user);
   const groupIds =
     currentUser.listGroupRole
-      .filter(
-        ({ groupName }) => groupName?.includes(COUNCIL)
-      )
+      // .filter(
+      //   ({ groupName }) => groupName?.includes(COUNCIL)
+      // )
       .map(({ groupId }) => groupId) || [];
   const groups = groupIds.map((groupId) => ({ groupID: groupId, cost: 0 })) || [];
 
@@ -161,7 +161,7 @@ export default function EventActivityPage() {
           <Spinner className="h-[40px] w-[40px]" spinning="true" />
         </div>)}
 
-        {!loading && <div className={`grid w-full h-full grid-cols-4 px-4  gap-4`}>
+        {!loading && <div className={`grid w-full h-full grid-cols-4 grid-rows-2 px-4  gap-4`}>
           {(activeTab === 'events' ? filteredEvents : filteredActivities)?.map((item) => (
             <Card
               key={item.id}
@@ -201,7 +201,6 @@ export default function EventActivityPage() {
         <CreateActivityModal
           isUpdate={isUpdate}
           setIsUpdate={setIsUpdate}
-          groupIds={groupIds}
           image={ALT}
           loading={loading}
           isModalVisible={isModalVisible}

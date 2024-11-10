@@ -12,7 +12,7 @@ const EventHeader = ({ setActiveTab, filter, setFilter, currentPage, total, setC
         className="border-b-1 border-[#D9D9D9]"
       >
         <TabPane
-          tab={<span className="font-bold">List Events</span>}
+          tab={<span className="font-bold">Sự Kiện</span>}
           key="events"
         />
         <TabPane disabled tab={
@@ -21,7 +21,7 @@ const EventHeader = ({ setActiveTab, filter, setFilter, currentPage, total, setC
           </span>
         } />
         <TabPane
-          tab={<span className="font-bold">List Activities</span>}
+          tab={<span className="font-bold">Hoạt Động</span>}
           key="activities"
         />
       </Tabs>
@@ -29,16 +29,16 @@ const EventHeader = ({ setActiveTab, filter, setFilter, currentPage, total, setC
 
       <div className='absolute right-12 top-0 flex items-center gap-8'>
         <Select
-          value={`Sort by: ${filters[filter]}`}
+          value={`Sắp xếp theo: ${filters[filter]}`}
           onChange={(value) => { setFilter(filters.findIndex((item) => item === value)); setCurrentPage(1) }}
           size="large"
           className="w-[fit] bg-transparent font-bold"
-          placeholder="Sort by: All"
+          placeholder="Sắp xếp theo: Tất cả"
           variant='filled'
         >
-          <Option value={filters[0]}>All</Option>
-          <Option value={filters[1]}>This Month</Option>
-          <Option value={filters[2]}>Next Month</Option>
+          <Option value={filters[0]}>Tất cả</Option>
+          <Option value={filters[1]}>Tháng này</Option>
+          <Option value={filters[2]}>Tháng sau</Option>
         </Select>
 
         <Pagination current={currentPage} total={total} onChange={(pageNumber) => setCurrentPage(pageNumber)}
