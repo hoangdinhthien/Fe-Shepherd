@@ -7,12 +7,12 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import HeaderLogo from '../assets/header-logo-img.png';
 
 const userMenuItems = [
-  { icon: MdDashboard, title: 'Dashboard', path: '/user/dashboard' },
-  { icon: RxActivityLog, title: 'Task', path: '/user/task' },
-  { icon: MdCelebration, title: 'Events and Activities', path: '/user/event' },
-  { icon: FaClipboardList, title: 'Request', path: '/user/request' },
-  { icon: FaCalendarAlt, title: 'Calendar', path: '/user/calendar' },
-  { icon: MdGroup, title: 'Group', path: '/user/group' },
+  { icon: MdDashboard, title: 'Bảng Điều Khiển', path: '/user/dashboard' },
+  { icon: RxActivityLog, title: 'Nhiệm Vụ', path: '/user/task' },
+  { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/user/event' },
+  { icon: FaClipboardList, title: 'Yêu Cầu', path: '/user/request' },
+  { icon: FaCalendarAlt, title: 'Lịch', path: '/user/calendar' },
+  { icon: MdGroup, title: 'Nhóm', path: '/user/group' },
   { icon: FaComments, title: 'Chat', path: '/user/chat' },
 ];
 

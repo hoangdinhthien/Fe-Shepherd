@@ -1,7 +1,7 @@
-import { Divider, Pagination, Select, Tabs } from "antd";
-import TabPane from "antd/es/tabs/TabPane";
+import { Divider, Pagination, Select, Tabs } from 'antd';
+import TabPane from 'antd/es/tabs/TabPane';
 
-const filters = ['All', 'This month', 'Next month'];
+const filters = ['Tất Cả', 'Tháng này', 'Tháng sau'];
 
 const EventHeader = ({ setActiveTab, filter, setFilter, currentPage, total, setCurrentPage }) => {
   return (

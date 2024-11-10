@@ -63,9 +63,7 @@ export default function SignIn() {
       <header
         className={` bg-amber-400 shadow-md shadow-slate-300 pr-4 pl-24 py-2 border-b border-blue-gray-700`}
       >
-        <div
-          className={`flex gap-x-4 items-center justify-start`}
-        >
+        <div className={`flex gap-x-4 items-center justify-start`}>
           <img
             src={HeaderLogo}
             alt=''
@@ -80,7 +78,7 @@ export default function SignIn() {
       </header>
       <div className='p-2 pt-20 max-w-2xl mx-auto'>
         {/* SIGN IN TITLE */}
-        <h1 className='text-3xl text-center font-semibold my-8'>Sign In</h1>
+        <h1 className='text-3xl text-center font-semibold my-8'>Đăng Nhập</h1>
 
         {/* SIGN IN FORM */}
         <form
@@ -92,7 +90,7 @@ export default function SignIn() {
             id='username'
             name='username' // Set name attribute for the input
             type='text'
-            placeholder='Email or Username'
+            placeholder='Email hoặc Tên đăng nhập'
             value={formData.username}
             onChange={handleChange} // Use a single handler for input changes
             required
@@ -105,7 +103,7 @@ export default function SignIn() {
               id='password'
               name='password'
               type={showPassword ? 'text' : 'password'}
-              placeholder='Password'
+              placeholder='Mật khẩu '
               value={formData.password}
               onChange={handleChange}
               required
@@ -133,7 +131,7 @@ export default function SignIn() {
             className='justify-center inline-flex items-center bg-blue-gray-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'
             disabled={isLoading}
           >
-            {isLoading ? 'Signing In' : 'Sign In'}
+            {isLoading ? 'Loading' : 'Đăng Nhập'}
             {isLoading && (
               <>
                 <div className='h-2 w-2 ml-2 mr-1 bg-gray-300 rounded-full animate-scale [animation-delay:-0.3s]'></div>
@@ -144,7 +142,7 @@ export default function SignIn() {
           </button>
 
           {/* SIGN IN WITH GOOGLE BUTTON */}
-          <OAuth />
+          {/* <OAuth /> */}
 
           {/* SHOW ERROR MESSAGE */}
           {error && <p className='text-red-500 text-center'>{error}</p>}

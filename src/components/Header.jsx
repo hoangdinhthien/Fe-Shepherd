@@ -60,7 +60,7 @@ export default function Header({
           ) ||
             currentUser.user.role === COUNCIL) && (
             <Tooltip
-              content='Create a request'
+              content='Tạo một yêu cầu'
               placement='bottom'
             >
               <Link to='/user/create-request'>
@@ -73,7 +73,7 @@ export default function Header({
           {/* NOTIFICATION */}
           {currentUser.user.role !== ADMIN && (
             <Tooltip
-              content='Notification'
+              content='Thông báo'
               placement='bottom'
             >
               <button onClick={onNotificationClick}>
