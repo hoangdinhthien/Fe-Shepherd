@@ -14,6 +14,12 @@ class RequestAPI extends BaseAPI {
     const url = `${this.url}/GetRequests`;
     return super.getCustom(url, params);
   }
+
+  // get request type
+  getRequestType() {
+    const url = `${this.url}/GetType`;
+    return super.getCustom(url);
+  }
 }
 
 export default new RequestAPI();
