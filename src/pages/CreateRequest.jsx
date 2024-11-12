@@ -117,61 +117,65 @@ export default function CreateRequest() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    // Validate date range
+
     if (
       !formData.fromDate ||
       !formData.toDate ||
       !formData.eventName ||
       !formData.description
     ) {
-      message.error('Please fill all the fields.'); // Show error message
+      message.error('Please fill all the fields.');
       return;
     }
 
-    const loadingKey = 'loading'; // Define a key for the loading message
-
+    const loadingKey = 'loading';
     try {
       setLoading(true);
       message.loading({
         content: 'Submitting request...',
         key: loadingKey,
         duration: 0,
-      }); // Show loading message
+      });
 
-      if (selectedRequestType === 'Create Event') {
-        const data = {
-          eventName: formData.eventName,
-          description: formData.description,
-          fromDate: formData.fromDate.toISOString(),
-          toDate: formData.toDate.toISOString(),
-          isPublic: true,
-          totalCost: formData.eventCost,
-          ceremonyID: null,
-          activities: activities.map((activity) => ({
-            activityName: activity.title,
-            description: activity.description,
-            startTime: activity.startTime
-              ? activity.startTime.toISOString()
-              : null,
-            endTime: activity.endTime ? activity.endTime.toISOString() : null,
-            groupID: selectedGroup,
-            cost: activity.budget,
-          })),
-        };
-        await RequestAPI.createRequest(selectedGroup, data);
-      }
+      // Construct the data object as per API requirements
+      const data = {
+        eventName: formData.eventName,
+        description: formData.description,
+        fromDate: formData.fromDate.toISOString(),
+        toDate: formData.toDate.toISOString(),
+        isPublic: true,
+        ceremonyID: null,
+        listActivities: activities.map((activity) => ({
+          activityName: activity.title,
+          description: activity.description,
+          startTime: activity.startTime
+            ? activity.startTime.toISOString()
+            : undefined,
+          endTime: activity.endTime
+            ? activity.endTime.toISOString()
+            : undefined,
+          groups: [
+            {
+              groupID: selectedGroup,
+              cost: activity.budget,
+            },
+          ],
+        })),
+      };
 
-      // await RequestAPI.createRequest(groupIds[0], data);
+      console.log('Data being sent to API:', data);
+      await RequestAPI.createRequest(selectedGroup, data);
+
       message.success({
         content: 'Request submitted successfully!',
         key: loadingKey,
-      }); // Show success message
+      });
       console.log('Request submitted:', data);
     } catch (error) {
       message.error({
         content: `Error submitting request: ${error.message}`,
         key: loadingKey,
-      }); // Show error message
+      });
       console.error('Error submitting request:', error);
     } finally {
       setLoading(false);
