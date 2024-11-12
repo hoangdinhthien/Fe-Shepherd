@@ -6,6 +6,8 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import group_api from '../apis/group_api';
 import RequestAPI from '../apis/request_api';
+import event_api from '../apis/event_api';
+import activity_api from '../apis/activity/activity_api';
 
 const { Option } = Select;
 
@@ -21,6 +23,8 @@ export default function CreateRequest() {
   // Select `currentUser` and rehydration state separately
   const currentUser = useSelector((state) => state.user.currentUser);
   const rehydrated = useSelector((state) => state._persist?.rehydrated);
+
+  // ---------------
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -59,9 +63,12 @@ export default function CreateRequest() {
     }
   }, [currentUser, rehydrated]);
 
+  // ---------------
   const handleGroupChange = (value) => {
     setSelectedGroup(value);
   };
+
+  // ---------------
 
   const handleRequestTypeChange = (value) => {
     setSelectedRequestType(value);
@@ -73,15 +80,21 @@ export default function CreateRequest() {
     description: '',
     fromDate: null,
     toDate: null,
+    eventCost: '',
   });
+
+  // ---------------
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+  // ---------------
 
   const LEADER = import.meta.env.VITE_ROLE_GROUP_LEADER;
   const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
+
+  // ---------------
 
   const groupIds =
     currentUser.listGroupRole
@@ -124,7 +137,31 @@ export default function CreateRequest() {
         key: loadingKey,
         duration: 0,
       }); // Show loading message
-      await RequestAPI.createRequest(groupIds[0], data);
+
+      if (selectedRequestType === 'Create Event') {
+        const data = {
+          eventName: formData.eventName,
+          description: formData.description,
+          fromDate: formData.fromDate.toISOString(),
+          toDate: formData.toDate.toISOString(),
+          isPublic: true,
+          totalCost: formData.eventCost,
+          ceremonyID: null,
+          activities: activities.map((activity) => ({
+            activityName: activity.title,
+            description: activity.description,
+            startTime: activity.startTime
+              ? activity.startTime.toISOString()
+              : null,
+            endTime: activity.endTime ? activity.endTime.toISOString() : null,
+            groupID: selectedGroup,
+            cost: activity.budget,
+          })),
+        };
+        await RequestAPI.createRequest(selectedGroup, data);
+      }
+
+      // await RequestAPI.createRequest(groupIds[0], data);
       message.success({
         content: 'Request submitted successfully!',
         key: loadingKey,
@@ -141,15 +178,20 @@ export default function CreateRequest() {
     }
   };
 
+  // ---------------
+
   const onReset = () => {
     setFormData({
       eventName: '',
       description: '',
       fromDate: null,
       toDate: null,
+      eventCost: '',
     });
     setActivities([]); //reset activities
   };
+
+  // ---------------
 
   const addActivity = () => {
     setActivities((prevActivities) => [
@@ -164,11 +206,15 @@ export default function CreateRequest() {
     ]);
   };
 
+  // ---------------
+
   const removeActivity = (index) => {
     setActivities((prevActivities) =>
       prevActivities.filter((_, i) => i !== index)
     );
   };
+
+  // ---------------
 
   const handleActivityChange = (index, e) => {
     const { name, value } = e.target;
@@ -178,6 +224,8 @@ export default function CreateRequest() {
       return updatedActivities;
     });
   };
+
+  // ---------------
 
   return (
     <form className='p-6 max-w-6xl mx-auto '>
@@ -225,68 +273,90 @@ export default function CreateRequest() {
           className='border p-2 rounded w-full'
         />
       </div>
+
       <hr className='border-t border-gray-400 my-6' />
-      {/* Fourth section */}
-      <div className='mb-6'>
-        <div className='mb-4'>
-          <label className='mr-2'>Chọn đoàn thể:</label>
-          <Select
-            value={selectedGroup}
-            onChange={handleGroupChange}
-            className='w-[200px]'
-            placeholder='Select a group'
-          >
-            {groups?.map((group) => (
-              <Option
-                key={group.id}
-                value={group.id}
-                className='text-black text-xl'
-              >
-                {group.groupName}
-              </Option>
-            ))}
-          </Select>
-        </div>
-        <input
-          id='eventName'
-          type='text'
-          name='eventName'
-          value={formData.eventName}
-          onChange={handleChange}
-          placeholder='Tên sự kiện'
-          className='border p-2 rounded w-full mb-4'
-        />
 
-        <DatePicker.RangePicker
-          showTime
-          format='DD/MM/YYYY - HH:mm'
-          value={[formData.fromDate, formData.toDate]}
-          onChange={(date) =>
-            setFormData((prev) => ({
-              ...prev,
-              fromDate: date ? date[0] : null,
-              toDate: date ? date[1] : null,
-            }))
-          }
-          placeholder={[
-            'Thời gian bắt đầu sự kiện',
-            'Thời gian kết thúc sự kiện',
-          ]}
-          size='large'
-          className='border border-[#EEE] p-2 rounded w-full mb-4 font-semibold'
-        />
-
-        <textarea
-          name='description'
-          value={formData.description}
-          onChange={handleChange}
-          placeholder='Mô tả sự kiện'
-          className='border p-2 rounded w-full h-32 mb-4'
-        ></textarea>
-      </div>
       {/* Display Activities Section if "Create Event" is selected */}
       {selectedRequestType === 'Create Event' && (
         <>
+          {/* Fourth section */}
+          <div className='mb-6'>
+            <h2 className='text-xl font-semibold mb-4'>Chi Tiết Sự Kiện</h2>
+
+            <div className='flex justify-between mb-4'>
+              {/* Group selection dropdown  */}
+              <div className='flex items-center space-x-2 w-[45%]'>
+                <label className='text-base'>Chọn đoàn thể:</label>
+                <Select
+                  value={selectedGroup}
+                  onChange={handleGroupChange}
+                  className='w-full h-[40px]'
+                  placeholder='Select a group'
+                >
+                  {groups?.map((group) => (
+                    <Option
+                      key={group.id}
+                      value={group.id}
+                      className='text-black text-xl'
+                    >
+                      {group.groupName}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* Event Cost input  */}
+              <div className='flex items-center space-x-2 w-[45%]'>
+                <label className='text-base'>Chi Phí Sự Kiện:</label>
+                <input
+                  id='eventCost'
+                  type='number'
+                  name='eventCost'
+                  value={formData.eventCost}
+                  onChange={handleChange}
+                  placeholder='Nhập chi phí'
+                  className='border p-2 rounded w-full h-[40px]'
+                />
+              </div>
+            </div>
+            <input
+              id='eventName'
+              type='text'
+              name='eventName'
+              value={formData.eventName}
+              onChange={handleChange}
+              placeholder='Tên sự kiện'
+              className='border p-2 rounded w-full mb-4'
+            />
+
+            <DatePicker.RangePicker
+              showTime
+              format='DD/MM/YYYY - HH:mm'
+              value={[formData.fromDate, formData.toDate]}
+              onChange={(date) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  fromDate: date ? date[0] : null,
+                  toDate: date ? date[1] : null,
+                }))
+              }
+              placeholder={[
+                'Thời gian bắt đầu sự kiện',
+                'Thời gian kết thúc sự kiện',
+              ]}
+              size='large'
+              className='border border-[#EEE] p-2 rounded w-full mb-4 font-semibold'
+            />
+
+            <textarea
+              name='description'
+              value={formData.description}
+              onChange={handleChange}
+              placeholder='Mô tả sự kiện'
+              className='border p-2 rounded w-full h-32 mb-4'
+            ></textarea>
+          </div>
+
           <div className='mb-6'>
             <h2 className='text-xl font-semibold mb-4'>
               Lịch trình dự kiến của sự kiện
@@ -341,16 +411,16 @@ export default function CreateRequest() {
                   className='border p-2 rounded w-full mb-2'
                 />
                 <input
-                  type='text'
+                  type='number'
                   name='manpower'
-                  placeholder='Expected Manpower'
+                  placeholder='Số Lượng Nhân Lực Dự Kiến'
                   value={activity.manpower}
                   onChange={(e) => handleActivityChange(index, e)}
                   className='border p-2 rounded w-full mb-2'
                 />
                 <textarea
                   name='description'
-                  placeholder='Description'
+                  placeholder='Mô tả hoạt động'
                   value={activity.description}
                   onChange={(e) => handleActivityChange(index, e)}
                   className='border p-2 rounded w-full mb-2'
@@ -367,6 +437,42 @@ export default function CreateRequest() {
           </div>
         </>
       )}
+
+      {/* Display Generate Account Section if "Generate Account" is selected */}
+      {selectedRequestType === 'Generate Account' && (
+        <>
+          <div className='mb-6'>
+            <h2 className='text-xl font-semibold mb-4'>Chi Tiết Tài Khoản</h2>
+            <div className='grid grid-cols-2 gap-4 mb-4'>
+              <input
+                type='text'
+                placeholder='Tên'
+                className='border p-2 rounded'
+              />
+              <input
+                type='text'
+                placeholder='Số Điện Thoại'
+                className='border p-2 rounded'
+              />
+              <input
+                type='text'
+                placeholder='Email'
+                className='border p-2 rounded'
+              />
+              <input
+                type='text'
+                placeholder='Đoàn Thể tham gia'
+                className='border p-2 rounded'
+              />
+            </div>
+            <textarea
+              placeholder='Mô tả yêu cầu tạo tài khoản'
+              className='border p-2 rounded w-full h-32 mb-4'
+            ></textarea>
+          </div>
+        </>
+      )}
+
       {/* Buttons */}
       {!loading && (
         <div className='flex justify-center items-center space-x-4'>
