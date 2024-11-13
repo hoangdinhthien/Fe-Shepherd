@@ -3,30 +3,8 @@ import { useEffect, useState } from 'react';
 import RequestAPI from '../apis/request_api';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import moment from 'moment'; // Ensure moment is imported
-
-const cols = [
-  {
-    title: 'Tiêu Đề',
-    dataIndex: 'title',
-    render: (text) => <a>{text}</a>,
-  },
-  {
-    title: 'Đoàn Thể Yêu Cầu',
-    dataIndex: 'from',
-  },
-  {
-    title: 'Tới Đoàn Thể',
-    dataIndex: 'to',
-  },
-  {
-    title: 'Ngày Tạo',
-    dataIndex: 'createdAt',
-  },
-  {
-    title: 'Trạng Thái',
-    dataIndex: 'status',
-  },
-];
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 // Row selection object for checkboxes (optional)
 const rowSelection = {
@@ -49,6 +27,10 @@ const Request = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.user.currentUser);
+  const COUNCIL_ROLE = import.meta.env.VITE_ROLE_COUNCIL;
 
   const fetchRequest = async () => {
     setIsLoading(true);
@@ -85,6 +67,15 @@ const Request = () => {
     fetchRequest();
   }, [currentPage, pageSize]);
 
+  const handleRowClick = (record) => {
+    if (user.user.role === COUNCIL_ROLE) {
+      // navigate to request detail page
+      navigate(`/user/requestDetails`, { state: { requestId: record.key } });
+    } else {
+      message.warning('You do not have permission to view this request');
+    }
+  };
+
   const getTime = (dateString) => {
     if (!dateString) return 'N/A';
     return moment(dateString).format('DD/MM/YYYY - HH:mm');
@@ -112,6 +103,32 @@ const Request = () => {
         </Tag>
       );
   };
+
+  const cols = [
+    {
+      title: 'Tiêu Đề',
+      dataIndex: 'title',
+      render: (text, record) => (
+        <a onClick={() => handleRowClick(record)}>{text}</a>
+      ),
+    },
+    {
+      title: 'Đoàn Thể Yêu Cầu',
+      dataIndex: 'from',
+    },
+    {
+      title: 'Tới Đoàn Thể',
+      dataIndex: 'to',
+    },
+    {
+      title: 'Ngày Tạo',
+      dataIndex: 'createdAt',
+    },
+    {
+      title: 'Trạng Thái',
+      dataIndex: 'status',
+    },
+  ];
 
   return (
     <div className='flex flex-col'>

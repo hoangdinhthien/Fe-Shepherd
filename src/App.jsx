@@ -30,6 +30,7 @@ import { jwtDecode } from 'jwt-decode';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistor, store } from './redux/store';
 import Event from './pages/Event';
+import RequestDetail from './pages/RequestDetail';
 
 const AppRoutes = () => {
   const roles = [
@@ -156,6 +157,10 @@ const AppRoutes = () => {
           )
         }
       >
+        <Route
+          path='requestDetails'
+          element={<RequestDetail />}
+        />
         <Route
           path='dashboard'
           index
