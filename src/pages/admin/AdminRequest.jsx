@@ -42,7 +42,7 @@ const AdminRequest = () => {
     : { approved: 0, rejected: 0, pending: 0 };
 
   const pieData = {
-    labels: ['Approve', 'Reject', 'Pending'],
+    labels: ['Chấp nhận', 'Từ chối', 'Đang xử lý'],
     datasets: [
       {
         data: [
@@ -130,10 +130,10 @@ const AdminRequest = () => {
                 }}
               >
                 {request.isAccepted === true
-                  ? 'Approve'
+                  ? 'Chấp nhận'
                   : request.isAccepted === false
-                  ? 'Reject'
-                  : 'Pending'}
+                  ? 'Từ chối'
+                  : 'Đang xử lý'}
               </td>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                 {request.to}

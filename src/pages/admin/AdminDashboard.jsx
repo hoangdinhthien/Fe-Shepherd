@@ -1,4 +1,6 @@
 import { Line, Bar, Pie } from 'react-chartjs-2';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import AdminDashboardAPI from '../../apis/admin/admin_dashboard';
 
 ChartJS.register(
   CategoryScale,
@@ -23,41 +26,150 @@ ChartJS.register(
 );
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const [eventCount, setEventCount] = useState({ thisMonth: 0, lastMonth: 0 });
+  const [userCount, setUserCount] = useState({ thisMonth: 0, lastMonth: 0 });
+  const [requestCount, setRequestCount] = useState({
+    thisMonth: 0,
+    lastMonth: 0,
+  });
+  const [monthlyEventCounts, setMonthlyEventCounts] = useState([]);
+  const [requestFirst, setRequestFirst] = useState(null);
+
+  const eventChange = AdminDashboardAPI.calculatePercentageChange(
+    eventCount.thisMonth,
+    eventCount.lastMonth
+  );
+  const userChange = AdminDashboardAPI.calculatePercentageChange(
+    userCount.thisMonth,
+    userCount.lastMonth
+  );
+  const requestChange = AdminDashboardAPI.calculatePercentageChange(
+    requestCount.thisMonth,
+    requestCount.lastMonth
+  );
+
+  const [budget, setBudget] = useState(0);
+
+  useEffect(() => {
+    // Lấy tổng số sự kiện
+    AdminDashboardAPI.getEventCount().then((count) =>
+      setEventCount((prev) => ({ ...prev, thisMonth: count }))
+    );
+
+    // Lấy tổng số người dùng
+    AdminDashboardAPI.getUserCount().then((count) =>
+      setUserCount((prev) => ({ ...prev, thisMonth: count }))
+    );
+
+    // Lấy tổng số yêu cầu
+    AdminDashboardAPI.getRequestCount().then((count) =>
+      setRequestCount((prev) => ({ ...prev, thisMonth: count }))
+    );
+
+    //Lấy tổng số tiền thừa hoặc thiếu
+    AdminDashboardAPI.getSurplusOrDeficit().then((amount) => setBudget(amount));
+
+    // Lấy tổng số event của từng tháng
+    AdminDashboardAPI.getAllEvents().then((events) => {
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth(); // Tháng hiện tại (0 = Jan, 1 = Feb, ...)
+      const eventCountsByMonth = Array(currentMonth + 1).fill(0); // Tạo mảng chỉ cho các tháng đã qua
+
+      events.forEach((event) => {
+        const eventDate = new Date(event.fromDate);
+        if (eventDate.getFullYear() === currentYear) {
+          const month = eventDate.getMonth();
+          if (month <= currentMonth) {
+            eventCountsByMonth[month] += 1; // Đếm sự kiện cho tháng tương ứng nếu là tháng đã qua
+          }
+        }
+      });
+
+      // Cập nhật state với dữ liệu đã đếm chỉ cho các tháng đã qua
+      setMonthlyEventCounts(eventCountsByMonth);
+      AdminDashboardAPI.getRequestFirst().then((request) =>
+        setRequestFirst(request)
+      );
+    });
+  }, []);
+
   // Sample data for the charts
-  const recurringEventsData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  // const recurringEventsData = {
+  //   labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  //   datasets: [
+  //     {
+  //       label: 'Các sự kiện không định kỳ',
+  //       data: [12, 19, 3, 5, 2, 3],
+  //       backgroundColor: 'rgba(75, 192, 192, 0.2)',
+  //       borderColor: 'rgba(75, 192, 192, 1)',
+  //       borderWidth: 1,
+  //     },
+  //   ],
+  // };
+  const chartData = {
+    labels: [
+      'Tháng 1',
+      'Tháng 2',
+      'Tháng 3',
+      'Tháng 4',
+      'Tháng 5',
+      'Tháng 6',
+      'Tháng 7',
+      'Tháng 8',
+      'Tháng 9',
+      'Tháng 10',
+      'Tháng 11',
+      'Tháng 12',
+    ].slice(0, monthlyEventCounts.length),
     datasets: [
       {
-        label: 'Recurring Events',
-        data: [12, 19, 3, 5, 2, 3],
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1,
+        label: 'Các sự kiện không định kỳ',
+        data: monthlyEventCounts,
+        fill: false,
+        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+        pointBorderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 2,
+        tension: 0.3, // Làm đường biểu đồ mượt hơn
       },
     ],
   };
 
-  const latestRequestData = {
-    group: 'Group A',
-    leaderName: 'John Doe',
-    eventDate: '2023-05-01',
-    subject: 'Annual Retreat',
-    budget: '$5,000',
-    description: 'This is the description of the latest request.',
+  const chartRecuringEventOptions = {
+    maintainAspectRatio: false,
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+    },
   };
 
-  const nonRecurringEventsData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Non-Recurring Events',
-        data: [8, 12, 6, 9, 4, 7],
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
+  // const latestRequestData = {
+  //   group: 'Group A',
+  //   leaderName: 'John Doe',
+  //   eventDate: '2023-05-01',
+  //   towho: 'Council',
+  //   subject: 'Annual Retreat',
+  //   budget: '$5,000',
+  //   status: 'Pending',
+  //   description: 'This is the description of the latest request.',
+  // };
+
+  // const nonRecurringEventsData = {
+  //   labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  //   datasets: [
+  //     {
+  //       label: 'Non-Recurring Events',
+  //       data: [8, 12, 6, 9, 4, 7],
+  //       backgroundColor: 'rgba(255, 99, 132, 0.2)',
+  //       borderColor: 'rgba(255, 99, 132, 1)',
+  //       borderWidth: 1,
+  //     },
+  //   ],
+  // };
 
   const leaderActivitiesData = {
     labels: ['Leader A', 'Leader B', 'Leader C', 'Leader D', 'Leader E'],
@@ -107,104 +219,150 @@ const AdminDashboard = () => {
       },
     },
   };
+
   return (
     <div className='p-6 max-w-[1600px] mx-auto'>
       {/* Stats Overview */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
-        <div className='bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white'>
-          <h3 className='text-lg font-semibold'>Total Events</h3>
-          <p className='text-3xl font-bold mt-2'>156</p>
-          <p className='text-sm  mt-1'>+12% from last month</p>
+        <div
+          onClick={() => navigate('/admin/event')}
+          className='bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white'
+        >
+          <h3 className='text-lg font-semibold'>Tổng Số Sự Kiện</h3>
+          <p className='text-3xl font-bold mt-2'>{eventCount.thisMonth}</p>
+          {eventChange !== null && eventChange !== 0 && (
+            <p className='text-sm mt-1'>
+              {eventChange > 0 ? `+${eventChange}%` : `${eventChange}%`} So với
+              tháng trước
+            </p>
+          )}
         </div>
-        <div className='bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white'>
-          <h3 className='text-lg font-semibold'>Active Leaders</h3>
-          <p className='text-3xl font-bold mt-2'>48</p>
-          <p className='text-sm mt-1'>+5% from last month</p>
+        <div
+          // onClick={() => navigate('/admin/events')}
+          className='bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white'
+        >
+          <h3 className='text-lg font-semibold'>Số Người Dùng</h3>
+          <p className='text-3xl font-bold mt-2'>{userCount.thisMonth}</p>
+          {userChange !== null && userChange !== 0 && (
+            <p className='text-sm mt-1'>
+              {userChange > 0 ? `+${userChange}%` : `${userChange}%`} So với
+              tháng trước
+            </p>
+          )}
         </div>
-        <div className='bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white'>
-          <h3 className='text-lg font-semibold'>Total Budget</h3>
-          <p className='text-3xl font-bold mt-2'>$45,250</p>
-          <p className='text-sm mt-1'>+8% from last month</p>
+        <div
+          // onClick={() => navigate('/admin/events')}
+          className='bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white'
+        >
+          <h3 className='text-lg font-semibold'>Ngân Sách</h3>
+          <p className='text-3xl font-bold mt-2'>
+            {budget.toLocaleString()} VND
+          </p>
+          <p className='text-sm mt-1'></p>
         </div>
-        <div className='bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white'>
-          <h3 className='text-lg font-semibold'>Pending Requests</h3>
-          <p className='text-3xl font-bold mt-2'>23</p>
-          <p className='text-sm mt-1'>-2% from last month</p>
+        <div
+          onClick={() => navigate('/admin/request')}
+          className='bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white'
+        >
+          <h3 className='text-lg font-semibold'>Số Yêu Cầu</h3>
+          <p className='text-3xl font-bold mt-2'>{requestCount.thisMonth}</p>
+          {requestChange !== null && requestChange !== 0 && (
+            <p className='text-sm mt-1'>
+              {requestChange > 0 ? `+${requestChange}%` : `${requestChange}%`}{' '}
+              So với tháng trước
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-        {/* Main Chart */}
-        <div className='lg:col-span-2 bg-white rounded-xl shadow-lg p-6'>
-          <h2 className='text-xl font-bold mb-4'>Recurring Events Overview</h2>
-
-          <div className='h-[300px]'>
-            <Line
-              data={recurringEventsData}
-              options={chartOptions}
-            />
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
+        {/* Charts Section */}
+        <div
+          onClick={() => navigate('/admin/event')}
+          className='bg-white rounded-xl shadow-lg p-6 md:col-span-3'
+        >
+          <h2 className='text-xl font-bold mb-4'>
+            Tổng Quan Về Sự Kiện Không Định Kỳ
+          </h2>
+          <div className='bg-white rounded-lg p-4 width-full height-full'>
+            <Line data={chartData} options={chartRecuringEventOptions} />
           </div>
         </div>
 
         {/* Latest Request Card */}
-        <div className='bg-white rounded-xl shadow-lg p-6'>
-          <h2 className='text-xl font-bold mb-4'>Latest Request</h2>
-          <div className='space-y-3'>
-            <div className='flex justify-between items-center pb-2 border-b'>
-              <span className='font-semibold'>Group</span>
-              <span className='text-gray-600'>{latestRequestData.group}</span>
+        <div
+          onClick={() => navigate('/admin/request')}
+          className='bg-white rounded-xl shadow-lg p-6'
+        >
+          <h2 className='text-xl font-bold mb-4'>Yêu Cầu Mới Nhất</h2>
+          {requestFirst && (
+            <div className='space-y-3'>
+              <div className='flex justify-between items-center pb-2 border-b'>
+                <span className='font-semibold'>Nhóm</span>
+                <span className='text-gray-600'>
+                  {requestFirst.group?.groupName}
+                </span>
+              </div>
+              <div className='flex justify-between items-center pb-2 border-b'>
+                <span className='font-semibold'>Nhóm Trưởng</span>
+                <span className='text-gray-600'>{requestFirst.createdBy}</span>
+              </div>
+              <div className='flex justify-between items-center pb-2 border-b'>
+                <span className='font-semibold'>Ngày Tạo</span>
+                <span className='text-gray-600'>
+                  {new Date(requestFirst.createDate).toLocaleDateString(
+                    'vi-VN',
+                    {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    }
+                  )}
+                </span>
+              </div>
+              <div className='flex justify-between items-center pb-2 border-b'>
+                <span className='font-semibold'>Gửi Đến</span>
+                <span className='text-gray-600'>{requestFirst.to}</span>
+              </div>
+              <div className='flex justify-between items-center pb-2 border-b'>
+                <span className='font-semibold'>Ngân Sách Dự Kiến</span>
+                <span className='text-green-600 font-bold'>
+                  {requestFirst.event.totalCost} VND
+                </span>
+              </div>
+              <div className='flex justify-between items-center pb-2 border-b'>
+                <span className='font-semibold'>Trạng Thái</span>
+                <span
+                  className={
+                    requestFirst.isAccepted === null
+                      ? 'text-yellow-600 font-bold'
+                      : requestFirst.isAccepted
+                      ? 'text-green-600 font-bold'
+                      : 'text-red-600 font-bold'
+                  }
+                >
+                  {requestFirst.isAccepted === null
+                    ? 'Đang xử lý'
+                    : requestFirst.isAccepted
+                    ? 'Chấp nhận'
+                    : 'Từ chối'}
+                </span>
+              </div>
             </div>
-            <div className='flex justify-between items-center pb-2 border-b'>
-              <span className='font-semibold'>Leader</span>
-              <span className='text-gray-600'>
-                {latestRequestData.leaderName}
-              </span>
-            </div>
-            <div className='flex justify-between items-center pb-2 border-b'>
-              <span className='font-semibold'>Event Date</span>
-              <span className='text-gray-600'>
-                {latestRequestData.eventDate}
-              </span>
-            </div>
-            <div className='flex justify-between items-center pb-2 border-b'>
-              <span className='font-semibold'>Budget</span>
-              <span className='text-green-600 font-bold'>
-                {latestRequestData.budget}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Bottom Charts */}
         <div className='bg-white rounded-xl shadow-lg p-6'>
-          <h2 className='text-xl font-bold mb-4'>Non-Recurring Events</h2>
-
-          <div className='h-[300px]'>
-            <Bar
-              data={nonRecurringEventsData}
-              options={chartOptions}
-            />
-          </div>
-        </div>
-        <div className='bg-white rounded-xl shadow-lg p-6'>
           <h2 className='text-xl font-bold mb-4'>Leader Activities</h2>
-
           <div className='h-[300px]'>
-            <Pie
-              data={leaderActivitiesData}
-              options={chartOptions}
-            />
+            <Pie data={leaderActivitiesData} options={chartOptions} />
           </div>
         </div>
-        <div className='bg-white rounded-xl shadow-lg p-6'>
+        <div className='bg-white rounded-xl shadow-lg p-6 md:col-span-3'>
           <h2 className='text-xl font-bold mb-4'>Transactions Overview</h2>
-
           <div className='h-[300px]'>
-            <Line
-              data={transactionsData}
-              options={chartOptions}
-            />
+            <Line data={transactionsData} options={chartOptions} />
           </div>
         </div>
       </div>

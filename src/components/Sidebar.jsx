@@ -23,9 +23,10 @@ const userMenuItems = [
 ];
 
 const adminMenuItems = [
-  { icon: MdDashboard, title: 'Dashboard', path: '/admin/dashboard' },
-  { icon: MdRequestPage, title: 'Request', path: '/admin/request' },
-  { icon: FaCalendarAlt, title: 'Calendar', path: '/admin/calendar' },
+  { icon: MdDashboard, title: 'Bảng Điều Khiển', path: '/admin/dashboard' },
+  { icon: FaClipboardList, title: 'Yêu Cầu', path: '/admin/request' },
+  { icon: FaCalendarAlt, title: 'Lịch', path: '/admin/calendar' },
+  { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/admin/event' },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
