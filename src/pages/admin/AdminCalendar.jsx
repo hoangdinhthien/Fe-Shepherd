@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
+import 'moment/locale/vi'; // Import Vietnamese locale for moment
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Modal, Typography } from 'antd';
 import AdminCalendarAPI from '../../apis/admin/admin_calendar_api';
@@ -9,13 +10,21 @@ import CustomAdminHeaderBar from '../../components/calendar/CustomAdminHeaderBar
 const { Title, Text } = Typography;
 const localizer = momentLocalizer(moment);
 
+moment.locale('vi'); // Set the global locale to Vietnamese
+
 const getWeekRange = (weekNumber) => {
   const now = moment()
     .startOf('year')
     .add(weekNumber - 1, 'weeks');
   const startOfWeek = now.clone().startOf('week');
   const endOfWeek = now.clone().endOf('week');
-  return { start: startOfWeek, end: endOfWeek };
+  return {
+    start: startOfWeek,
+    end: endOfWeek,
+    range: `${startOfWeek.format('DD MMMM YYYY')} - ${endOfWeek.format(
+      'DD MMMM YYYY'
+    )}`, // Format in Vietnamese
+  };
 };
 
 const AdminCalendar = () => {
@@ -32,7 +41,7 @@ const AdminCalendar = () => {
       const ceremonies = await AdminCalendarAPI.getAllCeremonies();
       console.log('Fetched data:', ceremonies);
 
-      // Kiểm tra xem ceremonies có chứa dữ liệu không và là một mảng
+      // Format ceremony data to be used in calendar
       const ceremonyData = Array.isArray(ceremonies)
         ? ceremonies.map((ceremony) => ({
             id: ceremony.id,
@@ -40,16 +49,16 @@ const AdminCalendar = () => {
             start: new Date(ceremony.fromDate),
             end: new Date(ceremony.toDate),
             description: ceremony.description,
-            activities: ceremony.activityPresets || [], // Sử dụng activityPresets nếu có
+            activities: ceremony.activityPresets || [], // Use activityPresets if available
           }))
         : [];
-      setCeremonies(ceremonyData); // Cập nhật trực tiếp danh sách ceremonies
+      setCeremonies(ceremonyData); // Directly update the ceremony list
     } catch (error) {
       console.error('Failed to fetch ceremonies:', error);
     }
   };
 
-  // Gọi fetchCeremonies mỗi khi currentDate thay đổi
+  // Fetch ceremonies whenever currentDate changes
   useEffect(() => {
     fetchCeremonies(currentDate);
   }, [currentDate]);
@@ -137,7 +146,7 @@ const AdminCalendar = () => {
               level={4}
               className='text-lg font-semibold text-blue-500 mb-2'
             >
-              Activities
+              Hoạt động
             </Title>
             {Array.isArray(selectedCeremony.activities) &&
             selectedCeremony.activities.length > 0 ? (
@@ -161,7 +170,7 @@ const AdminCalendar = () => {
                 ))}
               </ul>
             ) : (
-              <Text>No activities available</Text>
+              <Text>Không có hoạt động nào</Text>
             )}
           </div>
         )}

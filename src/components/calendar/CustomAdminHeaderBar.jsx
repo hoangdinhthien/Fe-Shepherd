@@ -1,8 +1,11 @@
 import { Select, Button } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import moment from 'moment';
+import 'moment/locale/vi'; // Import ngôn ngữ tiếng Việt cho moment
 
-const { Option } = Select; // Ensure Option is imported correctly from Select
+moment.locale('vi'); // Thiết lập ngôn ngữ tiếng Việt cho moment
+
+const { Option } = Select;
 
 const CustomAdminHeaderBar = ({
   onNavigate,
@@ -10,17 +13,30 @@ const CustomAdminHeaderBar = ({
   handleWeekChange,
   handleEditButtonClick,
 }) => {
-  // Utility function to get the start and end dates of a specific week
-  const getWeekRange = (weekNumber) => {
-    const now = moment()
-      .startOf('year')
-      .add(weekNumber - 1, 'weeks');
-    const startOfWeek = now.clone().startOf('week');
-    const endOfWeek = now.clone().endOf('week');
-    return `${startOfWeek.format('DD MMM YYYY')} - ${endOfWeek.format(
-      'DD MMM YYYY'
-    )}`;
-  };
+  // Xác định tuần hiện tại
+  const currentWeekNumber = moment().week();
+  const currentYear = moment().year();
+
+  // Tính toán tuần bắt đầu và tuần kết thúc trong khoảng thời gian 12 tháng
+  const startDate = moment().subtract(6, 'months').startOf('week');
+  const endDate = moment().add(6, 'months').endOf('week');
+
+  // Tạo danh sách tuần từ tuần bắt đầu đến tuần kết thúc
+  const weeksInRange = [];
+  let week = startDate.clone();
+
+  while (week.isSameOrBefore(endDate)) {
+    weeksInRange.push({
+      weekNumber: week.week(),
+      year: week.year(),
+      range: `${week
+        .startOf('week')
+        .format('DD [tháng] MM [năm] YYYY')} - ${week
+        .endOf('week')
+        .format('DD [tháng] MM [năm] YYYY')}`,
+    });
+    week.add(1, 'weeks');
+  }
 
   return (
     <div
@@ -33,35 +49,58 @@ const CustomAdminHeaderBar = ({
         width: '97%',
       }}
     >
-      {/* Navigation Buttons */}
+      {/* Nút điều hướng */}
       <div className='rbc-btn-group' style={{ display: 'flex' }}>
         <button type='button' onClick={() => onNavigate('PREV')}>
-          Previous Week
+          Tuần Trước
         </button>
         <button type='button' onClick={() => onNavigate('TODAY')}>
-          Current Week
+          Tuần Này
         </button>
         <button type='button' onClick={() => onNavigate('NEXT')}>
-          Next Week
+          Tuần Sau
         </button>
       </div>
 
-      {/* Week Selection Dropdown */}
+      {/* Dropdown chọn tuần */}
       <Select
         value={currentWeek}
         onChange={handleWeekChange}
+        dropdownMatchSelectWidth={false} // Đảm bảo dropdown có chiều rộng động
         style={{
-          width: 300,
+          width: 'auto', // Chiều rộng tự động
+          minWidth: 350, // Đảm bảo đủ rộng để hiển thị toàn bộ
           marginLeft: '10px',
           marginRight: '10px',
           textAlign: 'center',
         }}
       >
-        {[...Array(52).keys()].map((week) => (
-          <Option key={week + 1} value={week + 1}>
-            {getWeekRange(week + 1)}
-          </Option>
-        ))}
+        {weeksInRange.map(({ weekNumber, year, range }) => {
+          const isCurrentWeek =
+            weekNumber === currentWeekNumber && year === currentYear;
+          const isSelectedWeek = weekNumber === currentWeek;
+
+          return (
+            <Option
+              key={`${year}-${weekNumber}`}
+              value={weekNumber}
+              // Thêm inline style để đánh dấu tuần hiện tại và tuần đang chọn
+              style={{
+                backgroundColor: isSelectedWeek
+                  ? '#e0f7fa' // Màu xanh nhạt cho tuần được chọn
+                  : isCurrentWeek
+                  ? '#f0f0f0' // Màu xám nhẹ cho tuần hiện tại
+                  : 'transparent',
+                fontWeight: isSelectedWeek || isCurrentWeek ? 'bold' : 'normal',
+                color: isSelectedWeek ? '#00796b' : 'inherit', // Màu chữ xanh đậm cho tuần đang chọn
+                minWidth: '350px', // Đảm bảo mỗi Option đủ rộng
+                whiteSpace: 'nowrap', // Ngăn chặn xuống dòng
+              }}
+            >
+              {range}
+            </Option>
+          );
+        })}
       </Select>
 
       <Button
@@ -75,7 +114,7 @@ const CustomAdminHeaderBar = ({
           justifyItems: 'right',
         }}
       >
-        Edit
+        Chỉnh Sửa
       </Button>
     </div>
   );
