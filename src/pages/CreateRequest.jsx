@@ -267,6 +267,8 @@ export default function CreateRequest() {
         duration: 0,
       });
 
+      calculateTotalCost();
+
       const data = {
         // groupId: selectedGroup,
         eventName: formData.eventName,
@@ -275,6 +277,7 @@ export default function CreateRequest() {
         toDate: formData.toDate.toISOString(),
         isPublic: formData.isPublic,
         ceremonyID: formData.ceremonyID,
+        totalCost: totalCost,
         listActivities: activities.map((activity) => ({
           activityName: activity.title,
           description: activity.description,

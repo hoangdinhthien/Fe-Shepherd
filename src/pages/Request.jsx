@@ -52,8 +52,10 @@ const Request = () => {
           status: getStatusTag(item.isAccepted),
           event: item.event,
           group: item.group,
+          createdUser: item.createdUser,
         }))
       );
+
       setTotal(res.pagination.totalCount);
     } catch (error) {
       message.error(error.message);
@@ -69,8 +71,26 @@ const Request = () => {
 
   const handleRowClick = (record) => {
     if (user.user.role === COUNCIL_ROLE) {
-      // navigate to request detail page
-      navigate(`/user/requestDetails`, { state: { requestId: record.key } });
+      const requestData = {
+        key: record.key,
+        title: record.title,
+        from: record.from,
+        to: record.to,
+        content: record.content,
+        createdAt: record.createdAt,
+        eventId: record.event?.id, // Use the event ID for fetching details
+        groupId: record.group?.id,
+        createdUser: record.createdUser,
+        type: 'Tạo sự kiện', // Pass the type for the details request
+        status:
+          record.status === 'Accepted'
+            ? 'Accepted'
+            : record.status === 'Rejected'
+            ? 'Rejected'
+            : 'Pending',
+      };
+
+      navigate(`/user/requestDetails`, { state: { request: requestData } });
     } else {
       message.warning('You do not have permission to view this request');
     }
