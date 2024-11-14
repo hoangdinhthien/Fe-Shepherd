@@ -1,4 +1,4 @@
-import { Select, DatePicker, message } from 'antd';
+import { Select, DatePicker, message, Input } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 import { IoArrowBack } from 'react-icons/io5';
@@ -6,19 +6,22 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import group_api from '../apis/group_api';
 import RequestAPI from '../apis/request_api';
-import event_api from '../apis/event_api';
-import activity_api from '../apis/activity/activity_api';
+import moment from 'moment';
 
 const { Option } = Select;
 
 export default function CreateRequest() {
   // ------STATES------
-  const [groups, setGroups] = useState([]);
+  const [userGroups, setUserGroups] = useState([]);
+  const [groupsOptions, setGroupsOptions] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [loading, setLoading] = useState(false);
   const [requestTypes, setRequestTypes] = useState([]);
   const [selectedRequestType, setSelectedRequestType] = useState('');
   const [activities, setActivities] = useState([]);
+  const [totalCost, setTotalCost] = useState(0);
+
+  // ---------------
 
   // Select `currentUser` and rehydration state separately
   const currentUser = useSelector((state) => state.user.currentUser);
@@ -27,6 +30,23 @@ export default function CreateRequest() {
   // ---------------
 
   useEffect(() => {
+    const fetchAllGroups = async () => {
+      try {
+        setLoading(true);
+        const response = await group_api.getAllGroups();
+        setGroupsOptions(
+          response.result.map((group) => ({
+            label: group.groupName,
+            value: group.id,
+          }))
+        );
+      } catch (error) {
+        console.error('Error fetching all groups:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const fetchGroups = async () => {
       if (!currentUser || !currentUser.user?.id) {
         console.log('Current user id is not available');
@@ -36,10 +56,11 @@ export default function CreateRequest() {
       try {
         setLoading(true);
         const response = await group_api.getGroupsForUser(currentUser.user.id);
-        setGroups(response.result);
-        if (response.result.length > 0) {
-          setSelectedGroup(response.result[0].id); // Set initial group selection
-        }
+        setUserGroups(response.result);
+
+        // if (response.result.length > 0) {
+        //   setSelectedGroup(response.result[0].id); // Set initial group selection
+        // }
       } catch (error) {
         console.error('Error fetching groups:', error);
       } finally {
@@ -58,6 +79,7 @@ export default function CreateRequest() {
 
     // Only run after rehydration and when currentUser is available
     if (rehydrated && currentUser) {
+      fetchAllGroups();
       fetchGroups();
       fetchRequestTypes();
     }
@@ -80,7 +102,9 @@ export default function CreateRequest() {
     description: '',
     fromDate: null,
     toDate: null,
-    eventCost: '',
+    isPublic: true,
+    ceremonyID: null,
+    listActivities: [],
   });
 
   // ---------------
@@ -96,91 +120,24 @@ export default function CreateRequest() {
 
   // ---------------
 
-  const groupIds =
-    currentUser.listGroupRole
-      .filter(
-        ({ roleName, groupName }) =>
-          roleName === LEADER || groupName?.includes(COUNCIL)
-      )
-      .map(({ groupId }) => groupId) || [];
+  // const groupIds =
+  //   currentUser.listGroupRole
+  //     .filter(
+  //       ({ roleName, groupName }) =>
+  //         roleName === LEADER || groupName?.includes(COUNCIL)
+  //     )
+  //     .map(({ groupId }) => groupId) || [];
 
-  const data = {
-    eventName: formData.eventName,
-    description: formData.description,
-    fromDate: formData.fromDate ? formData.fromDate.toISOString() : null,
-    toDate: formData.toDate ? formData.toDate.toISOString() : null,
-    isPublic: true,
-    totalCost: 0,
-    // groupIds: groupIds,
-    ceremonyID: null,
-  };
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-
-    if (
-      !formData.fromDate ||
-      !formData.toDate ||
-      !formData.eventName ||
-      !formData.description
-    ) {
-      message.error('Please fill all the fields.');
-      return;
-    }
-
-    const loadingKey = 'loading';
-    try {
-      setLoading(true);
-      message.loading({
-        content: 'Submitting request...',
-        key: loadingKey,
-        duration: 0,
-      });
-
-      // Construct the data object as per API requirements
-      const data = {
-        eventName: formData.eventName,
-        description: formData.description,
-        fromDate: formData.fromDate.toISOString(),
-        toDate: formData.toDate.toISOString(),
-        isPublic: true,
-        ceremonyID: null,
-        listActivities: activities.map((activity) => ({
-          activityName: activity.title,
-          description: activity.description,
-          startTime: activity.startTime
-            ? activity.startTime.toISOString()
-            : undefined,
-          endTime: activity.endTime
-            ? activity.endTime.toISOString()
-            : undefined,
-          groups: [
-            {
-              groupID: selectedGroup,
-              cost: activity.budget,
-            },
-          ],
-        })),
-      };
-
-      console.log('Data being sent to API:', data);
-      await RequestAPI.createRequest(selectedGroup, data);
-
-      message.success({
-        content: 'Request submitted successfully!',
-        key: loadingKey,
-      });
-      console.log('Request submitted:', data);
-    } catch (error) {
-      message.error({
-        content: `Error submitting request: ${error.message}`,
-        key: loadingKey,
-      });
-      console.error('Error submitting request:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const data = {
+  //   eventName: formData.eventName,
+  //   description: formData.description,
+  //   fromDate: formData.fromDate ? formData.fromDate.toISOString() : null,
+  //   toDate: formData.toDate ? formData.toDate.toISOString() : null,
+  //   isPublic: true,
+  //   totalCost: 0,
+  //   // groupIds: groupIds,
+  //   ceremonyID: null,
+  // };
 
   // ---------------
 
@@ -202,10 +159,10 @@ export default function CreateRequest() {
       ...prevActivities,
       {
         title: '',
-        date: null,
-        budget: '',
-        manpower: '',
         description: '',
+        startTime: null,
+        endTime: null,
+        selectedGroups: [],
       },
     ]);
   };
@@ -231,6 +188,128 @@ export default function CreateRequest() {
 
   // ---------------
 
+  const handleActivityStartTimeChange = (index, date) => {
+    setActivities((prevActivities) => {
+      const updatedActivities = [...prevActivities];
+      updatedActivities[index].startTime = date ? date.toISOString() : null;
+      return updatedActivities;
+    });
+  };
+
+  const handleActivityEndTimeChange = (index, date) => {
+    setActivities((prevActivities) => {
+      const updatedActivities = [...prevActivities];
+      updatedActivities[index].endTime = date ? date.toISOString() : null;
+      return updatedActivities;
+    });
+  };
+
+  // ---------------
+
+  const handleActivityGroupChange = (index, selectedGroups) => {
+    setActivities((prevActivities) => {
+      const updatedActivities = [...prevActivities];
+      updatedActivities[index].selectedGroups = selectedGroups.map(
+        (groupId) => ({
+          groupID: groupId,
+          cost: 0, //default cost
+        })
+      );
+      return updatedActivities;
+    });
+    calculateTotalCost();
+  };
+
+  const handleactivityGroupCostChange = (activityIndex, groupIndex, cost) => {
+    setActivities((prevActivities) => {
+      const updatedActivities = [...prevActivities];
+      updatedActivities[activityIndex].selectedGroups[groupIndex].cost =
+        parseFloat(cost) || 0;
+      return updatedActivities;
+    });
+    calculateTotalCost();
+  };
+
+  // ---------------
+
+  const calculateTotalCost = () => {
+    const total = activities.reduce((acc, activity) => {
+      const activityCost = activity.selectedGroups.reduce(
+        (sum, group) => sum + group.cost,
+        0
+      );
+      return acc + activityCost;
+    }, 0);
+    setTotalCost(total);
+  };
+
+  // ---------------
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+
+    if (
+      !formData.fromDate ||
+      !formData.toDate ||
+      !formData.eventName ||
+      !formData.description
+    ) {
+      message.error('Please fill all the fields.');
+      return;
+    }
+
+    const loadingKey = 'loading';
+    try {
+      setLoading(true);
+      message.loading({
+        content: 'Submitting request...',
+        key: loadingKey,
+        duration: 0,
+      });
+
+      const data = {
+        // groupId: selectedGroup,
+        eventName: formData.eventName,
+        description: formData.description,
+        fromDate: formData.fromDate.toISOString(),
+        toDate: formData.toDate.toISOString(),
+        isPublic: formData.isPublic,
+        ceremonyID: formData.ceremonyID,
+        listActivities: activities.map((activity) => ({
+          activityName: activity.title,
+          description: activity.description,
+          startTime: activity.startTime
+            ? moment(activity.startTime).format('HH:mm:ss')
+            : null,
+          endTime: activity.endTime
+            ? moment(activity.endTime).format('HH:mm:ss')
+            : null,
+          groups: activity.selectedGroups.map((group) => ({
+            groupID: group.groupID,
+            cost: group.cost,
+          })),
+        })),
+      };
+
+      console.log('Data being sent to API:', JSON.stringify(data));
+      await RequestAPI.createRequest(selectedGroup, data);
+
+      message.success({
+        content: 'Request submitted successfully!',
+        key: loadingKey,
+      });
+      console.log('Request submitted:', data);
+    } catch (error) {
+      message.error({
+        content: `Error submitting request: ${error.message}`,
+        key: loadingKey,
+      });
+      console.error('Error details:', error.response?.data?.errors || error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <form className='p-6 max-w-6xl mx-auto '>
       {/* First section */}
@@ -247,25 +326,28 @@ export default function CreateRequest() {
       </div>
       <hr className='border-t border-gray-400 my-6' />
       {/* Second section */}
+
       {/* Show request types dropdown */}
       <div className='flex justify-end mb-6 items-center'>
         <label className='mr-2 text-lg font-medium'>Chọn Yêu Cầu:</label>
-        <select
-          className='border p-2 rounded-lg w-48'
+        <Select
+          className='rounded-lg w-48 h-[40px]'
           value={selectedRequestType}
-          onChange={(e) => handleRequestTypeChange(e.target.value)}
+          onChange={handleRequestTypeChange}
+          placeholder='Chọn yêu cầu'
         >
-          {/* <option>Type</option> */}
           {requestTypes.map((type, index) => (
-            <option
+            <Option
               key={index}
               value={type}
+              className='text-black text-xl'
             >
               {type}
-            </option>
+            </Option>
           ))}
-        </select>
+        </Select>
       </div>
+
       <hr className='border-t border-gray-400 my-6' />
 
       {/* Third section */}
@@ -281,14 +363,13 @@ export default function CreateRequest() {
       <hr className='border-t border-gray-400 my-6' />
 
       {/* Display Activities Section if "Create Event" is selected */}
-      {selectedRequestType === 'Create Event' && (
+      {selectedRequestType === 'Tạo sự kiện' && (
         <>
           {/* Fourth section */}
           <div className='mb-6'>
             <h2 className='text-xl font-semibold mb-4'>Chi Tiết Sự Kiện</h2>
 
             <div className='flex justify-between mb-4'>
-              {/* Group selection dropdown  */}
               <div className='flex items-center space-x-2 w-[45%]'>
                 <label className='text-base'>Chọn đoàn thể:</label>
                 <Select
@@ -297,7 +378,7 @@ export default function CreateRequest() {
                   className='w-full h-[40px]'
                   placeholder='Select a group'
                 >
-                  {groups?.map((group) => (
+                  {userGroups?.map((group) => (
                     <Option
                       key={group.id}
                       value={group.id}
@@ -308,21 +389,8 @@ export default function CreateRequest() {
                   ))}
                 </Select>
               </div>
-
-              {/* Event Cost input  */}
-              <div className='flex items-center space-x-2 w-[45%]'>
-                <label className='text-base'>Chi Phí Sự Kiện:</label>
-                <input
-                  id='eventCost'
-                  type='number'
-                  name='eventCost'
-                  value={formData.eventCost}
-                  onChange={handleChange}
-                  placeholder='Nhập chi phí'
-                  className='border p-2 rounded w-full h-[40px]'
-                />
-              </div>
             </div>
+
             <input
               id='eventName'
               type='text'
@@ -380,6 +448,7 @@ export default function CreateRequest() {
                 >
                   <DeleteOutlined /> <span className='text-lg'>Xóa</span>
                 </button>
+
                 <input
                   type='text'
                   name='title'
@@ -388,40 +457,71 @@ export default function CreateRequest() {
                   onChange={(e) => handleActivityChange(index, e)}
                   className='border p-2 rounded w-full mb-2'
                 />
-                <DatePicker.RangePicker
+                <DatePicker
                   showTime
                   format='DD/MM/YYYY - HH:mm'
-                  value={[formData.fromDate, formData.toDate]}
+                  value={activity.startTime ? moment(activity.startTime) : null}
                   onChange={(date) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      fromDate: date ? date[0] : null,
-                      toDate: date ? date[1] : null,
-                    }))
+                    handleActivityStartTimeChange(index, date)
                   }
-                  placeholder={[
-                    'Thời gian bắt đầu hoạt động',
-                    'Thời gian kết thúc hoạt động',
-                  ]}
+                  placeholder='Thời gian bắt đầu hoạt động'
                   size='large'
                   className='border border-[#EEE] p-2 rounded w-full mb-4 font-semibold'
                 />
-                <input
-                  type='number'
-                  name='budget'
-                  placeholder='Chi Phí Dự Kiến'
-                  value={activity.budget}
-                  onChange={(e) => handleActivityChange(index, e)}
-                  className='border p-2 rounded w-full mb-2'
+
+                <DatePicker
+                  showTime
+                  format='DD/MM/YYYY - HH:mm'
+                  value={activity.endTime ? moment(activity.endTime) : null}
+                  onChange={(date) => handleActivityEndTimeChange(index, date)}
+                  placeholder='Thời gian kết thúc hoạt động'
+                  size='large'
+                  className='border border-[#EEE] p-2 rounded w-full mb-4 font-semibold'
                 />
-                <input
-                  type='number'
-                  name='manpower'
-                  placeholder='Số Lượng Nhân Lực Dự Kiến'
-                  value={activity.manpower}
-                  onChange={(e) => handleActivityChange(index, e)}
-                  className='border p-2 rounded w-full mb-2'
+
+                <label className='text-base'>Chọn Nhóm và Chi Phí:</label>
+                <Select
+                  mode='multiple'
+                  allowClear
+                  placeholder='Chọn Nhóm'
+                  style={{
+                    width: '100%',
+                    height: '40px',
+                    marginBottom: '10px',
+                  }}
+                  value={activity.selectedGroups.map((group) => group.groupID)}
+                  options={groupsOptions}
+                  onChange={(value) => handleActivityGroupChange(index, value)}
                 />
+
+                {activity.selectedGroups.map((group, groupIndex) => (
+                  <div
+                    key={group.groupID}
+                    className='flex items-center space-x-2'
+                  >
+                    <span>
+                      Nhập Chi Phí Cho{' '}
+                      {
+                        groupsOptions.find((g) => g.value === group.groupID)
+                          ?.label
+                      }
+                    </span>
+                    <Input
+                      type='number'
+                      placeholder='Nhập Chi Phí'
+                      value={group.cost}
+                      onChange={(e) =>
+                        handleactivityGroupCostChange(
+                          index,
+                          groupIndex,
+                          e.target.value
+                        )
+                      }
+                      style={{ width: '100px' }}
+                    />
+                  </div>
+                ))}
+
                 <textarea
                   name='description'
                   placeholder='Mô tả hoạt động'
@@ -439,11 +539,15 @@ export default function CreateRequest() {
               <PlusOutlined /> Thêm hoạt động
             </button>
           </div>
+
+          <p className='text-lg font-semibold text-right'>
+            Tổng Chi Phí Sự Kiện: {totalCost} VND
+          </p>
         </>
       )}
 
       {/* Display Generate Account Section if "Generate Account" is selected */}
-      {selectedRequestType === 'Generate Account' && (
+      {selectedRequestType === 'Tạo tài khoản' && (
         <>
           <div className='mb-6'>
             <h2 className='text-xl font-semibold mb-4'>Chi Tiết Tài Khoản</h2>
