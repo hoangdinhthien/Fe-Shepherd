@@ -138,6 +138,10 @@ const AppRoutes = () => {
           element={<AdminCalendar />}
         />
         <Route
+          path='event'
+          element={<Event />}
+        />
+        <Route
           path='profile'
           element={<Profile />}
         />
