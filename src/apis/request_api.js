@@ -15,9 +15,9 @@ class RequestAPI extends BaseAPI {
     return super.getCustom(url, params);
   }
 
-  getRequestDetails(eventId, type) {
+  getRequestDetails(requestId) {
     const url = `${this.url}/GetRequestDetails`;
-    return super.getCustom(url, { EventId: eventId, Type: type });
+    return super.getCustom(url, { requestId });
   }
 
   // get request type

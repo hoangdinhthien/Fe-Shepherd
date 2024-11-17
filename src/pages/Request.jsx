@@ -90,7 +90,9 @@ const Request = () => {
             : 'Pending',
       };
 
-      navigate(`/user/requestDetails`, { state: { request: requestData } });
+      navigate(`/user/requestDetails`, {
+        state: { request: { requestId: record.key } },
+      });
     } else {
       message.warning('You do not have permission to view this request');
     }

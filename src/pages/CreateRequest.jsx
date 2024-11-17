@@ -335,19 +335,23 @@ export default function CreateRequest() {
         <label className='mr-2 text-lg font-medium'>Chọn Yêu Cầu:</label>
         <Select
           className='rounded-lg w-48 h-[40px]'
-          value={selectedRequestType}
+          value={selectedRequestType || undefined}
           onChange={handleRequestTypeChange}
-          placeholder='Chọn yêu cầu'
+          placeholder='Chọn Yêu Cầu'
         >
-          {requestTypes.map((type, index) => (
-            <Option
-              key={index}
-              value={type}
-              className='text-black text-xl'
-            >
-              {type}
-            </Option>
-          ))}
+          {requestTypes?.length > 0 ? (
+            requestTypes.map((type, index) => (
+              <Option
+                key={index}
+                value={type}
+                className='text-black text-xl'
+              >
+                {type}
+              </Option>
+            ))
+          ) : (
+            <Option disabled>No request types available</Option>
+          )}
         </Select>
       </div>
 
@@ -357,9 +361,11 @@ export default function CreateRequest() {
       <div className='mb-6'>
         <h2 className='text-xl font-semibold mb-4'>Người yêu cầu</h2>
         <input
+          value={currentUser?.user?.name || ''}
           type='text'
           placeholder='Tên người yêu cầu'
           className='border p-2 rounded w-full'
+          disabled
         />
       </div>
 
@@ -373,13 +379,13 @@ export default function CreateRequest() {
             <h2 className='text-xl font-semibold mb-4'>Chi Tiết Sự Kiện</h2>
 
             <div className='flex justify-between mb-4'>
-              <div className='flex items-center space-x-2 w-[45%]'>
-                <label className='text-base'>Chọn đoàn thể:</label>
+              <div className='flex items-center justtify-center space-x-4 w-[50%]'>
+                <label className='text-base w-[30%]'>Chọn đoàn thể:</label>
                 <Select
                   value={selectedGroup}
                   onChange={handleGroupChange}
                   className='w-full h-[40px]'
-                  placeholder='Select a group'
+                  placeholder='Chọn Đoàn Thể Bạn Tham Gia'
                 >
                   {userGroups?.map((group) => (
                     <Option
