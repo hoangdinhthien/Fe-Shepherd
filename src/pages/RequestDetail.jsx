@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import RequestAPI from '../apis/request_api';
 import UserAPI from '../apis/user_api';
 import GroupAPI from '../apis/group_api';
 import { message, Tag, Divider, Button } from 'antd';
 import moment from 'moment';
+import request_api from '../apis/request_api';
 
 export default function RequestDetail() {
   const [requestDetails, setRequestDetails] = useState(null);
   const [createdByName, setCreatedByName] = useState('');
   const [groupNames, setGroupNames] = useState({});
   const location = useLocation();
-  const { eventId, type } = location.state.request;
+  const { requestId } = location.state.request;
 
   useEffect(() => {
     const fetchRequestDetails = async () => {
       try {
-        const response = await RequestAPI.getRequestDetails(eventId, type);
+        // Fetch specific request details
+        const response = await request_api.getRequestDetails(requestId);
         if (response.success) {
           const data = response.data;
           setRequestDetails(data);
@@ -40,16 +41,33 @@ export default function RequestDetail() {
             });
             setGroupNames(namesMap);
           }
+
+          // Fetch all requests to get the type
+          const allRequestsResponse = await request_api.getRequests();
+          if (allRequestsResponse.result) {
+            const matchedRequest = allRequestsResponse.result.find(
+              (req) => req.id === requestId
+            );
+            if (matchedRequest) {
+              setRequestDetails((prev) => ({
+                ...prev,
+                type: matchedRequest.type || 'Unknown',
+              }));
+            }
+          } else {
+            message.warning('Unable to fetch all requests to retrieve type.');
+          }
         } else {
           message.error(response.message || 'Failed to fetch details.');
         }
       } catch (error) {
         message.error('An error occurred while fetching request details.');
+        console.log(error);
       }
     };
 
     fetchRequestDetails();
-  }, [eventId, type]);
+  }, [requestId]);
 
   const formatDateTime = (date) => {
     return date ? moment(date).format('DD/MM/YYYY - HH:mm') : 'N/A';
@@ -80,7 +98,7 @@ export default function RequestDetail() {
         </div>
         <div className='flex space-x-2'>
           <p className='font-semibold text-gray-700'>Loại Yêu Cầu:</p>
-          <p className='text-gray-600'>{type}</p>
+          <p className='text-gray-600'>{requestDetails?.type || 'N/A'}</p>
         </div>
       </div>
 
