@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef,useState } from 'react';
 import {
   FaCheck,
   FaComment,
@@ -9,34 +9,39 @@ import {
   FaClipboardList,
   FaTimes,
 } from 'react-icons/fa';
+  import NotificationApi from '../apis/notification_api';
+
 
 export default function NotificationPopup({
   isOpen,
   onClose,
-  notifications,
   removeNotification,
   handleAccept,
   handleReject,
 }) {
   const dropdownRef = useRef(null);
 
-  // useEffect(() => {
-  //   const handleClickOutside = (event) => {
-  //     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-  //       isOpen(false);
-  //     }
-  //   };
+  const [notifications, setNotifications] = useState([]);
 
-  //   document.addEventListener('mousedown', handleClickOutside);
-  //   return () => {
-  //     document.removeEventListener('mousedown', handleClickOutside);
-  //   };
-  // }, [isOpen]);
+  const GetNotification = async () => {
+    try {
+      const data = await NotificationApi.getNotifications();
+      setNotifications(data.result);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      GetNotification();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        onClose(); // Close the modal if clicked outside
+        onClose();
       }
     };
 
