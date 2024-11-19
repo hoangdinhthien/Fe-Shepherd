@@ -238,7 +238,7 @@ const AdminDashboard = () => {
           )}
         </div>
         <div
-          // onClick={() => navigate('/admin/events')}
+          onClick={() => navigate('/admin/user')}
           className='bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white'
         >
           <h3 className='text-lg font-semibold'>Số Người Dùng</h3>
@@ -251,7 +251,7 @@ const AdminDashboard = () => {
           )}
         </div>
         <div
-          // onClick={() => navigate('/admin/events')}
+          onClick={() => navigate('/admin/budget')}
           className='bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white'
         >
           <h3 className='text-lg font-semibold'>Ngân Sách</h3>
@@ -305,7 +305,9 @@ const AdminDashboard = () => {
               </div>
               <div className='flex justify-between items-center pb-2 border-b'>
                 <span className='font-semibold'>Nhóm Trưởng</span>
-                <span className='text-gray-600'>{requestFirst.createdBy}</span>
+                <span className='text-gray-600'>
+                  {requestFirst.createdUser.name}
+                </span>
               </div>
               <div className='flex justify-between items-center pb-2 border-b'>
                 <span className='font-semibold'>Ngày Tạo</span>

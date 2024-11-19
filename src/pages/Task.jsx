@@ -4,8 +4,9 @@ import { FaCalendarAlt, FaUser } from 'react-icons/fa';
 import GroupAPI from '../apis/group_api';
 import TaskAPI from '../apis/task_api';
 import { useSelector } from 'react-redux';
-import { Select, Spin } from 'antd';
+import { Select, Spin, Dropdown, Menu, Button } from 'antd';
 import TaskCreateButton from '../components/task/TaskCreateButton';
+import { DownOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -33,6 +34,17 @@ export default function Task() {
     } finally {
       setLoading(false);
     }
+  };
+  const tasks = [
+    { id: 1, title: 'Công việc 1' },
+    { id: 2, title: 'Công việc 2' },
+    { id: 3, title: 'Công việc 3' },
+  ];
+
+  // Hàm để xử lý hành động "Chấp nhận" và "Từ chối"
+  const handleAction = (taskId, action) => {
+    console.log(`Task ID: ${taskId}, Action: ${action}`);
+    // Ở đây bạn có thể thực hiện thêm các hành động khác như cập nhật trạng thái công việc trên server
   };
 
   useEffect(() => {
@@ -120,43 +132,78 @@ export default function Task() {
   };
   const columnOrder = ['To Do', 'In-Progress', 'Review', 'Done'];
 
+  const taskMenu = (
+    <Menu>
+      {tasks.map((task) => (
+        <Menu.Item key={task.id}>
+          <div>
+            <span>{task.title}</span>
+            <div>
+              <Button
+                type='link'
+                onClick={() => handleAction(task.id, 'accept')}
+                style={{ marginRight: 8 }}
+              >
+                Chấp nhận
+              </Button>
+              <Button
+                type='link'
+                danger
+                onClick={() => handleAction(task.id, 'reject')}
+              >
+                Từ chối
+              </Button>
+            </div>
+          </div>
+        </Menu.Item>
+      ))}
+    </Menu>
+  );
+
   return (
     <div className='mx-auto p-4'>
-      <h1 className='text-xl'>Task</h1>
+      <h1 className='text-xl'>Công Việc</h1>
       <div className='flex justify-between'>
-        <TaskCreateButton />
-        <div className='mb-4'>
-          <label className='mr-2'>Select Group:</label>
-          <Select
-            value={selectedGroup}
-            onChange={handleGroupChange}
-            style={{ width: 200 }}
-            placeholder='Select a group'
-          >
-            {groups?.map((group) => (
-              <Option
-                key={group.id}
-                value={group.id}
+        <TaskCreateButton selectedGroup={selectedGroup} />
+        <div className='flex justify-between'>
+          <div className='flex pr-4'>
+            <div className='mb-4'>
+              {/* Dropdown cho các công việc được bàn giao */}
+              <Dropdown
+                className='mr-4' // Tạo khoảng cách bên phải cho dropdown
+                overlay={taskMenu}
+                trigger={['click']}
               >
-                {group.groupName}
-              </Option>
-            ))}
-          </Select>
+                <Button>
+                  Công việc bàn giao <DownOutlined />
+                </Button>
+              </Dropdown>
+            </div>
+            <div className='mb-4'>
+              <label className='mr-2'>Chọn Nhóm:</label>
+              <Select
+                value={selectedGroup}
+                onChange={handleGroupChange}
+                style={{ width: 200 }}
+                placeholder='Select a group'
+              >
+                {groups?.map((group) => (
+                  <Option key={group.id} value={group.id}>
+                    {group.groupName}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          </div>
         </div>
       </div>
-      <Spin
-        spinning={loading}
-        tip='Loading...'
-      >
+      <Spin spinning={loading} tip='Loading...'>
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='grid grid-cols-4 gap-4'>
             {Object.keys(columns)
               .sort((a, b) => columnOrder.indexOf(a) - columnOrder.indexOf(b))
               .map((status) => (
-                <Droppable
-                  key={status}
-                  droppableId={status}
-                >
+                <Droppable key={status} droppableId={status}>
                   {(provided) => (
                     <div
                       ref={provided.innerRef}

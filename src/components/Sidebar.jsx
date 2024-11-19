@@ -11,10 +11,11 @@ import { RxActivityLog } from 'react-icons/rx';
 import { useSelector } from 'react-redux';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import HeaderLogo from '../assets/header-logo-img.png';
+import { FaUserAlt, FaMoneyBillWave } from 'react-icons/fa';
 
 const userMenuItems = [
   { icon: MdDashboard, title: 'Bảng Điều Khiển', path: '/user/dashboard' },
-  { icon: RxActivityLog, title: 'Nhiệm Vụ', path: '/user/task' },
+  { icon: RxActivityLog, title: 'Công Việc', path: '/user/task' },
   { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/user/event' },
   { icon: FaClipboardList, title: 'Yêu Cầu', path: '/user/request' },
   { icon: FaCalendarAlt, title: 'Lịch', path: '/user/calendar' },
@@ -27,6 +28,8 @@ const adminMenuItems = [
   { icon: FaClipboardList, title: 'Yêu Cầu', path: '/admin/request' },
   { icon: FaCalendarAlt, title: 'Lịch', path: '/admin/calendar' },
   { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/admin/event' },
+  { icon: FaUserAlt, title: 'Người Dùng', path: '/admin/user' },
+  { icon: FaMoneyBillWave, title: 'Ngân Sách', path: '/admin/budget' },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
