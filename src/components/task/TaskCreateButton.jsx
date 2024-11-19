@@ -2,27 +2,22 @@ import { useState } from 'react';
 import TaskCreatePopUp from './TaskCreatePopUp';
 import { FaPlus } from 'react-icons/fa';
 
-export default function TaskCreateButton() {
+export default function TaskCreateButton({ selectedGroup }) {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const timer = (secs) => {
-    if (loading) return;
-    setLoading(true);
-    setTimeout(() => {
-      setIsModalOpen(true);
-      setLoading(false);
-    }, secs * 1000);
+  const openPopup = () => {
+    setIsModalOpen(true);
   };
 
   return (
     <>
       <button
         disabled={loading}
-        onClick={() => timer(2)}
+        onClick={openPopup}
         type='button'
-        className={` px-6 me-2 text-sm font-medium rounded-md border-none bg-blue-500 text-white border-gray-400 ${
-          !loading && ' hover:bg-blue-700'
+        className={`px-6 me-2 text-sm font-medium rounded-md border-none bg-blue-500 text-white border-gray-400 ${
+          !loading && 'hover:bg-blue-700'
         } inline-flex items-center duration-300 focus:outline-none focus:ring-4 focus:ring-gray-300`}
       >
         {loading && (
@@ -45,11 +40,12 @@ export default function TaskCreateButton() {
           </svg>
         )}
         <FaPlus className='mr-2' />
-        {loading ? 'Loading...' : 'Create'}
+        {loading ? 'Loading...' : 'Tạo Công Việc'}
       </button>
       <TaskCreatePopUp
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        groupId={selectedGroup} // Truyền selectedGroup vào TaskCreatePopUp
       />
     </>
   );

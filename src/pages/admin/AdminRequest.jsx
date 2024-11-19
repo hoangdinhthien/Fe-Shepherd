@@ -1,20 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import RequestAPI from '../../apis/admin/request_api';
 import { Pie } from 'react-chartjs-2';
+import { FaSearch } from 'react-icons/fa';
 
 const AdminRequest = () => {
   const [requests, setRequests] = useState([]);
+  const [filteredRequests, setFilteredRequests] = useState([]); // Danh sách đã lọc
   const [loading, setLoading] = useState(true);
+  const [searchKeyword, setSearchKeyword] = useState(''); // Từ khóa tìm kiếm
+  const [sortOption, setSortOption] = useState('Tất cả'); // Tùy chọn sắp xếp
 
+  // Lấy dữ liệu từ API
   useEffect(() => {
     const fetchRequests = async () => {
       try {
         const data = await RequestAPI.getAllRequests();
-        console.log('Fetched data:', data);
-        // Ensure the data is an array before setting it
-        setRequests(Array.isArray(data['result']) ? data['result'] : []);
+        console.log('Dữ liệu đã lấy:', data);
+        const result = Array.isArray(data['result']) ? data['result'] : [];
+        setRequests(result);
+        setFilteredRequests(result); // Ban đầu hiển thị toàn bộ
       } catch (error) {
-        console.error('Failed to fetch requests:', error.message);
+        console.error('Không thể lấy dữ liệu:', error.message);
       } finally {
         setLoading(false);
       }
@@ -23,34 +29,58 @@ const AdminRequest = () => {
     fetchRequests();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  // Hàm xử lý tìm kiếm (chỉ tìm kiếm theo tiêu đề)
+  const handleSearchChange = (e) => {
+    const keyword = e.target.value.toLowerCase();
+    setSearchKeyword(keyword);
 
-  // Log requests before using reduce
-  console.log('Requests before reduce:', requests);
+    // Lọc danh sách giao dịch theo tiêu đề
+    const filtered = requests.filter((request) =>
+      request.title.toLowerCase().includes(keyword)
+    );
+    setFilteredRequests(filtered);
+  };
 
-  // Ensure requests is an array before calling .reduce()
-  const statusCounts = Array.isArray(requests)
-    ? requests.reduce(
-        (acc, request) => {
-          if (request.isAccepted === true) acc.approved += 1;
-          else if (request.isAccepted === false) acc.rejected += 1;
-          else acc.pending += 1;
-          return acc;
-        },
-        { approved: 0, rejected: 0, pending: 0 }
-      )
-    : { approved: 0, rejected: 0, pending: 0 };
+  // Hàm xử lý sắp xếp
+  const handleSortChange = (e) => {
+    const option = e.target.value;
+    setSortOption(option);
+
+    let sortedRequests = [...requests];
+    if (option === 'Chấp nhận') {
+      sortedRequests = sortedRequests.filter((req) => req.isAccepted === true);
+    } else if (option === 'Từ chối') {
+      sortedRequests = sortedRequests.filter((req) => req.isAccepted === false);
+    } else if (option === 'Đang xử lý') {
+      sortedRequests = sortedRequests.filter((req) => req.isAccepted === null);
+    }
+
+    setFilteredRequests(sortedRequests);
+  };
+
+  if (loading) return <p>Đang tải...</p>;
+
+  // Thống kê trạng thái
+  const statusCounts = requests.reduce(
+    (acc, request) => {
+      if (request.isAccepted === true) acc.approved += 1;
+      else if (request.isAccepted === false) acc.rejected += 1;
+      else acc.pending += 1;
+      return acc;
+    },
+    { approved: 0, rejected: 0, pending: 0 }
+  );
 
   const pieData = {
-    labels: ['Chấp nhận', 'Từ chối', 'Đang xử lý'],
+    labels: ['Chấp nhận', 'Đang xử lý', 'Từ chối'],
     datasets: [
       {
         data: [
           statusCounts.approved,
-          statusCounts.rejected,
           statusCounts.pending,
+          statusCounts.rejected,
         ],
-        backgroundColor: ['#4caf50', '#f44336', '#ff9800'],
+        backgroundColor: ['#4caf50', '#ff9800', '#f44336'],
       },
     ],
   };
@@ -59,9 +89,6 @@ const AdminRequest = () => {
     plugins: {
       legend: {
         position: 'right',
-        labels: {
-          padding: 20, // Add spacing between the chart and the legend items
-        },
       },
     },
     responsive: true,
@@ -69,6 +96,7 @@ const AdminRequest = () => {
 
   return (
     <div style={{ width: '80%', margin: 'auto', paddingTop: '20px' }}>
+      {/* Biểu đồ Pie */}
       <div
         style={{
           display: 'flex',
@@ -78,10 +106,9 @@ const AdminRequest = () => {
       >
         <div
           style={{
-            width: '600px', // Adjust width to make the box wider
+            width: '600px',
             height: '320px',
-            padding: '20px',
-            backgroundColor: '#C0C0C0',
+            backgroundColor: '#F5F5F5',
             borderRadius: '8px',
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
             display: 'flex',
@@ -93,22 +120,85 @@ const AdminRequest = () => {
         </div>
       </div>
 
+      {/* Thanh công cụ */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+        }}
+      >
+        <span className='text-2xl '>Danh Sách Giao Dịch</span>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '400px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            padding: '5px 10px',
+            backgroundColor: '#fff',
+            marginRight: '20px',
+          }}
+        >
+          <FaSearch style={{ marginRight: '10px', color: '#888' }} />
+          <input
+            type='text'
+            placeholder='Tìm kiếm theo tiêu đề...'
+            value={searchKeyword}
+            onChange={(e) => handleSearchChange(e)} // Chỉ tìm kiếm theo tiêu đề
+            style={{
+              flex: 1,
+              border: 'none',
+              outline: 'none',
+              fontSize: '14px',
+            }}
+          />
+        </div>
+        <div>
+          <span style={{ marginRight: '10px' }}>Sắp xếp theo:</span>
+          <select
+            value={sortOption} // Gắn state giá trị sắp xếp
+            onChange={handleSortChange} // Thay đổi giá trị sắp xếp
+            style={{
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid #ccc',
+            }}
+          >
+            <option value='Tất cả'>Tất cả</option>
+            <option value='Chấp nhận'>Chấp nhận</option>
+            <option value='Đang xử lý'>Đang xử lý</option>
+            <option value='Từ chối'>Từ chối</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Bảng dữ liệu */}
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ backgroundColor: '#f0f0f0' }}>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Title</th>
             <th style={{ border: '1px solid #ddd', padding: '8px' }}>
-              Content
+              Tiêu đề
             </th>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Status</th>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>To</th>
             <th style={{ border: '1px solid #ddd', padding: '8px' }}>
-              Create Date
+              Nội dung
+            </th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>
+              Trạng thái
+            </th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>
+              Người nhận
+            </th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>
+              Ngày tạo
             </th>
           </tr>
         </thead>
         <tbody>
-          {requests.map((request) => (
+          {filteredRequests.map((request) => (
             <tr key={request.id}>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                 {request.title}
@@ -139,7 +229,7 @@ const AdminRequest = () => {
                 {request.to}
               </td>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                {new Date(request.createDate).toLocaleDateString()}
+                {new Date(request.createDate).toLocaleDateString('vi-VN')}
               </td>
             </tr>
           ))}
