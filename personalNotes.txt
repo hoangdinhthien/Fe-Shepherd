@@ -1,0 +1,11 @@
+------ACCEPT/REJECT REQUEST------
+. Pending ko comment => status chưa duyệt, có hiện checkbox
+. Pending có comment => status cần sửa (leader), có hiện checkbox (council)
+. Accept => ko hiện checkbox
+. Reject => hiện checkbox và comment
+. CÓ checkbox trong request detail + từ chối yêu cầu + comments => isAccepted trong list activities = false, isAccepted request = false (rejected)
+. CÓ checkbox trong request detail + gửi lại + comments => isAccepted trong list activities = false, isAccepted request = null (pending)
+. KHÔNG CÓ checkbox trong request detail + chấp nhận yêu cầu + comments => isAccepted trong list activities = true, isAccepted request = true (accepted)
+
+
+
