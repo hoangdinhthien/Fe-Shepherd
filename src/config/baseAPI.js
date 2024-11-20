@@ -110,7 +110,8 @@ class BaseAPI {
     getDataKey = true
   ) {
     return this.handleRequest(
-      axiosClient.put(url, this.appendFormData(data), config),
+      // axiosClient.put(url, this.appendFormData(data), config),
+      axiosClient.put(url, data, config),
       getDataKey
     );
   }
