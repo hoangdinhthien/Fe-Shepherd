@@ -116,6 +116,15 @@ class BaseAPI {
     );
   }
 
+  patchCustom(
+    url,
+    data,
+    config = { headers: { 'Content-Type': 'application/json' } },
+    getDataKey = true
+  ) {
+    return this.handleRequest(axiosClient.patch(url, data, config), getDataKey);
+  }
+
   deleteCustom(url, id = null, getDataKey = true) {
     if (id === null) {
       return this.handleRequest(axiosClient.delete(url), getDataKey);
