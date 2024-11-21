@@ -120,27 +120,6 @@ export default function CreateRequest() {
 
   // ---------------
 
-  // const groupIds =
-  //   currentUser.listGroupRole
-  //     .filter(
-  //       ({ roleName, groupName }) =>
-  //         roleName === LEADER || groupName?.includes(COUNCIL)
-  //     )
-  //     .map(({ groupId }) => groupId) || [];
-
-  // const data = {
-  //   eventName: formData.eventName,
-  //   description: formData.description,
-  //   fromDate: formData.fromDate ? formData.fromDate.toISOString() : null,
-  //   toDate: formData.toDate ? formData.toDate.toISOString() : null,
-  //   isPublic: true,
-  //   totalCost: 0,
-  //   // groupIds: groupIds,
-  //   ceremonyID: null,
-  // };
-
-  // ---------------
-
   const onReset = () => {
     setFormData({
       eventName: '',

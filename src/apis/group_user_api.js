@@ -1,10 +1,8 @@
-import { sup } from "framer-motion/client";
-import BaseAPI from "../config/baseAPI";
-import axiosClient from "../config/axios";
+import BaseAPI from '../config/baseAPI';
 
 class GroupUserAPI extends BaseAPI {
   constructor() {
-    super("group-user");
+    super('group-user');
   }
 
   getGroupMembers(groupId) {

@@ -25,6 +25,11 @@ class RequestAPI extends BaseAPI {
     const url = `${this.url}/GetType`;
     return super.getCustom(url);
   }
+
+  updateRequestStatus(requestId, data) {
+    const url = `${this.url}/ApproveRequest`;
+    return super.putCustom(url, data);
+  }
 }
 
 export default new RequestAPI();

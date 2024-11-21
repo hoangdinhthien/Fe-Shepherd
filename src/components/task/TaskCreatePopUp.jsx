@@ -1,129 +1,187 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { Modal, Input, Select, Button, Spin } from 'antd';
 import { FaTimes } from 'react-icons/fa';
+import TaskAPI from '../../apis/task_api';
+import GroupUserAPI from '../../apis/group_user_api';
+import ActivityAPI from '../../apis/activity/activity_api';
+import useFetchGroups from '../../hooks/useFetchGroups';
+
+const { Option } = Select;
+const { TextArea } = Input;
 
 export default function TaskCreatePopUp({ isOpen, onClose }) {
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className='fixed inset-0 z-40 bg-black bg-opacity-50 w-full h-full flex justify-center items-center'
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className='relative p-4 w-full max-w-md max-h-full'
-            onClick={(e) => e.stopPropagation()} // To prevent closing when clicking inside the modal
-          >
-            <div className='relative bg-white rounded-lg shadow dark:bg-gray-700'>
-              <div className='flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600'>
-                <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
-                  Create New Product
-                </h3>
-                <button
-                  onClick={onClose}
-                  type='button'
-                  className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white'
-                >
-                  <FaTimes className='w-3 h-3' />
-                  <span className='sr-only'>Close modal</span>
-                </button>
-              </div>
+  const [title, setTitle] = useState('');
+  const [price, setPrice] = useState('');
+  const [activityId, setActivityId] = useState('');
+  const [userID, setUserId] = useState('');
+  const [description, setDescription] = useState('');
+  const [activities, setActivities] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-              <form className='p-4 md:p-5'>
-                <div className='grid gap-4 mb-4 grid-cols-2'>
-                  <div className='col-span-2'>
-                    <label
-                      htmlFor='name'
-                      className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                    >
-                      Name
-                    </label>
-                    <input
-                      type='text'
-                      name='name'
-                      id='name'
-                      className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                      placeholder='Type product name'
-                      required=''
-                    />
-                  </div>
-                  <div className='col-span-2 sm:col-span-1'>
-                    <label
-                      htmlFor='price'
-                      className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                    >
-                      Price
-                    </label>
-                    <input
-                      type='number'
-                      name='price'
-                      id='price'
-                      className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                      placeholder='$2999'
-                      required=''
-                    />
-                  </div>
-                  <div className='col-span-2 sm:col-span-1'>
-                    <label
-                      htmlFor='category'
-                      className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                    >
-                      Category
-                    </label>
-                    <select
-                      id='category'
-                      className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                    >
-                      <option selected=''>Select category</option>
-                      <option value='TV'>TV/Monitors</option>
-                      <option value='PC'>PC</option>
-                      <option value='GA'>Gaming/Console</option>
-                      <option value='PH'>Phones</option>
-                    </select>
-                  </div>
-                  <div className='col-span-2'>
-                    <label
-                      htmlFor='description'
-                      className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                    >
-                      Product Description
-                    </label>
-                    <textarea
-                      id='description'
-                      rows='4'
-                      className='block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                      placeholder='Write product description here'
-                    ></textarea>
-                  </div>
-                </div>
-                <button
-                  type='submit'
-                  className='text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
+  const { groups, loading: groupsLoading } = useFetchGroups();
+  const selectedGroupId = groups.length > 0 ? groups[0].id : null;
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const response = await ActivityAPI.getActivitiesByGroup(
+          selectedGroupId
+        );
+        console.log('activity', response);
+        setActivities(response.result || []); // Lưu danh sách hoạt động vào state
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+      }
+    };
+
+    if (isOpen && selectedGroupId) {
+      fetchActivities();
+    }
+  }, [isOpen, selectedGroupId]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await GroupUserAPI.getGroupMembers(selectedGroupId);
+        console.log('group user:', response);
+        setUsers(response.result || []); // Lưu danh sách hoạt động vào state
+      } catch (error) {
+        console.error('Error fetching group user:', error);
+      }
+    };
+
+    if (isOpen && selectedGroupId) {
+      fetchUsers();
+    }
+  }, [isOpen, selectedGroupId]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const taskData = {
+      title,
+      description,
+      cost: parseFloat(price),
+      activityID: activityId,
+      groupID: selectedGroupId,
+      userID: userID,
+      // isConfirmed: true,
+    };
+    console.log(JSON.stringify(taskData));
+
+    try {
+      const response = await TaskAPI.createTask(taskData);
+
+      if (response.success) {
+        setTitle('');
+        setPrice('');
+        setActivityId('');
+        setUserId('');
+        setDescription('');
+        onClose();
+      } else {
+        setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
+        console.error('Failed to create task:', response.message);
+      }
+    } catch (error) {
+      setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
+      console.error('Error creating task:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      footer={null}
+      className='max-w-lg w-full max-h-['
+    >
+      <form
+        className='p-3'
+        onSubmit={handleSubmit}
+      >
+        <div className='grid gap-4'>
+          <div>
+            <label>Tiêu Đề</label>
+            <Input
+              type='text'
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              placeholder='Tiêu đề của công việc'
+            />
+          </div>
+          <div>
+            <label>Nhập Chi Phí</label>
+            <Input
+              type='number'
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              // required
+              placeholder='VND'
+            />
+          </div>
+          <div>
+            <label>Chọn Hoạt Động</label>
+            <Select
+              value={activityId}
+              onChange={(value) => setActivityId(value)}
+              required
+              placeholder='Chọn Hoạt Động'
+              className='w-full'
+            >
+              {activities.map((activity) => (
+                <Option
+                  key={activity.id}
+                  value={activity.activityId}
                 >
-                  <svg
-                    className='me-1 -ms-1 w-5 h-5'
-                    fill='currentColor'
-                    viewBox='0 0 20 20'
-                    xmlns='http://www.w3.org/2000/svg'
-                  >
-                    <path
-                      fillRule='evenodd'
-                      d='M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z'
-                      clipRule='evenodd'
-                    ></path>
-                  </svg>
-                  Add new product
-                </button>
-              </form>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+                  {activity.activityName}
+                </Option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <label>Chọn Người Phụ Trách</label>
+            <Select
+              value={userID}
+              onChange={(value) => setUserId(value)}
+              required
+              placeholder='Chọn Người Phụ Trách'
+              className='w-full'
+            >
+              {users.map((user) => (
+                <Option key={user.id}>{user.name}</Option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <label>Mô Tả Công Việc</label>
+            <TextArea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              placeholder='Viết mô tả công việc'
+            />
+          </div>
+        </div>
+        {/* Hiển thị thông báo lỗi nếu có */}
+        {errorMessage && (
+          <p className='text-red-600 text-center mt-2'>{errorMessage}</p>
+        )}
+        <Button
+          type='primary'
+          htmlType='submit'
+          disabled={isLoading}
+          className='w-full mt-4'
+        >
+          {isLoading ? <Spin /> : 'Thêm Công Việc'}
+        </Button>
+      </form>
+    </Modal>
   );
 }
