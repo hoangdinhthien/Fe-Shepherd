@@ -1,13 +1,13 @@
-import BaseAPI from "../config/baseAPI";
+import BaseAPI from '../config/baseAPI';
 
 class NotificationAPI extends BaseAPI {
-    constructor() {
-        super("notification");
-    }
-    
-    getNotifications(params) {
-        return super.getAll(params);
-    }
+  constructor() {
+    super('notification/GetAll');
+  }
+
+  getNotifications(params) {
+    return super.getAll(params);
+  }
 }
 
-export default new NotificationAPI;
+export default new NotificationAPI();
