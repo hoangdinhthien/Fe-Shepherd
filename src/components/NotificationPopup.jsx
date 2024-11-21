@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useRef,useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FaCheck,
   FaComment,
@@ -9,8 +9,7 @@ import {
   FaClipboardList,
   FaTimes,
 } from 'react-icons/fa';
-  import NotificationApi from '../apis/notification_api';
-
+import NotificationApi from '../apis/notification_api';
 
 export default function NotificationPopup({
   isOpen,
@@ -20,21 +19,36 @@ export default function NotificationPopup({
   handleReject,
 }) {
   const dropdownRef = useRef(null);
+  const listRef = useRef(null);
 
   const [notifications, setNotifications] = useState([]);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const GetNotification = async () => {
+  const GetNotification = async (page) => {
+    if (isLoading || !hasMore) return;
+    setIsLoading(true);
     try {
-      const data = await NotificationApi.getNotifications();
-      setNotifications(data.result);
+      const data = await NotificationApi.getNotifications({ PageNumber: page });
+      if (data.result.length === 0) {
+        setHasMore(false);
+      } else {
+        setNotifications((prev) => [...prev, ...data.result]);
+        setPageNumber(page + 1);
+      }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
+    setIsLoading(false);
   };
 
   useEffect(() => {
     if (isOpen) {
-      GetNotification();
+      setNotifications([]);
+      setPageNumber(1);
+      setHasMore(true);
+      GetNotification(1);
     }
   }, [isOpen]);
 
@@ -56,6 +70,15 @@ export default function NotificationPopup({
     };
   }, [isOpen, onClose]);
 
+  const handleScroll = () => {
+    if (listRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+      if (scrollTop + clientHeight >= scrollHeight - 5) {
+        GetNotification(pageNumber);
+      }
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -65,15 +88,19 @@ export default function NotificationPopup({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className=' fixed right-0 mt-24 mr-6 w-80 bg-white rounded-lg shadow-xl z-50'
+          className='fixed right-0 mt-24 mr-6 w-80 bg-white rounded-lg shadow-xl z-50'
         >
           <div className='p-4 border-b'>
             <h2 className='text-xl font-semibold text-gray-800'>
               Notifications
             </h2>
           </div>
-          <div className='overflow-y-auto max-h-80'>
-            {notifications.length === 0 ? (
+          <div
+            ref={listRef}
+            onScroll={handleScroll}
+            className='overflow-y-auto max-h-80'
+          >
+            {notifications.length === 0 && !isLoading ? (
               <p className='text-center text-gray-500 py-4'>No notifications</p>
             ) : (
               notifications.map((notification) => (
@@ -100,7 +127,7 @@ export default function NotificationPopup({
                       <p className='text-sm text-gray-800'>
                         {notification.content}
                       </p>
-                      <p className='text-xs text-gray-500 mt-1'>Just now</p>
+                      <p className='text-xs text-gray-500 mt-1'>{notification.timeAgo}</p>
                     </div>
                     <button
                       onClick={() => removeNotification(notification.id)}
@@ -127,6 +154,9 @@ export default function NotificationPopup({
                   )}
                 </div>
               ))
+            )}
+            {isLoading && (
+              <p className='text-center text-gray-500 py-4'>Loading...</p>
             )}
           </div>
         </motion.div>
