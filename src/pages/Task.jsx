@@ -202,9 +202,7 @@ export default function Task() {
         !allowedColumns.includes(source.droppableId) ||
         !allowedColumns.includes(destination.droppableId)
       ) {
-        message.warning(
-          'Bạn không được phép bỏ vào cột này trừ khi bạn là leader'
-        );
+        message.warning('Bạn không được phép bỏ vào cột này.');
         return;
       }
     }
@@ -294,14 +292,14 @@ export default function Task() {
         <div className='flex items-center'>
           <div className='mr-4'>
             {/* Dropdown cho các công việc được bàn giao */}
-            <Dropdown
+            {/* <Dropdown
               menu={taskMenu}
               trigger={['click']}
             >
               <Button className='flex items-center bg-blue-500 text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'>
                 Công việc bàn giao <DownOutlined className='ml-2' />
               </Button>
-            </Dropdown>
+            </Dropdown> */}
           </div>
           <div>
             <label className='mr-2'>Chọn Nhóm:</label>
