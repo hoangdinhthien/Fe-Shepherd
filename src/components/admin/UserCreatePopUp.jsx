@@ -9,12 +9,33 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('Thành viên');
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); // Chỉ hiển thị lỗi chung
+  const [fieldErrors, setFieldErrors] = useState({}); // Để hiển thị lỗi chi tiết theo trường
+  const [errorMessage, setErrorMessage] = useState(''); // Lỗi chung nếu có
+
+  const validateFields = () => {
+    const errors = {};
+    if (!name.trim()) errors.name = 'Họ và tên không được để trống';
+    if (!phone.trim()) errors.phone = 'Số điện thoại không được để trống';
+    if (!email.trim()) errors.email = 'Email không được để trống';
+    if (!password.trim()) errors.password = 'Mật khẩu không được để trống';
+    if (password.length < 6)
+      errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+
+    return errors;
+  };
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setErrorMessage(''); // Xóa thông báo lỗi cũ trước khi gửi yêu cầu mới
+    setFieldErrors({});
+    setErrorMessage('');
+
+    const errors = validateFields();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setIsLoading(false);
+      return;
+    }
 
     const userData = { name, phone, email, password, role };
 
@@ -22,22 +43,15 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
       const response = await AdminUserAPI.createUser(userData);
 
       if (response.success) {
-        // Nếu tạo tài khoản thành công, gọi callback để cập nhật danh sách người dùng và đóng modal
         if (typeof onUserCreated === 'function') {
-          onUserCreated(response.data.newUser); // Truyền người dùng mới trở lại AdminUser
+          onUserCreated(response.data.newUser);
         }
-        onClose(); // Đóng popup sau khi tạo thành công
+        onClose();
       } else {
-        // Hiển thị lỗi chung nếu không thành công
-        setErrorMessage('Không thể tạo tài khoản. Vui lòng thử lại.');
-        console.error(
-          'Lỗi tạo tài khoản:',
-          response.message || 'Lỗi không xác định'
-        );
+        setErrorMessage(response.message || 'Không thể tạo tài khoản.');
       }
     } catch (error) {
-      // Hiển thị lỗi chung cho người dùng và in chi tiết lỗi ra console
-      setErrorMessage('Không thể tạo tài khoản. Vui lòng thử lại.');
+      setErrorMessage('Có lỗi xảy ra. Vui lòng thử lại sau.');
       console.error('Lỗi khi tạo tài khoản:', error);
     } finally {
       setIsLoading(false);
@@ -70,10 +84,14 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
                     type='text'
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    required
-                    className='w-full p-2 border rounded'
+                    className={`w-full p-2 border rounded ${
+                      fieldErrors.name ? 'border-red-600' : ''
+                    }`}
                     placeholder='Nhập họ và tên'
                   />
+                  {fieldErrors.name && (
+                    <p className='text-red-600 text-sm'>{fieldErrors.name}</p>
+                  )}
                 </div>
                 <div className='mb-4'>
                   <label>Số điện thoại</label>
@@ -81,10 +99,14 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
                     type='text'
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    required
-                    className='w-full p-2 border rounded'
+                    className={`w-full p-2 border rounded ${
+                      fieldErrors.phone ? 'border-red-600' : ''
+                    }`}
                     placeholder='Nhập số điện thoại'
                   />
+                  {fieldErrors.phone && (
+                    <p className='text-red-600 text-sm'>{fieldErrors.phone}</p>
+                  )}
                 </div>
                 <div className='mb-4'>
                   <label>Email</label>
@@ -92,10 +114,14 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
                     type='email'
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className='w-full p-2 border rounded'
+                    className={`w-full p-2 border rounded ${
+                      fieldErrors.email ? 'border-red-600' : ''
+                    }`}
                     placeholder='Nhập email'
                   />
+                  {fieldErrors.email && (
+                    <p className='text-red-600 text-sm'>{fieldErrors.email}</p>
+                  )}
                 </div>
                 <div className='mb-4'>
                   <label>Mật Khẩu</label>
@@ -103,10 +129,16 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
                     type='password'
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className='w-full p-2 border rounded'
+                    className={`w-full p-2 border rounded ${
+                      fieldErrors.password ? 'border-red-600' : ''
+                    }`}
                     placeholder='Nhập mật khẩu'
                   />
+                  {fieldErrors.password && (
+                    <p className='text-red-600 text-sm'>
+                      {fieldErrors.password}
+                    </p>
+                  )}
                 </div>
                 <div className='mb-4'>
                   <label>Vai Trò</label>
@@ -122,7 +154,6 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
                   </select>
                 </div>
 
-                {/* Thông báo lỗi chung */}
                 {errorMessage && (
                   <p className='text-red-600 text-center mb-4'>
                     {errorMessage}
@@ -132,7 +163,9 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
                 <button
                   type='submit'
                   disabled={isLoading}
-                  className='bg-blue-600 text-white p-2 rounded w-full'
+                  className={`${
+                    isLoading ? 'bg-gray-400' : 'bg-blue-600'
+                  } text-white p-2 rounded w-full`}
                 >
                   {isLoading ? 'Đang tạo...' : 'Tạo Tài Khoản'}
                 </button>

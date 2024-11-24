@@ -45,7 +45,8 @@ export default function TaskCreateButton({ selectedGroup }) {
       <TaskCreatePopUp
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        groupId={selectedGroup} // Truyền selectedGroup vào TaskCreatePopUp
+        groupId={selectedGroup}
+        // Truyền selectedGroup vào TaskCreatePopUp
       />
     </>
   );

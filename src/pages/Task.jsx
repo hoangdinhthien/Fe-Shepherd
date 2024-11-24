@@ -4,7 +4,7 @@ import { FaCalendarAlt, FaUser } from 'react-icons/fa';
 import GroupAPI from '../apis/group_api';
 import TaskAPI from '../apis/task_api';
 import { useSelector } from 'react-redux';
-import { Select, Spin, Dropdown, Menu, Button } from 'antd';
+import { Select, Spin, Dropdown, Button } from 'antd';
 import TaskCreateButton from '../components/task/TaskCreateButton';
 import { DownOutlined } from '@ant-design/icons';
 
@@ -19,6 +19,7 @@ export default function Task() {
 
   const currentUser = useSelector((state) => state.user.currentUser);
   const rehydrated = useSelector((state) => state._persist?.rehydrated);
+  console.log('currentUser:', currentUser);
 
   const fetchGroups = async () => {
     if (!currentUser || !currentUser.user?.id) return;
@@ -132,33 +133,33 @@ export default function Task() {
   };
   const columnOrder = ['To Do', 'In-Progress', 'Review', 'Done'];
 
-  const taskMenu = (
-    <Menu>
-      {tasks.map((task) => (
-        <Menu.Item key={task.id}>
+  // Thay đổi `taskMenu` thành cấu trúc menu của Ant Design
+  const taskMenu = {
+    items: tasks.map((task) => ({
+      key: task.id,
+      label: (
+        <div>
+          <span>{task.title}</span>
           <div>
-            <span>{task.title}</span>
-            <div>
-              <Button
-                type='link'
-                onClick={() => handleAction(task.id, 'accept')}
-                style={{ marginRight: 8 }}
-              >
-                Chấp nhận
-              </Button>
-              <Button
-                type='link'
-                danger
-                onClick={() => handleAction(task.id, 'reject')}
-              >
-                Từ chối
-              </Button>
-            </div>
+            <Button
+              type='link'
+              onClick={() => handleAction(task.id, 'accept')}
+              style={{ marginRight: 8 }}
+            >
+              Chấp nhận
+            </Button>
+            <Button
+              type='link'
+              danger
+              onClick={() => handleAction(task.id, 'reject')}
+            >
+              Từ chối
+            </Button>
           </div>
-        </Menu.Item>
-      ))}
-    </Menu>
-  );
+        </div>
+      ),
+    })),
+  };
 
   return (
     <div className='mx-auto p-4'>
@@ -171,7 +172,7 @@ export default function Task() {
               {/* Dropdown cho các công việc được bàn giao */}
               <Dropdown
                 className='mr-4' // Tạo khoảng cách bên phải cho dropdown
-                overlay={taskMenu}
+                menu={taskMenu} // Thay overlay bằng menu
                 trigger={['click']}
               >
                 <Button>
@@ -214,7 +215,7 @@ export default function Task() {
                       {columns[status].map((task, index) => (
                         <Draggable
                           key={task.id}
-                          draggableId={task.id}
+                          draggableId={task.id.toString()}
                           index={index}
                         >
                           {(provided) => (

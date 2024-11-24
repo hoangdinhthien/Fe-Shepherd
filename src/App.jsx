@@ -109,6 +109,8 @@ const AppRoutes = () => {
         <Route path='request' index element={<AdminRequest />} />
         <Route path='calendar' index element={<AdminCalendar />} />
         <Route path='event' element={<Event />} />
+        <Route path='user' element={<AdminUser />} />
+        <Route path='budget' element={<AdminBudget />} />
         <Route path='profile' element={<Profile />} />
         <Route path='' element={<Navigate to='dashboard' />} />
       </Route>

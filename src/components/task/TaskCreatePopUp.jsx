@@ -9,47 +9,64 @@ export default function TaskCreatePopUp({ isOpen, onClose, selectedgroupId }) {
   const [activityId, setActivityId] = useState('');
   const [userId, setUserId] = useState('');
   const [description, setDescription] = useState('');
-  const [groupId, setGroupId] = useState('');
   const [activities, setActivities] = useState([]);
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  console.log('selectedgroupId:', selectedgroupId);
 
+  // Fetch activities when modal is open
   useEffect(() => {
     const fetchActivities = async () => {
+      if (!selectedgroupId) {
+        console.error('GroupID is undefined or invalid:', selectedgroupId);
+        setErrorMessage('GroupID không hợp lệ. Vui lòng kiểm tra.');
+        return;
+      }
+
       try {
         const response = await TaskAPI.getActivitiesByGroup(selectedgroupId);
-        console.log('activity', response);
-        setActivities(response.result || []); // Lưu danh sách hoạt động vào state
+        setActivities(response.result || []);
       } catch (error) {
         console.error('Error fetching activities:', error);
+        setErrorMessage('Không thể tải danh sách hoạt động.');
       }
     };
 
-    if (isOpen) {
-      fetchActivities();
-    }
+    if (isOpen) fetchActivities();
   }, [isOpen, selectedgroupId]);
 
+  // Fetch users when modal is open
   useEffect(() => {
     const fetchUsers = async () => {
+      if (!selectedgroupId) {
+        console.error('GroupID is undefined or invalid:', selectedgroupId);
+        setErrorMessage('GroupID không hợp lệ. Vui lòng kiểm tra.');
+        return;
+      }
+
       try {
         const response = await TaskAPI.getUsersByGroup(selectedgroupId);
-        console.log('User', response);
-        setUsers(response.result || []); // Lưu danh sách hoạt động vào state
+        setUsers(response.result || []);
       } catch (error) {
-        console.error('Error fetching activities:', error);
+        console.error('Error fetching users:', error);
+        setErrorMessage('Không thể tải danh sách người phụ trách.');
       }
     };
 
-    if (isOpen) {
-      fetchUsers();
-    }
+    if (isOpen) fetchUsers();
   }, [isOpen, selectedgroupId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage('');
+
+    if (!title || !price || !activityId || !userId) {
+      setErrorMessage('Vui lòng điền đầy đủ thông tin.');
+      setIsLoading(false);
+      return;
+    }
 
     const taskData = {
       title,
@@ -63,19 +80,20 @@ export default function TaskCreatePopUp({ isOpen, onClose, selectedgroupId }) {
       const response = await TaskAPI.createTask(taskData);
 
       if (response.success) {
+        // Reset form fields on success
         setTitle('');
         setPrice('');
         setActivityId('');
         setUserId('');
         setDescription('');
-        setGroupId(selectedgroupId);
         onClose();
       } else {
-        setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
-        console.error('Failed to create task:', response.message);
+        setErrorMessage(
+          response.message || 'Không thể tạo công việc. Vui lòng thử lại.'
+        );
       }
     } catch (error) {
-      setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
+      setErrorMessage('Có lỗi xảy ra khi tạo công việc. Vui lòng thử lại.');
       console.error('Error creating task:', error);
     } finally {
       setIsLoading(false);
@@ -90,7 +108,7 @@ export default function TaskCreatePopUp({ isOpen, onClose, selectedgroupId }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className='fixed inset-0 z-40 bg-black bg-opacity-50 w-full h-full flex justify-center items-center'
+          className='fixed inset-0 z-40 bg-black bg-opacity-50 flex justify-center items-center'
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -119,6 +137,7 @@ export default function TaskCreatePopUp({ isOpen, onClose, selectedgroupId }) {
                       type='text'
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
+                      disabled={isLoading}
                       required
                       className='w-full p-2 border rounded'
                       placeholder='Tiêu đề của công việc'
@@ -130,6 +149,7 @@ export default function TaskCreatePopUp({ isOpen, onClose, selectedgroupId }) {
                       type='number'
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
+                      disabled={isLoading}
                       required
                       className='w-full p-2 border rounded'
                       placeholder='VND'
@@ -140,6 +160,7 @@ export default function TaskCreatePopUp({ isOpen, onClose, selectedgroupId }) {
                     <select
                       value={activityId}
                       onChange={(e) => setActivityId(e.target.value)}
+                      disabled={isLoading}
                       required
                       className='w-full p-2 border rounded'
                     >
@@ -156,6 +177,7 @@ export default function TaskCreatePopUp({ isOpen, onClose, selectedgroupId }) {
                     <select
                       value={userId}
                       onChange={(e) => setUserId(e.target.value)}
+                      disabled={isLoading}
                       required
                       className='w-full p-2 border rounded'
                     >
@@ -172,13 +194,13 @@ export default function TaskCreatePopUp({ isOpen, onClose, selectedgroupId }) {
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
+                      disabled={isLoading}
                       rows='4'
                       className='w-full p-2 border rounded'
                       placeholder='Viết mô tả công việc'
                     />
                   </div>
                 </div>
-                {/* Hiển thị thông báo lỗi nếu có */}
                 {errorMessage && (
                   <p className='text-red-600 text-center mt-2'>
                     {errorMessage}

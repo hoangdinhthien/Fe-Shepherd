@@ -1,23 +1,32 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import AdminUserAPI from '../../apis/admin/admin_user_api';
 import UserCreatePopUp from '../../components/admin/UserCreatePopUp';
-import { FaTimes } from 'react-icons/fa'; // Import icon 'X' từ react-icons
+import { FaTimes } from 'react-icons/fa';
 
 const AdminUser = () => {
-  const [users, setUsers] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]); // Danh sách người dùng sau khi lọc
-  const [loading, setLoading] = useState(true);
-  const [searchKeyword, setSearchKeyword] = useState(''); // Quản lý từ khóa tìm kiếm
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false); // Trạng thái để hiển thị popup
+  const location = useLocation(); // Lấy trạng thái từ điều hướng
+  const [users, setUsers] = useState([]); // Danh sách người dùng
+  const [filteredUsers, setFilteredUsers] = useState([]); // Người dùng đã lọc
+  const [loading, setLoading] = useState(true); // Trạng thái tải
+  const [searchKeyword, setSearchKeyword] = useState(''); // Từ khóa tìm kiếm
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // Quản lý trạng thái mở popup
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false); // Hiển thị popup thành công
 
+  // Mở popup nếu được điều hướng từ AdminRequest
+  useEffect(() => {
+    if (location.state?.popup === 'UserCreatePopUp') {
+      setIsCreateModalOpen(true); // Mở popup
+    }
+  }, [location.state]);
+
+  // Lấy danh sách người dùng
   const fetchUsers = async () => {
     try {
       const data = await AdminUserAPI.getAllUsers();
-      console.log('Dữ liệu người dùng:', data);
       const userList = Array.isArray(data.result) ? data.result : [];
       setUsers(userList);
-      setFilteredUsers(userList); // Khởi tạo danh sách hiển thị với dữ liệu đầy đủ
+      setFilteredUsers(userList);
     } catch (error) {
       console.error('Không thể lấy danh sách người dùng:', error.message);
     } finally {
@@ -33,7 +42,6 @@ const AdminUser = () => {
     const keyword = e.target.value.toLowerCase();
     setSearchKeyword(keyword);
 
-    // Lọc danh sách người dùng dựa trên từ khóa tìm kiếm
     const filtered = users.filter(
       (user) =>
         user.name.toLowerCase().includes(keyword) ||
@@ -44,25 +52,24 @@ const AdminUser = () => {
   };
 
   const handleUserCreated = () => {
-    fetchUsers(); // Gọi lại API để lấy danh sách người dùng mới nhất
-    setShowSuccessPopup(true); // Hiển thị popup thông báo thành công
-    setIsCreateModalOpen(false); // Đóng modal
+    fetchUsers(); // Lấy lại danh sách người dùng
+    setShowSuccessPopup(true);
+    setIsCreateModalOpen(false);
 
-    // Đặt timeout để tự động ẩn popup sau 6 giây
     setTimeout(() => {
-      setShowSuccessPopup(false); // Ẩn popup sau 6 giây
-    }, 6000);
-  };
-
-  const handleOpenCreateModal = () => {
-    setIsCreateModalOpen(true);
+      setShowSuccessPopup(false);
+    }, 4000);
   };
 
   const handleCloseCreateModal = () => {
     setIsCreateModalOpen(false);
   };
 
-  if (loading) return <p>Đang tải...</p>;
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  if (loading) return <p>Đang tải danh sách người dùng...</p>;
 
   return (
     <div
@@ -73,14 +80,13 @@ const AdminUser = () => {
         position: 'relative',
       }}
     >
-      {/* Popup thông báo thành công */}
       {showSuccessPopup && (
         <div
           style={{
             position: 'absolute',
             top: '10px',
             right: '10px',
-            backgroundColor: 'rgb(253, 186, 116)', // Màu cam nhạt
+            backgroundColor: '#4caf50',
             color: '#fff',
             padding: '10px 15px',
             borderRadius: '5px',
@@ -127,11 +133,10 @@ const AdminUser = () => {
             cursor: 'pointer',
           }}
         >
-          Tạo tài khoản mới
+          Tạo tài khoản
         </button>
       </div>
 
-      {/* Thanh tìm kiếm */}
       <div
         style={{
           display: 'flex',
@@ -219,7 +224,7 @@ const AdminUser = () => {
               >
                 {user.createDate
                   ? new Date(user.createDate).toLocaleDateString('vi-VN')
-                  : 'No Date'}
+                  : 'Không có'}
               </td>
             </tr>
           ))}
@@ -230,7 +235,7 @@ const AdminUser = () => {
         <UserCreatePopUp
           isOpen={isCreateModalOpen}
           onClose={handleCloseCreateModal}
-          onUserCreated={handleUserCreated} // Truyền hàm handleUserCreated
+          onUserCreated={handleUserCreated}
         />
       )}
     </div>

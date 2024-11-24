@@ -12,14 +12,26 @@ class TaskAPI extends BaseAPI {
   }
 
   getActivitiesByGroup(groupId) {
-    const url = `${this.url}activity?GroupID=${groupId}`;
-    console.log('url', url);
+    if (!groupId) {
+      console.error('GroupID không hợp lệ:', groupId);
+      throw new Error('GroupID is required for fetching activities');
+    }
+
+    const url = `${this.url}activity?GroupID=${encodeURIComponent(groupId)}`;
+    console.log('URL:', url);
+
     return super.getCustom(url, { groupId });
   }
 
   getUsersByGroup(groupId) {
-    const url = `${this.url}group-user?GroupId=${groupId}`;
-    console.log('urlUser', url);
+    if (!groupId) {
+      console.error('GroupID không hợp lệ:', groupId);
+      throw new Error('GroupID is required for fetching users');
+    }
+
+    const url = `${this.url}group-user?GroupId=${encodeURIComponent(groupId)}`;
+    console.log('URL:', url);
+
     return super.getCustom(url, { groupId });
   }
 

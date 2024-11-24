@@ -1,24 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import RequestAPI from '../../apis/admin/request_api';
 import { Pie } from 'react-chartjs-2';
 import { FaSearch } from 'react-icons/fa';
 
 const AdminRequest = () => {
+  const navigate = useNavigate(); // Điều hướng
   const [requests, setRequests] = useState([]);
-  const [filteredRequests, setFilteredRequests] = useState([]); // Danh sách đã lọc
+  const [filteredRequests, setFilteredRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchKeyword, setSearchKeyword] = useState(''); // Từ khóa tìm kiếm
-  const [sortOption, setSortOption] = useState('Tất cả'); // Tùy chọn sắp xếp
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [sortOption, setSortOption] = useState('Tất cả');
 
   // Lấy dữ liệu từ API
   useEffect(() => {
     const fetchRequests = async () => {
       try {
         const data = await RequestAPI.getAllRequests();
-        console.log('Dữ liệu đã lấy:', data);
         const result = Array.isArray(data['result']) ? data['result'] : [];
         setRequests(result);
-        setFilteredRequests(result); // Ban đầu hiển thị toàn bộ
+        setFilteredRequests(result); // Hiển thị toàn bộ ban đầu
       } catch (error) {
         console.error('Không thể lấy dữ liệu:', error.message);
       } finally {
@@ -29,19 +30,18 @@ const AdminRequest = () => {
     fetchRequests();
   }, []);
 
-  // Hàm xử lý tìm kiếm (chỉ tìm kiếm theo tiêu đề)
+  // Tìm kiếm
   const handleSearchChange = (e) => {
     const keyword = e.target.value.toLowerCase();
     setSearchKeyword(keyword);
 
-    // Lọc danh sách giao dịch theo tiêu đề
     const filtered = requests.filter((request) =>
       request.title.toLowerCase().includes(keyword)
     );
     setFilteredRequests(filtered);
   };
 
-  // Hàm xử lý sắp xếp
+  // Sắp xếp
   const handleSortChange = (e) => {
     const option = e.target.value;
     setSortOption(option);
@@ -56,6 +56,11 @@ const AdminRequest = () => {
     }
 
     setFilteredRequests(sortedRequests);
+  };
+
+  // Điều hướng tạo tài khoản
+  const handleCreateAccount = () => {
+    navigate('/admin/user', { state: { popup: 'UserCreatePopUp' } });
   };
 
   if (loading) return <p>Đang tải...</p>;
@@ -129,7 +134,7 @@ const AdminRequest = () => {
           marginBottom: '20px',
         }}
       >
-        <span className='text-2xl '>Danh Sách Giao Dịch</span>
+        <span className='text-2xl '>Danh Sách Yêu Cầu</span>
         <div
           style={{
             display: 'flex',
@@ -148,7 +153,7 @@ const AdminRequest = () => {
             type='text'
             placeholder='Tìm kiếm theo tiêu đề...'
             value={searchKeyword}
-            onChange={(e) => handleSearchChange(e)} // Chỉ tìm kiếm theo tiêu đề
+            onChange={(e) => handleSearchChange(e)}
             style={{
               flex: 1,
               border: 'none',
@@ -160,8 +165,8 @@ const AdminRequest = () => {
         <div>
           <span style={{ marginRight: '10px' }}>Sắp xếp theo:</span>
           <select
-            value={sortOption} // Gắn state giá trị sắp xếp
-            onChange={handleSortChange} // Thay đổi giá trị sắp xếp
+            value={sortOption}
+            onChange={handleSortChange}
             style={{
               padding: '8px',
               borderRadius: '4px',
@@ -194,6 +199,9 @@ const AdminRequest = () => {
             </th>
             <th style={{ border: '1px solid #ddd', padding: '8px' }}>
               Ngày tạo
+            </th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>
+              Hành động
             </th>
           </tr>
         </thead>
@@ -230,6 +238,24 @@ const AdminRequest = () => {
               </td>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                 {new Date(request.createDate).toLocaleDateString('vi-VN')}
+              </td>
+              <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                {request.isAccepted === null &&
+                  request.type === 'Tạo tài khoản' && ( // Chỉ hiển thị nếu trạng thái là Pending và loại là "Tạo tài khoản"
+                    <button
+                      style={{
+                        backgroundColor: '#4caf50',
+                        color: 'white',
+                        padding: '5px 10px',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => handleCreateAccount(request)}
+                    >
+                      Tạo tài khoản
+                    </button>
+                  )}
               </td>
             </tr>
           ))}
