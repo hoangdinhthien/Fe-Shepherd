@@ -91,9 +91,7 @@ export default function NotificationPopup({
           className='fixed right-0 mt-24 mr-6 w-80 bg-white rounded-lg shadow-xl z-50'
         >
           <div className='p-4 border-b'>
-            <h2 className='text-xl font-semibold text-gray-800'>
-              Notifications
-            </h2>
+            <h2 className='text-xl font-semibold text-gray-800'>Notifications</h2>
           </div>
           <div
             ref={listRef}
@@ -106,20 +104,22 @@ export default function NotificationPopup({
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className='p-4 border-b last:border-b-0 hover:bg-gray-50'
+                  className={`p-4 border-b last:border-b-0 hover:bg-gray-50 ${
+                    notification.IsRead ? 'bg-gray-200' : ''
+                  }`}
                 >
                   <div className='flex items-center mb-2'>
                     <div className='mr-3'>
-                      {notification.type === 'like' && (
+                      {notification.type === 'Activity' && (
                         <FaThumbsUp className='text-blue-500 h-5 w-5' />
                       )}
-                      {notification.type === 'comment' && (
+                      {notification.type === 'Request' && (
                         <FaComment className='text-green-500 h-5 w-5' />
                       )}
-                      {notification.type === 'share' && (
+                      {notification.type === 'Event' && (
                         <FaShare className='text-purple-500 h-5 w-5' />
                       )}
-                      {notification.type === 'task' && (
+                      {notification.type === 'Task' && (
                         <FaClipboardList className='text-yellow-500 h-5 w-5' />
                       )}
                     </div>
@@ -127,7 +127,9 @@ export default function NotificationPopup({
                       <p className='text-sm text-gray-800'>
                         {notification.content}
                       </p>
-                      <p className='text-xs text-gray-500 mt-1'>{notification.timeAgo}</p>
+                      <p className='text-xs text-gray-500 mt-1'>
+                        {notification.timeAgo}
+                      </p>
                     </div>
                     <button
                       onClick={() => removeNotification(notification.id)}
@@ -136,7 +138,7 @@ export default function NotificationPopup({
                       <FaTimes className='h-4 w-4' />
                     </button>
                   </div>
-                  {notification.type === 'task' && (
+                  {notification.type === 'Task' && (
                     <div className='mt-2 flex justify-end space-x-2'>
                       <button
                         onClick={() => handleAccept(notification.id)}
