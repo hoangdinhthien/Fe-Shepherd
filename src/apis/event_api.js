@@ -13,6 +13,12 @@ class EventAPI extends BaseAPI {
   getEvents(params) {
     return super.getAll(params);
   }
+
+  // task
+  getEventsByGroupForTask(groupId) {
+    const url = `${this.url}?GroupId=${groupId}`;
+    return super.getCustom(url);
+  }
 }
 
 export default new EventAPI('event');

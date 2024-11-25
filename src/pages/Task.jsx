@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { FaCalendarAlt, FaUser } from 'react-icons/fa';
 import TaskAPI from '../apis/task_api';
+import ActivityAPI from '../apis/activity/activity_api';
 import GroupAPI from '../apis/group_api';
 import { useSelector } from 'react-redux';
 import {
@@ -23,6 +24,8 @@ export default function Task() {
   // ------STATES------
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [columns, setColumns] = useState({}); // Initialize as an empty object
   const [isGroupLeader, setIsGroupLeader] = useState(false);
@@ -59,6 +62,19 @@ export default function Task() {
     }
   };
 
+  // -----FETCH ACTIVITIES FUNCTION-----
+  const fetchActivities = async (groupId) => {
+    try {
+      setLoading(true);
+      const response = await ActivityAPI.getActivitiesByGroup(groupId);
+      setActivities(response.result || []);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // -----FETCH TASK DETAILS FUNCTION-----
   const fetchTaskDetails = async (taskId) => {
     try {
@@ -77,19 +93,6 @@ export default function Task() {
     }
   };
 
-  // ?????
-  const tasks = [
-    { id: 1, title: 'Công việc 1' },
-    { id: 2, title: 'Công việc 2' },
-    { id: 3, title: 'Công việc 3' },
-  ];
-
-  // Hàm để xử lý hành động "Chấp nhận" và "Từ chối"
-  const handleAction = (taskId, action) => {
-    console.log(`Task ID: ${taskId}, Action: ${action}`);
-    // Ở đây bạn có thể thực hiện thêm các hành động khác như cập nhật trạng thái công việc trên server
-  };
-
   useEffect(() => {
     if (rehydrated && currentUser) {
       fetchGroups();
@@ -99,6 +102,7 @@ export default function Task() {
   useEffect(() => {
     if (selectedGroup) {
       fetchUserRole(selectedGroup);
+      fetchActivities(selectedGroup);
     }
   }, [selectedGroup]);
 
@@ -110,11 +114,15 @@ export default function Task() {
       setLoading(true);
       let response;
       if (isGroupLeader) {
-        response = await TaskAPI.getTasksByGroup(selectedGroup);
+        response = await TaskAPI.getTasksByGroup(
+          selectedGroup,
+          selectedActivity
+        );
       } else {
         response = await TaskAPI.getTasksByGroupAndUser(
           selectedGroup,
-          currentUser.user.id
+          currentUser.user.id,
+          selectedActivity
         );
       }
 
@@ -123,21 +131,23 @@ export default function Task() {
         const columnsData = {};
 
         response.result.forEach((task) => {
-          const status = task.status || 'Uncategorized'; // Default to 'Uncategorized' if no status
+          console.log('Task:', task);
 
-          // Create an array for each unique status if it doesn't exist yet
-          if (!columnsData[status]) {
-            columnsData[status] = [];
+          if (!selectedActivity || task.activityId === selectedActivity) {
+            const status = task.status || 'Uncategorized';
+
+            if (!columnsData[status]) {
+              columnsData[status] = [];
+            }
+
+            columnsData[status].push({
+              ...task,
+              title: task.title || 'Untitled Task',
+              description: task.description || 'Untitled Task',
+              assignedUser: task.userName || 'Unassigned',
+              dueDate: task.dueDate || 'No due date',
+            });
           }
-
-          // Push the task into the correct status array
-          columnsData[status].push({
-            ...task,
-            title: task.title || 'Untitled Task',
-            description: task.description || 'Untitled Task',
-            assignedUser: task.userName || 'Unassigned',
-            dueDate: task.dueDate || 'No due date',
-          });
         });
 
         // Ensure all columns are present, even if empty
@@ -159,15 +169,20 @@ export default function Task() {
     } finally {
       setLoading(false);
     }
-  }, [selectedGroup, isGroupLeader, currentUser.user.id]);
+  }, [selectedGroup, isGroupLeader, currentUser.user.id, selectedActivity]);
 
   useEffect(() => {
     fetchTasks();
-  }, [fetchTasks, selectedGroup]);
+  }, [fetchTasks, selectedGroup, selectedActivity]);
 
   const handleGroupChange = (value) => {
     setSelectedGroup(value);
     setColumns({}); // Reset columns when changing groups
+  };
+
+  const handleActivityChange = (value) => {
+    setSelectedActivity(value);
+    setColumns({});
   };
 
   const onDragEnd = async (result) => {
@@ -256,53 +271,31 @@ export default function Task() {
     'bg-pink-100',
   ];
 
-  const taskMenu = (
-    <Menu>
-      {tasks.map((task) => (
-        <Menu.Item key={task.id}>
-          <div>
-            <span>{task.title}</span>
-            <div>
-              <Button
-                type='link'
-                onClick={() => handleAction(task.id, 'accept')}
-                style={{ marginRight: 8 }}
-              >
-                Chấp nhận
-              </Button>
-              <Button
-                type='link'
-                danger
-                onClick={() => handleAction(task.id, 'reject')}
-              >
-                Từ chối
-              </Button>
-            </div>
-          </div>
-        </Menu.Item>
-      ))}
-    </Menu>
-  );
-
   return (
     <div className='mx-auto p-4'>
       <h1 className='text-xl mb-3 font-semibold'>Công Việc</h1>
       <div className='flex justify-between items-center mb-4'>
-        {isGroupLeader && <TaskCreateButton selectedGroup={selectedGroup} />}
-        <div className='flex items-center'>
-          <div className='mr-4'>
-            {/* Dropdown cho các công việc được bàn giao */}
-            {/* <Dropdown
-              menu={taskMenu}
-              trigger={['click']}
-            >
-              <Button className='flex items-center bg-blue-500 text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'>
-                Công việc bàn giao <DownOutlined className='ml-2' />
-              </Button>
-            </Dropdown> */}
-          </div>
+        {isGroupLeader && activities.length > 0 && (
+          <>
+            {/* {console.log('Activities:', activities)}
+            {console.log('Selected Activity:', selectedActivity)}
+            {console.log(
+              activities.find((activity) => activity.id === selectedActivity)
+                ?.activityName || ''
+            )} */}
+            <TaskCreateButton
+              selectedGroup={selectedGroup}
+              selectedActivity={selectedActivity}
+              activityName={
+                activities.find((activity) => activity.id === selectedActivity)
+                  ?.activityName || ''
+              }
+            />
+          </>
+        )}
+        <div className='flex items-center ml-auto'>
           <div>
-            <label className='mr-2'>Chọn Nhóm:</label>
+            <label className='mr-4'>Chọn Nhóm:</label>
             <Select
               value={selectedGroup}
               onChange={handleGroupChange}
@@ -315,6 +308,24 @@ export default function Task() {
                   value={group.id}
                 >
                   {group.groupName}
+                </Option>
+              ))}
+            </Select>
+          </div>
+          <div className='ml-4'>
+            <label className='mr-2'>Chọn Hoạt Động:</label>
+            <Select
+              value={selectedActivity}
+              onChange={handleActivityChange}
+              className='h-12 w-64'
+              placeholder='Chọn Hoạt Động'
+            >
+              {activities.map((activity) => (
+                <Option
+                  key={activity.id}
+                  value={activity.id}
+                >
+                  {activity.activityName}
                 </Option>
               ))}
             </Select>
@@ -332,10 +343,10 @@ export default function Task() {
               .map((status, index) => (
                 <div
                   key={status}
-                  className='flex flex-col w-50'
+                  className='flex flex-col flex-1 max-h-[calc(100vh-200px)]'
                 >
                   <h2
-                    className={`text-lg font-semibold p-4 border rounded-lg ${
+                    className={`text-lg font-semibold p-4 border rounded-t ${
                       columnColors[index % columnColors.length]
                     }`}
                   >
@@ -346,7 +357,7 @@ export default function Task() {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`p-4 border rounded-lg max-h-[calc(100vh-280px)] overflow-y-auto ${
+                        className={`p-4 border rounded-b max-h-[calc(100vh-200px)] overflow-y-auto ${
                           columnColors[index % columnColors.length]
                         }`}
                       >
