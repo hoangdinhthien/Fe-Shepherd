@@ -83,16 +83,35 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path='/' element={<Navigate to={getRoute()} />} />
+      <Route
+        path='/'
+        element={<Navigate to={getRoute()} />}
+      />
       <Route
         path='/welcome'
         element={
-          isAuthenticated ? <Navigate replace to='/user' /> : <WelcomePage />
+          isAuthenticated ? (
+            <Navigate
+              replace
+              to='/user'
+            />
+          ) : (
+            <WelcomePage />
+          )
         }
       />
       <Route
         path='/sign-in'
-        element={isAuthenticated ? <Navigate replace to='/user' /> : <SignIn />}
+        element={
+          isAuthenticated ? (
+            <Navigate
+              replace
+              to='/user'
+            />
+          ) : (
+            <SignIn />
+          )
+        }
       />
 
       <Route
@@ -105,12 +124,33 @@ const AppRoutes = () => {
           )
         }
       >
-        <Route path='dashboard' index element={<AdminDashboard />} />
-        <Route path='request' index element={<AdminRequest />} />
-        <Route path='calendar' index element={<AdminCalendar />} />
-        <Route path='event' element={<Event />} />
-        <Route path='profile' element={<Profile />} />
-        <Route path='' element={<Navigate to='dashboard' />} />
+        <Route
+          path='dashboard'
+          index
+          element={<AdminDashboard />}
+        />
+        <Route
+          path='request'
+          index
+          element={<AdminRequest />}
+        />
+        <Route
+          path='calendar'
+          index
+          element={<AdminCalendar />}
+        />
+        <Route
+          path='event'
+          element={<Event />}
+        />
+        <Route
+          path='profile'
+          element={<Profile />}
+        />
+        <Route
+          path=''
+          element={<Navigate to='dashboard' />}
+        />
       </Route>
 
       <Route
@@ -123,27 +163,87 @@ const AppRoutes = () => {
           )
         }
       >
-        <Route path='requestDetails' element={<RequestDetail />} />
-        <Route path='dashboard' index element={<Dashboard />} />
+        <Route
+          path='requestDetails'
+          element={<RequestDetail />}
+        />
+        <Route
+          path='dashboard'
+          index
+          element={<Dashboard />}
+        />
 
-        <Route path='request' element={<Request />} />
-        <Route path='calendar' element={<Calendar />} />
-        <Route path='group' element={<Group />} />
-        <Route path='chat' element={<ChatHome />} />
-        <Route path='task' element={<Task />} />
-        <Route path='event' element={<Event />} />
+        <Route
+          path='request'
+          element={<Request />}
+        />
+        <Route
+          path='calendar'
+          element={<Calendar />}
+        />
+        <Route
+          path='group'
+          element={<Group />}
+        />
+        <Route
+          path='chat'
+          element={<ChatHome />}
+        />
+        <Route
+          path='task'
+          element={<Task />}
+        />
+        <Route
+          path='event'
+          element={<Event />}
+        />
+        <Route
+          path='user'
+          element={<AdminUser />}
+        />
+        <Route
+          path='budget'
+          element={<AdminBudget />}
+        />
 
-        <Route path='create-request' element={<CreateRequest />} />
-        <Route path='create-activity' element={<CreateActivity />} />
-        <Route path='profile' element={<Profile />} />
-        <Route path='' element={<Navigate to='dashboard' />} />
-        <Route path='create-request' element={<CreateRequest />} />
-        <Route path='create-activity' element={<CreateActivity />} />
-        <Route path='profile' element={<Profile />} />
-        <Route path='' element={<Navigate to='dashboard' />} />
+        <Route
+          path='create-request'
+          element={<CreateRequest />}
+        />
+        <Route
+          path='create-activity'
+          element={<CreateActivity />}
+        />
+        <Route
+          path='profile'
+          element={<Profile />}
+        />
+        <Route
+          path=''
+          element={<Navigate to='dashboard' />}
+        />
+        <Route
+          path='create-request'
+          element={<CreateRequest />}
+        />
+        <Route
+          path='create-activity'
+          element={<CreateActivity />}
+        />
+        <Route
+          path='profile'
+          element={<Profile />}
+        />
+        <Route
+          path=''
+          element={<Navigate to='dashboard' />}
+        />
       </Route>
 
-      <Route path='*' element={<Navigate to='/' />} />
+      <Route
+        path='*'
+        element={<Navigate to='/' />}
+      />
     </Routes>
   );
 };
@@ -151,7 +251,10 @@ const AppRoutes = () => {
 function App() {
   return (
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
+      <PersistGate
+        loading={null}
+        persistor={persistor}
+      >
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>
