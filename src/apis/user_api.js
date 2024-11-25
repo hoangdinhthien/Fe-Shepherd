@@ -10,6 +10,11 @@ class UserAPI extends BaseAPI {
     const url = `${this.url}/Detail`;
     return this.handleRequest(axiosClient.get(url, { params }));
   }
+
+  getUserRole(userId) {
+    const url = `${this.url}/GetUserRole`;
+    return this.handleRequest(axiosClient.get(url, { params: { id: userId } }));
+  }
 }
 
 export default new UserAPI();
