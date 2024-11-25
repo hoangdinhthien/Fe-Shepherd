@@ -294,9 +294,14 @@ export default function RequestDetail() {
           <p className='font-semibold text-gray-700'>Tổng Chi Phí Sự Kiện:</p>
           <p className='text-gray-600'>{eventTotalCost} VND</p>
         </div>
+        {/* -----EVENT COMMENT----- */}
+        <div>
+          <p className='font-semibold text-gray-700'>Góp Ý:</p>
+          <p className='text-gray-600'>{requestDetails.comment}</p>
+        </div>
       </div>
 
-      {/* -----EVENT COMMENT----- */}
+      {/* -----EVENT COMMENT INPUT----- */}
       {isAccepted === null && (
         <div className='p-3 bg-gray-50'>
           <h3
@@ -380,6 +385,11 @@ export default function RequestDetail() {
                   </p>
                   <p className='text-gray-600'>{activity.totalCost} VND</p>
                 </div>
+                {/* -----ACTIVITY COMMENT----- */}
+                <div>
+                  <p className='font-semibold text-gray-700'>Góp Ý:</p>
+                  <p className='text-gray-600'>{activity.comment}</p>
+                </div>
               </div>
 
               <Divider
@@ -408,7 +418,7 @@ export default function RequestDetail() {
                   </li>
                 ))}
               </ul>
-              {/* -----ACTIVITY COMMENT----- */}
+              {/* -----ACTIVITY COMMENT INPUT----- */}
               {isAccepted === null && (
                 <div className='mt-4'>
                   <p
