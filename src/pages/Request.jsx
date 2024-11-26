@@ -70,32 +70,25 @@ const Request = () => {
   }, [currentPage, pageSize]);
 
   const handleRowClick = (record) => {
-    if (user.user.role === COUNCIL_ROLE) {
-      const requestData = {
-        key: record.key,
-        title: record.title,
-        from: record.from,
-        to: record.to,
-        content: record.content,
-        createdAt: record.createdAt,
-        eventId: record.event?.id, // Use the event ID for fetching details
-        groupId: record.group?.id,
-        createdUser: record.createdUser,
-        type: 'Tạo sự kiện', // Pass the type for the details request
-        status:
-          record.status === 'Accepted'
-            ? 'Accepted'
-            : record.status === 'Rejected'
-            ? 'Rejected'
-            : 'Pending',
-      };
+    console.log('Row clicked:', record); // Log the whole record to inspect its structure
 
-      navigate(`/user/requestDetails`, {
-        state: { request: { requestId: record.key } },
-      });
-    } else {
-      message.warning('You do not have permission to view this request');
-    }
+    // If status is a React element, you should check the actual value of status
+    const status = record.status?.props?.children; // Access the string value of the status
+
+    const isAccepted =
+      status === 'Accepted' ? true : status === 'Rejected' ? false : null;
+
+    console.log('Navigating with isAccepted:', isAccepted);
+
+    navigate(`/user/requestDetails`, {
+      state: {
+        request: {
+          requestId: record.key,
+          isAccepted: isAccepted,
+          requestingGroup: record.from,
+        },
+      },
+    });
   };
 
   const getTime = (dateString) => {

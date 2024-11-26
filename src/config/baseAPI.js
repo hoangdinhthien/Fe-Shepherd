@@ -110,9 +110,19 @@ class BaseAPI {
     getDataKey = true
   ) {
     return this.handleRequest(
-      axiosClient.put(url, this.appendFormData(data), config),
+      // axiosClient.put(url, this.appendFormData(data), config),
+      axiosClient.put(url, data, config),
       getDataKey
     );
+  }
+
+  patchCustom(
+    url,
+    data,
+    config = { headers: { 'Content-Type': 'application/json' } },
+    getDataKey = true
+  ) {
+    return this.handleRequest(axiosClient.patch(url, data, config), getDataKey);
   }
 
   deleteCustom(url, id = null, getDataKey = true) {

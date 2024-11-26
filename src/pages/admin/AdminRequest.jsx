@@ -121,7 +121,10 @@ const AdminRequest = () => {
             alignItems: 'center',
           }}
         >
-          <Pie data={pieData} options={pieOptions} />
+          <Pie
+            data={pieData}
+            options={pieOptions}
+          />
         </div>
       </div>
 
