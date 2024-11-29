@@ -349,11 +349,6 @@ export default function RequestCreateEvent({
                   suffix=' VND'
                   intlConfig={{ locale: 'vi-VN', currency: 'VND' }}
                 />
-                <p className='text-red-500 text-sm italic mb-4'>
-                  Lưu Ý: Bạn không được nhập chi phí vượt quá 100,000,000 VND
-                  cho mỗi đoàn thể và tổng chi phí không được vượt quá
-                  1,000,000,000 VND.
-                </p>
               </div>
             ))}
 
@@ -367,6 +362,10 @@ export default function RequestCreateEvent({
           </div>
         ))}
 
+        <p className='text-red-500 text-sm italic mb-4'>
+          Lưu Ý: Bạn không được nhập chi phí vượt quá 100,000,000 VND cho mỗi
+          đoàn thể và tổng chi phí không được vượt quá 1,000,000,000 VND.
+        </p>
         <Button
           type='dashed'
           onClick={addActivity}

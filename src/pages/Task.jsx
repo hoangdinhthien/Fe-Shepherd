@@ -25,7 +25,6 @@ export default function Task() {
   // ------SELECTORS------
   const currentUser = useSelector((state) => state.user.currentUser);
   const rehydrated = useSelector((state) => state._persist?.rehydrated);
-  console.log('currentUser:', currentUser);
 
   // -----FETCH USER ROLE FUNCTION-----
   const fetchUserRole = (groupId) => {
@@ -234,7 +233,16 @@ export default function Task() {
       });
     }
   };
-  const columnOrder = ['To Do', 'In-Progress', 'Review', 'Done'];
+
+  // Define the order of columns
+  const columnOrder = [
+    'Bản nháp', // Draft
+    'Đang chờ', // Pending
+    'Việc cần làm', // To Do
+    'Đang thực hiện', // In Progress
+    'Xem xét', // Review
+    'Đã hoàn thành', // Done
+  ];
 
   // Define colors for columns
   const columnColors = [

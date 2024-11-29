@@ -19,62 +19,32 @@ export default function TaskCreatePopUp({
   const [price, setPrice] = useState('');
   const [userID, setUserId] = useState('');
   const [description, setDescription] = useState('');
-  const [groupId, setGroupId] = useState('');
-  const [activities, setActivities] = useState([]);
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  console.log('selectedgroupId:', selectedgroupId);
 
-  useEffect(() => {
-    const fetchActivities = async () => {
-      try {
-        const response = await TaskAPI.getActivitiesByGroup(selectedgroupId);
-        console.log('activity', response);
-        setActivities(response.result || []); // Lưu danh sách hoạt động vào state
-      } catch (error) {
-        console.error('Error fetching activities:', error);
-      }
-    };
+  const { groups, loading: groupsLoading } = useFetchGroups();
+  const selectedGroupId = groups.length > 0 ? groups[0].id : null;
 
-    if (isOpen) {
-      fetchActivities();
-    }
-  }, [isOpen, selectedgroupId]);
-
-  // Fetch users when modal is open
   useEffect(() => {
     const fetchUsers = async () => {
-      if (!selectedgroupId) {
-        console.error('GroupID is undefined or invalid:', selectedgroupId);
-        setErrorMessage('GroupID không hợp lệ. Vui lòng kiểm tra.');
-        return;
-      }
-
       try {
-        const response = await TaskAPI.getUsersByGroup(selectedgroupId);
-        console.log('User', response);
-        setUsers(response.result || []); // Lưu danh sách hoạt động vào state
+        const response = await GroupUserAPI.getGroupMembers(selectedGroupId);
+        console.log('group user:', response);
+        setUsers(response.result || []);
       } catch (error) {
-        console.error('Error fetching activities:', error);
+        console.error('Error fetching group user:', error);
       }
     };
 
-    if (isOpen) {
+    if (isOpen && selectedGroupId) {
       fetchUsers();
     }
-  }, [isOpen, selectedgroupId]);
+  }, [isOpen, selectedGroupId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setErrorMessage('');
-
-    if (!title || !price || !activityId || !userId) {
-      setErrorMessage('Vui lòng điền đầy đủ thông tin.');
-      setIsLoading(false);
-      return;
-    }
 
     const taskData = {
       title,
@@ -90,7 +60,6 @@ export default function TaskCreatePopUp({
       const response = await TaskAPI.createTask(taskData);
 
       if (response.success) {
-        // Reset form fields on success
         setTitle('');
         setPrice('');
         setUserId('');
@@ -98,12 +67,11 @@ export default function TaskCreatePopUp({
         onClose();
         message.success('Công việc đã được tạo thành công');
       } else {
-        setErrorMessage(
-          response.message || 'Không thể tạo công việc. Vui lòng thử lại.'
-        );
+        setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
+        console.error('Failed to create task:', response.message);
       }
     } catch (error) {
-      setErrorMessage('Có lỗi xảy ra khi tạo công việc. Vui lòng thử lại.');
+      setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
       console.error('Error creating task:', error);
     } finally {
       setIsLoading(false);
