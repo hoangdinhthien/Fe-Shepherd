@@ -5,7 +5,6 @@ import GroupAPI from '../apis/group_api';
 import { message, Tag, Divider, Button, Checkbox, Input } from 'antd';
 import moment from 'moment';
 import request_api from '../apis/request_api';
-import { useSelector } from 'react-redux';
 
 export default function RequestDetail() {
   // -----STATE-----
@@ -16,10 +15,6 @@ export default function RequestDetail() {
   const [activityComments, setActivityComments] = useState({});
   const [activityAcceptance, setActivityAcceptance] = useState({});
   const [eventComment, setEventComment] = useState('');
-  const [userRole, setUserRole] = useState('');
-  const [isCreator, setIsCreator] = useState(false);
-
-  const currentUser = useSelector((state) => state.user.currentUser);
 
   // -----LOCATION-----
   const location = useLocation();
@@ -44,7 +39,6 @@ export default function RequestDetail() {
             });
             if (userResponse.success) {
               setCreatedByName(userResponse.data.name || 'Unknown');
-              setIsCreator(userResponse.data.id === currentUser.user.id);
             }
           }
 
@@ -73,17 +67,6 @@ export default function RequestDetail() {
           } else {
             message.warning('Unable to fetch all requests to retrieve type.');
           }
-
-          // Fetch user role
-          const roleResponse = await UserAPI.getUserRole(currentUser.user.id);
-          if (roleResponse.success) {
-            const roles = roleResponse.data;
-            const isCouncil = currentUser.role === 'council';
-            const isLeader = roles.some(
-              (role) => role.roleName === 'Trưởng nhóm'
-            );
-            setUserRole(isCouncil ? 'council' : isLeader ? 'leader' : 'member');
-          }
         } else {
           message.error(response.message || 'Failed to fetch details.');
         }
@@ -94,7 +77,7 @@ export default function RequestDetail() {
     };
 
     fetchRequestDetails();
-  }, [requestId, currentUser.user.id]);
+  }, [requestId]);
 
   // -----FORMAT DATE TIME FUNCTION-----
   const formatDateTime = (date) => {
@@ -316,7 +299,6 @@ export default function RequestDetail() {
             className='p-2 mt-3 block w-full rounded-md border-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
             placeholder='Nhập góp ý của bạn...'
             onChange={(e) => setEventComment(e.target.value)}
-            disabled={userRole !== 'council'}
           />
         </div>
       )}
@@ -336,7 +318,7 @@ export default function RequestDetail() {
             {/* -----ACTIVITY NAME----- */}
             <h3 className='text-xl font-semibold text-gray-800 mb-2'>
               {activity.activityName}
-              {isAccepted === null && userRole === 'council' && (
+              {isAccepted === null && (
                 <Checkbox
                   className='ml-2'
                   onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -352,7 +334,7 @@ export default function RequestDetail() {
                   </p>
                   <p className='text-gray-600'>
                     {activity.description}
-                    {isAccepted === null && userRole === 'council' && (
+                    {isAccepted === null && (
                       <Checkbox
                         className='ml-2'
                         onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -370,7 +352,7 @@ export default function RequestDetail() {
                   <p className='font-semibold text-gray-700'>Thời gian:</p>
                   <p className='text-gray-600'>
                     {activity.startTime} - {activity.endTime}
-                    {isAccepted === null && userRole === 'council' && (
+                    {isAccepted === null && (
                       <Checkbox
                         className='ml-2'
                         onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -409,7 +391,7 @@ export default function RequestDetail() {
                       {groupNames[group.groupID] || 'Unknown'}
                     </span>{' '}
                     - Chi Phí: {group.cost} VND
-                    {isAccepted === null && userRole === 'council' && (
+                    {isAccepted === null && (
                       <Checkbox
                         className='ml-2'
                         onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -436,7 +418,6 @@ export default function RequestDetail() {
                     onChange={(e) =>
                       handleCommentChange(activity.id, e.target.value)
                     }
-                    disabled={userRole !== 'council'}
                   />
                 </div>
               )}
@@ -454,7 +435,7 @@ export default function RequestDetail() {
       )}
 
       {/* -----BUTTONS----- */}
-      {isAccepted === null && userRole === 'council' && (
+      {isAccepted === null && (
         <div className='flex justify-center space-x-4 mt-8'>
           <Button
             type='primary'

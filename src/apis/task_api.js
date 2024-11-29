@@ -5,9 +5,10 @@ class TaskAPI extends BaseAPI {
     super('task');
   }
 
+  // Fetch tasks by group
   getTasksByGroup(groupId, activityId) {
-    const url = `${this.url}/group`;
-    return super.getCustom(url, { groupId, activityId });
+    const url = `${this.url}/group?GroupId=${groupId}`;
+    return this.getCustom(url, { activityId });
   }
 
   createTask(taskData) {
@@ -27,10 +28,11 @@ class TaskAPI extends BaseAPI {
     return super.getCustom(url, { groupId });
   }
 
+  // Update task status
   updateTaskStatus(taskId, status) {
-    const url = `${this.url}/${taskId}`;
-    return super.patchCustom(url, { status });
+    const url = `${this.url}/${taskId}/status`;
+    return this.putCustom(url, { status });
   }
 }
 
-export default new TaskAPI('');
+export default new TaskAPI();
