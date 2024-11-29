@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import TaskCreatePopUp from './TaskCreatePopUp';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 
 export default function TaskCreateButton({
   selectedGroup,
@@ -10,6 +10,14 @@ export default function TaskCreateButton({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleOpenModal = () => {
+    if (!selectedGroup) {
+      message.warning('Hãy chọn nhóm để tạo công việc mới.');
+      return;
+    }
+    if (!selectedActivity) {
+      message.warning('Hãy chọn hoạt động để tạo công việc mới.');
+      return;
+    }
     setIsModalOpen(true);
   };
 

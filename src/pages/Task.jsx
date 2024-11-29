@@ -5,18 +5,8 @@ import TaskAPI from '../apis/task_api';
 import ActivityAPI from '../apis/activity/activity_api';
 import GroupAPI from '../apis/group_api';
 import { useSelector } from 'react-redux';
-import {
-  Select,
-  Spin,
-  Dropdown,
-  Menu,
-  Button,
-  Modal,
-  message,
-  notification,
-} from 'antd';
+import { Select, Spin, Button, Modal, message, Card, Divider } from 'antd';
 import TaskCreateButton from '../components/task/TaskCreateButton';
-import { DownOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -52,9 +42,6 @@ export default function Task() {
       setLoading(true);
       const response = await GroupAPI.getGroupsForUser(currentUser.user.id);
       setGroups(response.result);
-      if (response.result.length > 0) {
-        setSelectedGroup(response.result[0].id);
-      }
     } catch (error) {
       console.error('Error fetching groups:', error);
     } finally {
@@ -74,37 +61,6 @@ export default function Task() {
       setLoading(false);
     }
   };
-
-  // -----FETCH TASK DETAILS FUNCTION-----
-  const fetchTaskDetails = async (taskId) => {
-    try {
-      setLoading(true);
-      const response = await TaskAPI.getTaskById(taskId);
-      if (response.success) {
-        setSelectedTask(response.data);
-        setIsModalVisible(true);
-      } else {
-        console.error('Failed to fetch task details:', response.message);
-      }
-    } catch (error) {
-      console.error('Error fetching task details:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (rehydrated && currentUser) {
-      fetchGroups();
-    }
-  }, [currentUser, rehydrated]);
-
-  useEffect(() => {
-    if (selectedGroup) {
-      fetchUserRole(selectedGroup);
-      fetchActivities(selectedGroup);
-    }
-  }, [selectedGroup]);
 
   // -----FETCH TASKS FUNCTION-----
   const fetchTasks = useCallback(async () => {
@@ -131,8 +87,6 @@ export default function Task() {
         const columnsData = {};
 
         response.result.forEach((task) => {
-          console.log('Task:', task);
-
           if (!selectedActivity || task.activityId === selectedActivity) {
             const status = task.status || 'Uncategorized';
 
@@ -171,6 +125,37 @@ export default function Task() {
     }
   }, [selectedGroup, isGroupLeader, currentUser.user.id, selectedActivity]);
 
+  // -----FETCH TASK DETAILS FUNCTION-----
+  const fetchTaskDetails = async (taskId) => {
+    try {
+      setLoading(true);
+      const response = await TaskAPI.getById(taskId);
+      if (response.success) {
+        setSelectedTask(response.data);
+        setIsModalVisible(true);
+      } else {
+        console.error('Failed to fetch task details:', response.message);
+      }
+    } catch (error) {
+      console.error('Error fetching task details:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (rehydrated && currentUser) {
+      fetchGroups();
+    }
+  }, [currentUser, rehydrated]);
+
+  useEffect(() => {
+    if (selectedGroup) {
+      fetchUserRole(selectedGroup);
+      fetchActivities(selectedGroup);
+    }
+  }, [selectedGroup]);
+
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks, selectedGroup, selectedActivity]);
@@ -201,9 +186,7 @@ export default function Task() {
         !allowedColumns.includes(source.droppableId) ||
         !allowedColumns.includes(destination.droppableId)
       ) {
-        message.warning(
-          'Bạn không được phép bỏ vào cột này trừ khi bạn là leader'
-        );
+        message.warning('Bạn không được phép bỏ vào cột này.');
         return;
       }
     } else {
@@ -277,12 +260,6 @@ export default function Task() {
       <div className='flex justify-between items-center mb-4'>
         {isGroupLeader && activities.length > 0 && (
           <>
-            {/* {console.log('Activities:', activities)}
-            {console.log('Selected Activity:', selectedActivity)}
-            {console.log(
-              activities.find((activity) => activity.id === selectedActivity)
-                ?.activityName || ''
-            )} */}
             <TaskCreateButton
               selectedGroup={selectedGroup}
               selectedActivity={selectedActivity}
@@ -336,6 +313,16 @@ export default function Task() {
         spinning={loading}
         tip='Loading...'
       >
+        {!selectedGroup && (
+          <div className='text-center text-gray-500'>
+            Vui lòng chọn nhóm để xem công việc.
+          </div>
+        )}
+        {selectedGroup && !selectedActivity && (
+          <div className='text-center text-gray-500'>
+            Vui lòng chọn hoạt động để xem công việc.
+          </div>
+        )}
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='flex flex-row overflow-x-auto gap-4 mt-4'>
             {columnOrder
@@ -357,7 +344,7 @@ export default function Task() {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`p-4 border rounded-b max-h-[calc(100vh-200px)] overflow-y-auto ${
+                        className={`p-4 border rounded-b max-h-[calc(100vh-350px)] overflow-y-auto ${
                           columnColors[index % columnColors.length]
                         }`}
                       >
@@ -410,32 +397,60 @@ export default function Task() {
               Close
             </Button>,
           ]}
+          width={750}
         >
-          <p>
-            <strong>Description:</strong> {selectedTask.description}
-          </p>
-          <p>
-            <strong>Cost:</strong> {selectedTask.cost}
-          </p>
-          <p>
-            <strong>Status:</strong> {selectedTask.status}
-          </p>
-          <p>
-            <strong>Assigned User:</strong> {selectedTask.userName}
-          </p>
-          <p>
-            <strong>Event Name:</strong> {selectedTask.eventName}
-          </p>
-          <p>
-            <strong>Event Description:</strong> {selectedTask.eventDescription}
-          </p>
-          <p>
-            <strong>Activity Name:</strong> {selectedTask.activityName}
-          </p>
-          <p>
-            <strong>Activity Description:</strong>{' '}
-            {selectedTask.activityDescription}
-          </p>
+          <Card bordered={false}>
+            <div className='space-y-4'>
+              <div className='flex justify-between'>
+                <strong className='text-gray-700'>Tên hoạt động:</strong>
+                <p className='text-gray-900'>{selectedTask.activityName}</p>
+              </div>
+              <div className='flex justify-between'>
+                <strong className='text-gray-700'>Mô tả hoạt động:</strong>
+                <p className='text-gray-900'>
+                  {selectedTask.activityDescription}
+                </p>
+              </div>
+              <div className='flex justify-between'>
+                <strong className='text-gray-700'>Mô tả:</strong>
+                <p className='text-gray-900'>{selectedTask.description}</p>
+              </div>
+              <div className='flex justify-between'>
+                <strong className='text-gray-700'>Chi phí:</strong>
+                <p className='text-gray-900'>{selectedTask.cost} VND</p>
+              </div>
+              <div className='flex justify-between'>
+                <strong className='text-gray-700'>Trạng thái:</strong>
+                <p className='text-gray-900'>{selectedTask.status}</p>
+              </div>
+              <div className='flex justify-between'>
+                <strong className='text-gray-700'>Người phụ trách:</strong>
+                <p className='text-gray-900'>{selectedTask.userName}</p>
+              </div>
+              <Divider
+                orientation='center'
+                style={{ borderColor: '#9a9a9a', marginTop: '2rem' }}
+              >
+                <strong>Hoạt Động Thuộc Sự Kiện</strong>
+              </Divider>
+              <div className='flex flex-col'>
+                <strong className='text-gray-700 text-center text-lg'>
+                  Tên sự kiện:
+                </strong>
+                <p className='text-gray-900 text-center'>
+                  {selectedTask.eventName}
+                </p>
+              </div>
+              <div className='flex flex-col'>
+                <strong className='text-gray-700 text-center text-lg'>
+                  Mô tả sự kiện:
+                </strong>
+                <p className='text-gray-900 text-center'>
+                  {selectedTask.eventDescription}
+                </p>
+              </div>
+            </div>
+          </Card>
         </Modal>
       )}
     </div>

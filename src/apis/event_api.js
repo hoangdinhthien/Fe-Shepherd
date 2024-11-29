@@ -19,6 +19,12 @@ class EventAPI extends BaseAPI {
     const url = `${this.url}?GroupId=${groupId}`;
     return super.getCustom(url);
   }
+
+  // Location
+  getLocations() {
+    const url = `${this.url}/Locations`;
+    return super.getCustom(url);
+  }
 }
 
 export default new EventAPI('event');

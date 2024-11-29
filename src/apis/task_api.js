@@ -5,30 +5,28 @@ class TaskAPI extends BaseAPI {
     super('task');
   }
 
+  // Fetch tasks by group
   getTasksByGroup(groupId, activityId) {
-    const url = `${this.url}/group`;
-    return super.getCustom(url, { groupId, activityId });
+    const url = `${this.url}/group?GroupId=${groupId}`;
+    return this.getCustom(url, { activityId });
   }
 
-  createTask(taskData) {
-    const url = `${this.url}`;
-    return super.postCustom(url, taskData);
-  }
-
-  getTaskById(taskId) {
-    const url = `${this.url}/${taskId}`;
-    return super.getCustom(url);
-  }
-
+  // Fetch tasks by group and user
   getTasksByGroupAndUser(groupId, userId, activityId) {
-    const url = `${this.url}/group/${groupId}/${userId}/${activityId}`;
-    return this.getCustom(url);
+    const url = `${this.url}/group?GroupId=${groupId}&UserId=${userId}`;
+    return this.getCustom(url, { activityId });
   }
 
+  // Update task status
   updateTaskStatus(taskId, status) {
-    const url = `${this.url}/${taskId}`;
-    return super.patchCustom(url, { status });
+    const url = `${this.url}/${taskId}/status`;
+    return this.putCustom(url, { status });
+  }
+
+  // create a new task
+  createTask(data) {
+    return this.postCustom(this.url, data);
   }
 }
 
-export default new TaskAPI('');
+export default new TaskAPI();
