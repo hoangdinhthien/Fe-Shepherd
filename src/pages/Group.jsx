@@ -7,6 +7,7 @@ import moment from 'moment';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
+const { TabPane } = Tabs;
 
 export default function Group() {
   const { groups, loading: loadingGroups } = useFetchGroups(); // Sử dụng hook custom
@@ -14,7 +15,9 @@ export default function Group() {
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState([]);
 
+  // Chọn đoàn thể đầu tiên mặc định khi danh sách đoàn thể được tải
   // Chọn đoàn thể đầu tiên mặc định khi danh sách đoàn thể được tải
   useEffect(() => {
     if (groups.length > 0) {
@@ -23,6 +26,7 @@ export default function Group() {
   }, [groups]);
 
   // Lấy danh sách thành viên khi đoàn thể được chọn
+  // Lấy danh sách thành viên khi đoàn thể được chọn
   const fetchMembers = async () => {
     if (!selectedGroup) return;
     try {
@@ -30,6 +34,32 @@ export default function Group() {
       const response = await GroupUserAPI.getGroupMembers(selectedGroup);
       setMembers(response.result || []);
     } catch (error) {
+      console.error('Lỗi khi lấy danh sách thành viên:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Lấy danh sách giao dịch khi đoàn thể được chọn
+  const fetchTransactions = async () => {
+    if (!selectedGroup) return;
+    try {
+      setLoading(true);
+      const response = await TransactionAPI.getTransactionByGroup(
+        selectedGroup
+      );
+
+      // Chuyển đổi object transactions thành array
+      const transactionArray = response.result
+        ? Object.keys(response.result).map((key) => ({
+            ...response.result[key],
+            id: key, // Thêm ID từ key (nếu cần)
+          }))
+        : [];
+      console.log('transactionArray:', transactionArray);
+      setTransactions(transactionArray);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách giao dịch:', error);
       console.error('Lỗi khi lấy danh sách thành viên:', error);
     } finally {
       setLoading(false);
@@ -120,25 +150,16 @@ export default function Group() {
           loading={loadingGroups}
         >
           {groups.map((group) => (
-            <Option
-              key={group.id}
-              value={group.id}
-            >
+            <Option key={group.id} value={group.id}>
               {group.groupName}
             </Option>
           ))}
         </Select>
       </div>
 
-      <Spin
-        spinning={loading || loadingGroups}
-        tip='Đang tải...'
-      >
+      <Spin spinning={loading || loadingGroups} tip='Đang tải...'>
         <Tabs defaultActiveKey='1'>
-          <TabPane
-            tab='Danh Sách Thành Viên'
-            key='1'
-          >
+          <TabPane tab='Danh Sách Thành Viên' key='1'>
             <Table
               columns={memberColumns}
               dataSource={members}
@@ -146,10 +167,7 @@ export default function Group() {
               pagination={false}
             />
           </TabPane>
-          <TabPane
-            tab='Danh Sách Giao Dịch'
-            key='2'
-          >
+          <TabPane tab='Danh Sách Giao Dịch' key='2'>
             <Table
               columns={transactionColumns}
               dataSource={transactions}

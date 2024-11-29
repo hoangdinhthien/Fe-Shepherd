@@ -15,14 +15,16 @@ class TaskAPI extends BaseAPI {
     return super.postCustom(url, taskData);
   }
 
-  getTaskById(taskId) {
-    const url = `${this.url}/${taskId}`;
-    return super.getCustom(url);
+  getActivitiesByGroup(groupId) {
+    const url = `${this.url}activity?GroupID=${groupId}`;
+    console.log('url', url);
+    return super.getCustom(url, { groupId });
   }
 
-  getTasksByGroupAndUser(groupId, userId, activityId) {
-    const url = `${this.url}/group/${groupId}/${userId}/${activityId}`;
-    return this.getCustom(url);
+  getUsersByGroup(groupId) {
+    const url = `${this.url}group-user?GroupId=${groupId}`;
+    console.log('urlUser', url);
+    return super.getCustom(url, { groupId });
   }
 
   updateTaskStatus(taskId, status) {

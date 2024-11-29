@@ -19,10 +19,7 @@ export default function TaskCreateButton({
 
   return (
     <>
-      <Button
-        type='primary'
-        onClick={handleOpenModal}
-      >
+      <Button type='primary' onClick={handleOpenModal}>
         Tạo công việc
       </Button>
       <TaskCreatePopUp

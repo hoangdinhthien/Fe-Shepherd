@@ -21,32 +21,62 @@ export default function TaskCreatePopUp({
   const [price, setPrice] = useState('');
   const [userID, setUserId] = useState('');
   const [description, setDescription] = useState('');
+  const [groupId, setGroupId] = useState('');
+  const [activities, setActivities] = useState([]);
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
-  const { groups, loading: groupsLoading } = useFetchGroups();
-  const selectedGroupId = groups.length > 0 ? groups[0].id : null;
+  console.log('selectedgroupId:', selectedgroupId);
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchActivities = async () => {
       try {
-        const response = await GroupUserAPI.getGroupMembers(selectedGroupId);
-        console.log('group user:', response);
-        setUsers(response.result || []);
+        const response = await TaskAPI.getActivitiesByGroup(selectedgroupId);
+        console.log('activity', response);
+        setActivities(response.result || []); // Lưu danh sách hoạt động vào state
       } catch (error) {
-        console.error('Error fetching group user:', error);
+        console.error('Error fetching activities:', error);
       }
     };
 
-    if (isOpen && selectedGroupId) {
+    if (isOpen) {
+      fetchActivities();
+    }
+  }, [isOpen, selectedgroupId]);
+
+  // Fetch users when modal is open
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!selectedgroupId) {
+        console.error('GroupID is undefined or invalid:', selectedgroupId);
+        setErrorMessage('GroupID không hợp lệ. Vui lòng kiểm tra.');
+        return;
+      }
+
+      try {
+        const response = await TaskAPI.getUsersByGroup(selectedgroupId);
+        console.log('User', response);
+        setUsers(response.result || []); // Lưu danh sách hoạt động vào state
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+      }
+    };
+
+    if (isOpen) {
       fetchUsers();
     }
-  }, [isOpen, selectedGroupId]);
+  }, [isOpen, selectedgroupId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage('');
+
+    if (!title || !price || !activityId || !userId) {
+      setErrorMessage('Vui lòng điền đầy đủ thông tin.');
+      setIsLoading(false);
+      return;
+    }
 
     const taskData = {
       title,
@@ -62,17 +92,19 @@ export default function TaskCreatePopUp({
       const response = await TaskAPI.createTask(taskData);
 
       if (response.success) {
+        // Reset form fields on success
         setTitle('');
         setPrice('');
         setUserId('');
         setDescription('');
         onClose();
       } else {
-        setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
-        console.error('Failed to create task:', response.message);
+        setErrorMessage(
+          response.message || 'Không thể tạo công việc. Vui lòng thử lại.'
+        );
       }
     } catch (error) {
-      setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
+      setErrorMessage('Có lỗi xảy ra khi tạo công việc. Vui lòng thử lại.');
       console.error('Error creating task:', error);
     } finally {
       setIsLoading(false);
@@ -80,87 +112,119 @@ export default function TaskCreatePopUp({
   };
 
   return (
-    <Modal
-      open={isOpen}
-      onCancel={onClose}
-      footer={null}
-      className='w-full max-w-xl'
-    >
-      <div className='flex items-center justify-between p-4 border-b'>
-        <p className='text-lg'>
-          Tạo Một Công Việc Mới Cho{' '}
-          <strong>{activityName || 'Hoạt động chưa xác định'}</strong>
-        </p>
-      </div>
-
-      <form
-        className='p-4'
-        onSubmit={handleSubmit}
-      >
-        <div className='grid gap-4'>
-          <div>
-            <label className='block mb-1'>Chọn Người Phụ Trách</label>
-            <Select
-              value={userID}
-              onChange={(value) => setUserId(value)}
-              required
-              placeholder='Chọn Người Phụ Trách'
-              className='w-full'
-            >
-              {users.map((user) => (
-                <Option
-                  key={user.id}
-                  value={user.userID}
-                >
-                  {user.name}
-                </Option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <label className='block mb-1'>Nhập Tiêu Đề Công Việc</label>
-            <Input
-              type='text'
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              placeholder='Tiêu đề của công việc'
-              className='w-full'
-            />
-          </div>
-          <div>
-            <label className='block mb-1'>Nhập Chi Phí</label>
-            <Input
-              type='number'
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder='VND'
-              className='w-full'
-            />
-          </div>
-          <div>
-            <label className='block mb-1'>Nhập Mô Tả Công Việc</label>
-            <TextArea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              placeholder='Viết mô tả công việc'
-              className='w-full'
-            />
-          </div>
-        </div>
-        {errorMessage && (
-          <p className='text-red-600 text-center mt-2'>{errorMessage}</p>
-        )}
-        <Button
-          type='primary'
-          htmlType='submit'
-          disabled={isLoading}
-          className='w-full mt-4'
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className='fixed inset-0 z-40 bg-black bg-opacity-50 w-full h-full flex justify-center items-center'
         >
-          {isLoading ? <Spin /> : 'Thêm Công Việc'}
-        </Button>
-      </form>
-    </Modal>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className='relative p-4 w-full max-w-md max-h-full'
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className='relative bg-white rounded-lg shadow'>
+              <div className='flex items-center justify-between p-4 border-b rounded-t'>
+                <h3 className='text-lg font-semibold'>Tạo Một Công Việc Mới</h3>
+                <button
+                  onClick={onClose}
+                  type='button'
+                  className='text-gray-400 hover:bg-gray-200 rounded-lg text-sm w-8 h-8 flex justify-center items-center'
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <form className='p-4' onSubmit={handleSubmit}>
+                <div className='grid gap-4'>
+                  <div>
+                    <label>Tiêu Đề</label>
+                    <input
+                      type='text'
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                      className='w-full p-2 border rounded'
+                      placeholder='Tiêu đề của công việc'
+                    />
+                  </div>
+                  <div>
+                    <label>Chi Phí</label>
+                    <input
+                      type='number'
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      required
+                      className='w-full p-2 border rounded'
+                      placeholder='VND'
+                    />
+                  </div>
+                  <div>
+                    <label>Hoạt Động</label>
+                    <select
+                      value={activityId}
+                      onChange={(e) => setActivityId(e.target.value)}
+                      required
+                      className='w-full p-2 border rounded'
+                    >
+                      <option value=''>Chọn Hoạt Động</option>
+                      {activities.map((activity) => (
+                        <option key={activity.id} value={activity.activityId}>
+                          {activity.activityName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label>Người Phụ Trách</label>
+                    <select
+                      value={userId}
+                      onChange={(e) => setUserId(e.target.value)}
+                      required
+                      className='w-full p-2 border rounded'
+                    >
+                      <option value=''>Chọn Người Phụ Trách</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.userId}>
+                          {user.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label>Mô Tả Công Việc</label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows='4'
+                      className='w-full p-2 border rounded'
+                      placeholder='Viết mô tả công việc'
+                    />
+                  </div>
+                </div>
+                {/* Hiển thị thông báo lỗi nếu có */}
+                {errorMessage && (
+                  <p className='text-red-600 text-center mt-2'>
+                    {errorMessage}
+                  </p>
+                )}
+                <button
+                  type='submit'
+                  disabled={isLoading}
+                  className='w-full bg-blue-600 text-white p-2 rounded mt-4'
+                >
+                  {isLoading ? 'Đang tạo...' : 'Thêm Công Việc'}
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
