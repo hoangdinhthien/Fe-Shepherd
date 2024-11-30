@@ -1,5 +1,5 @@
 // src/components/RequestCreateAccount.jsx
-import { Input, Button, Tooltip } from 'antd';
+import { Input, Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
 export default function RequestCreateAccount() {
@@ -33,7 +33,7 @@ export default function RequestCreateAccount() {
         />
         <Input
           type='text'
-          placeholder='Đoàn Thể tham gia'
+          placeholder='Chọn Đoàn Thể tham gia'
           className='h-12'
           size='large'
         />

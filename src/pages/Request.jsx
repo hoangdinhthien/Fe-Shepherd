@@ -30,7 +30,15 @@ const Request = () => {
 
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.currentUser);
-  const COUNCIL_ROLE = import.meta.env.VITE_ROLE_COUNCIL;
+
+  // -----ROLES-----
+  const roles = [
+    import.meta.env.VITE_ROLE_ADMIN,
+    import.meta.env.VITE_ROLE_MEMBER,
+    import.meta.env.VITE_ROLE_PARISH_PRIEST,
+    import.meta.env.VITE_ROLE_COUNCIL,
+    import.meta.env.VITE_ROLE_ACCOUNTANT,
+  ];
 
   const fetchRequest = async () => {
     setIsLoading(true);
@@ -57,6 +65,7 @@ const Request = () => {
       );
 
       setTotal(res.pagination.totalCount);
+      console.log('Request data:', res);
     } catch (error) {
       message.error(error.message);
       console.error(error);
@@ -87,6 +96,7 @@ const Request = () => {
           isAccepted: isAccepted,
           requestingGroup: record.from,
         },
+        currentUser: user, // Pass the current user
       },
     });
   };

@@ -19,8 +19,8 @@ const userMenuItems = [
   { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/user/event' },
   { icon: FaClipboardList, title: 'Yêu Cầu', path: '/user/request' },
   { icon: FaCalendarAlt, title: 'Lịch', path: '/user/calendar' },
-  { icon: MdGroup, title: 'Nhóm', path: '/user/group' },
-  { icon: FaComments, title: 'Chat', path: '/user/chat' },
+  { icon: MdGroup, title: 'Đoàn Thể', path: '/user/group' },
+  // { icon: FaComments, title: 'Chat', path: '/user/chat' },
 ];
 
 const adminMenuItems = [

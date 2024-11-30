@@ -3,7 +3,7 @@ import { Select, message } from 'antd';
 import { IoArrowBack } from 'react-icons/io5';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import group_api from '../apis/group_api';
 import RequestAPI from '../apis/request_api';
 import moment from 'moment';
@@ -28,6 +28,8 @@ export default function CreateRequest() {
   // Select `currentUser` and rehydration state separately
   const currentUser = useSelector((state) => state.user.currentUser);
   const rehydrated = useSelector((state) => state._persist?.rehydrated);
+
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     eventName: '',
@@ -191,6 +193,8 @@ export default function CreateRequest() {
         key: loadingKey,
       });
       console.log('Request submitted:', data);
+
+      navigate('/user/request');
     } catch (error) {
       message.error({
         content: `Error submitting request: ${error.message}`,
