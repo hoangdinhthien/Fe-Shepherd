@@ -9,6 +9,7 @@ import moment from 'moment';
 import PropTypes from 'prop-types';
 import CurrencyInput from 'react-currency-input-field';
 import { useEffect } from 'react';
+import { validateActivityDates } from '../../pages/CreateRequest';
 
 RequestCreateEvent.propTypes = {
   formData: PropTypes.object.isRequired,
@@ -86,6 +87,16 @@ export default function RequestCreateEvent({
       message.warning(
         'Thời gian hoạt động phải nằm trong phạm vi của sự kiện.'
       );
+      setActivities((prevActivities) => {
+        const updatedActivities = [...prevActivities];
+        updatedActivities[index].startTime = null;
+        updatedActivities[index].endTime = null;
+        return updatedActivities;
+      });
+      return;
+    }
+
+    if (!validateActivityDates(start, end)) {
       setActivities((prevActivities) => {
         const updatedActivities = [...prevActivities];
         updatedActivities[index].startTime = null;

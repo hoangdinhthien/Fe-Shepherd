@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import UserAPI from '../apis/user_api';
 import GroupAPI from '../apis/group_api';
 import { message, Tag, Divider, Button, Checkbox } from 'antd';
@@ -387,6 +387,12 @@ export default function RequestDetail() {
                 </div>
                 {/* -----ACTIVITY COMMENT----- */}
                 <div>
+                  <p className='font-semibold text-gray-700'>
+                    Địa điểm tổ chức hoạt động:
+                  </p>
+                  <p className='text-gray-600'>{activity.location}</p>
+                </div>
+                <div>
                   <p className='font-semibold text-gray-700'>Góp Ý:</p>
                   <p className='text-gray-600'>
                     {activity.comment || 'Không có góp ý cho phần này'}
@@ -416,6 +422,21 @@ export default function RequestDetail() {
                         className='ml-2'
                         onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
                       />
+                    )}
+                    {/* -----NAVIGATE TO TASK BUTTON----- */}
+                    {currentUser.listGroupRole?.some(
+                      (userGroup) =>
+                        userGroup.groupId === group.groupID &&
+                        userGroup.roleName === 'Trưởng nhóm'
+                    ) && (
+                      <div className='mb-3 ml-3'>
+                        <Link
+                          to={`/user/task?groupId=${group.groupID}&activityId=${activity.id}`}
+                          className='text-blue-500 hover:underline'
+                        >
+                          Tạo công việc và bàn giao thành viên cho hoạt động này
+                        </Link>
+                      </div>
                     )}
                   </li>
                 ))}
