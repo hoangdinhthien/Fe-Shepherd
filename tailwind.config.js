@@ -1,7 +1,7 @@
-const withMT = require('@material-tailwind/react/utils/withMT');
+import withMT from '@material-tailwind/react/utils/withMT';
 
 /** @type {import('tailwindcss').Config} */
-module.exports = withMT({
+export default withMT({
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
@@ -13,12 +13,12 @@ module.exports = withMT({
         scale: {
           '0%': { transform: 'scale(0.6)' },
           '100%': { transform: 'scale(1)' },
-        }
+        },
       },
       animation: {
         wiggle: 'wiggle 1s ease-in-out infinite',
         scale: 'scale 1s ease-in-out infinite',
-      }
+      },
     },
   },
   plugins: [

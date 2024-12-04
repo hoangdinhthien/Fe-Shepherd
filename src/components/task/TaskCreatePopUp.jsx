@@ -4,6 +4,7 @@ import TaskAPI from '../../apis/task_api';
 import GroupUserAPI from '../../apis/group_user_api';
 import useFetchGroups from '../../hooks/useFetchGroups';
 import CurrencyInput from 'react-currency-input-field';
+import ActivityAPI from '../../apis/activity/activity_api';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -65,7 +66,7 @@ export default function TaskCreatePopUp({
         setUserId('');
         setDescription('');
         onClose();
-        message.success('Công việc đã được tạo thành công');
+        message.success('Công việc đã đư��c tạo thành công');
       } else {
         setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
         console.error('Failed to create task:', response.message);
@@ -92,7 +93,7 @@ export default function TaskCreatePopUp({
       open={isOpen}
       onCancel={onClose}
       footer={null}
-      className='w-full max-w-xl'
+      width={750}
     >
       <div className='flex items-center justify-between p-4 border-b'>
         <p className='text-lg'>
@@ -136,6 +137,7 @@ export default function TaskCreatePopUp({
               className='w-full'
             />
           </div>
+
           <div>
             <label className='block mb-1'>Nhập Chi Phí</label>
             <CurrencyInput

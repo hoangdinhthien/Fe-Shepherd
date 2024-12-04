@@ -5,8 +5,10 @@ import TaskAPI from '../apis/task_api';
 import ActivityAPI from '../apis/activity/activity_api';
 import GroupAPI from '../apis/group_api';
 import { useSelector } from 'react-redux';
-import { Select, Spin, Button, Modal, message, Card, Divider } from 'antd';
+import { Select, Spin, message } from 'antd';
 import TaskCreateButton from '../components/task/TaskCreateButton';
+import { useLocation, useNavigate } from 'react-router-dom'; // Import useLocation and useNavigate
+import TaskDetail from '../components/task/TaskDetail'; // Import TaskDetail component
 
 const { Option } = Select;
 
@@ -25,6 +27,9 @@ export default function Task() {
   // ------SELECTORS------
   const currentUser = useSelector((state) => state.user.currentUser);
   const rehydrated = useSelector((state) => state._persist?.rehydrated);
+
+  const location = useLocation(); // Get the location object
+  const navigate = useNavigate(); // Get the navigate function
 
   // -----FETCH USER ROLE FUNCTION-----
   const fetchUserRole = (groupId) => {
@@ -64,30 +69,21 @@ export default function Task() {
 
   // -----FETCH TASKS FUNCTION-----
   const fetchTasks = useCallback(async () => {
-    if (!selectedGroup) return;
-
+    if (!selectedGroup || !selectedActivity) return;
+    setLoading(true);
     try {
-      setLoading(true);
-      let response;
-      if (isGroupLeader) {
-        response = await TaskAPI.getTasksByGroup(
-          selectedGroup,
-          selectedActivity
-        );
-      } else {
-        response = await TaskAPI.getTasksByGroupAndUser(
-          selectedGroup,
-          currentUser.user.id,
-          selectedActivity
-        );
-      }
+      const response = await TaskAPI.getTasksByGroup(
+        selectedGroup,
+        selectedActivity
+      );
+      console.log('response:', response);
 
       if (response && Array.isArray(response.result)) {
         // Initialize an empty object to hold tasks by status
         const columnsData = {};
 
         response.result.forEach((task) => {
-          if (!selectedActivity || task.activityId === selectedActivity) {
+          if (isGroupLeader || task.userId === currentUser.user.id) {
             const status = task.status || 'Uncategorized';
 
             if (!columnsData[status]) {
@@ -123,7 +119,7 @@ export default function Task() {
     } finally {
       setLoading(false);
     }
-  }, [selectedGroup, isGroupLeader, currentUser.user.id, selectedActivity]);
+  }, [selectedGroup, selectedActivity, isGroupLeader, currentUser.user.id]);
 
   // -----FETCH TASK DETAILS FUNCTION-----
   const fetchTaskDetails = async (taskId) => {
@@ -147,7 +143,20 @@ export default function Task() {
     if (rehydrated && currentUser) {
       fetchGroups();
     }
-  }, [currentUser, rehydrated]);
+
+    // Extract eventId and groupId from URL query parameters
+    const params = new URLSearchParams(location.search);
+    const activityId = params.get('activityId');
+    const groupId = params.get('groupId');
+
+    if (groupId) {
+      setSelectedGroup(groupId);
+    }
+
+    if (activityId) {
+      setSelectedActivity(activityId);
+    }
+  }, [currentUser, rehydrated, location.search]);
 
   useEffect(() => {
     if (selectedGroup) {
@@ -157,17 +166,25 @@ export default function Task() {
   }, [selectedGroup]);
 
   useEffect(() => {
-    fetchTasks();
+    if (selectedGroup && selectedActivity !== null) {
+      fetchTasks();
+    }
   }, [fetchTasks, selectedGroup, selectedActivity]);
 
   const handleGroupChange = (value) => {
     setSelectedGroup(value);
     setColumns({}); // Reset columns when changing groups
+    navigate(
+      `/user/task?groupId=${value}${
+        selectedActivity ? `&activityId=${selectedActivity}` : ''
+      }`
+    );
   };
 
   const handleActivityChange = (value) => {
     setSelectedActivity(value);
     setColumns({});
+    navigate(`/user/task?groupId=${selectedGroup}&activityId=${value}`);
   };
 
   const onDragEnd = async (result) => {
@@ -184,7 +201,10 @@ export default function Task() {
       ];
       if (
         !allowedColumns.includes(source.droppableId) ||
-        !allowedColumns.includes(destination.droppableId)
+        !allowedColumns.includes(destination.droppableId) ||
+        (source.droppableId === 'Đã hoàn thành' &&
+          (destination.droppableId === 'Đang chờ' ||
+            destination.droppableId === 'Bản nháp'))
       ) {
         message.warning('Bạn không được phép bỏ vào cột này.');
         return;
@@ -254,25 +274,31 @@ export default function Task() {
     'bg-pink-100',
   ];
 
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+    setSelectedTask(null);
+  };
+
   return (
     <div className='mx-auto p-4'>
       <h1 className='text-xl mb-3 font-semibold'>Công Việc</h1>
+      {/* -----TOP SECTION----- */}
       <div className='flex justify-between items-center mb-4'>
         {isGroupLeader && activities.length > 0 && (
-          <>
-            <TaskCreateButton
-              selectedGroup={selectedGroup}
-              selectedActivity={selectedActivity}
-              activityName={
-                activities.find((activity) => activity.id === selectedActivity)
-                  ?.activityName || ''
-              }
-            />
-          </>
+          <TaskCreateButton
+            selectedGroup={selectedGroup}
+            selectedActivity={selectedActivity}
+            activityName={
+              activities.find((activity) => activity.id === selectedActivity)
+                ?.activityName || ''
+            }
+          />
         )}
-        <div className='flex items-center ml-auto'>
+        <div className='flex items-center ml-auto space-x-4'>
           <div>
-            <label className='mr-4'>Chọn Nhóm:</label>
+            <label className='mr-2 text-gray-700 font-semibold'>
+              Chọn Nhóm:
+            </label>
             <Select
               value={selectedGroup}
               onChange={handleGroupChange}
@@ -289,8 +315,10 @@ export default function Task() {
               ))}
             </Select>
           </div>
-          <div className='ml-4'>
-            <label className='mr-2'>Chọn Hoạt Động:</label>
+          <div>
+            <label className='mr-2 text-gray-700 font-semibold'>
+              Chọn Hoạt Động:
+            </label>
             <Select
               value={selectedActivity}
               onChange={handleActivityChange}
@@ -307,8 +335,21 @@ export default function Task() {
               ))}
             </Select>
           </div>
+          {selectedActivity && (
+            <div className='ml-5'>
+              <p className='text-gray-700 font-semibold'>
+                Hoạt động này thuộc Sự Kiện:
+              </p>
+              <span className='text-gray-900 font-semibold'>
+                {activities.find((activity) => activity.id === selectedActivity)
+                  ?.event.eventName || 'Không có sự kiện'}
+              </span>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* -----LOADING AND TASKS----- */}
       <Spin
         spinning={loading}
         tip='Loading...'
@@ -323,135 +364,80 @@ export default function Task() {
             Vui lòng chọn hoạt động để xem công việc.
           </div>
         )}
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className='flex flex-row overflow-x-auto gap-4 mt-4'>
-            {columnOrder
-              .filter((status) => isGroupLeader || status !== 'Bản nháp') // Filter out "Draft" for non-leaders
-              .map((status, index) => (
-                <div
-                  key={status}
-                  className='flex flex-col flex-1 max-h-[calc(100vh-200px)]'
-                >
-                  <h2
-                    className={`text-lg font-semibold p-4 border rounded-t ${
-                      columnColors[index % columnColors.length]
-                    }`}
+        {selectedGroup && selectedActivity && (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div className='flex flex-row overflow-x-auto gap-4 mt-4'>
+              {columnOrder
+                .filter((status) => isGroupLeader || status !== 'Bản nháp') // Filter out "Draft" for non-leaders
+                .map((status, index) => (
+                  <div
+                    key={status}
+                    className='flex flex-col flex-1 max-h-[calc(100vh-200px)]'
                   >
-                    {status}
-                  </h2>
-                  <Droppable droppableId={status}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`p-4 border rounded-b max-h-[calc(100vh-350px)] overflow-y-auto ${
-                          columnColors[index % columnColors.length]
-                        }`}
-                      >
-                        {columns[status]?.map((task, index) => (
-                          <Draggable
-                            key={task.id}
-                            draggableId={task.id.toString()}
-                            index={index}
-                          >
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className='p-2 mt-2 bg-white rounded shadow-md cursor-pointer'
-                                onClick={() => fetchTaskDetails(task.id)}
-                              >
-                                <h3 className='font-medium'>{task.title}</h3>
-                                <p className='text-sm text-gray-600'>
-                                  <FaUser className='inline mr-1' />{' '}
-                                  {task.assignedUser}
-                                </p>
-                                <p className='text-sm text-gray-600'>
-                                  <FaCalendarAlt className='inline mr-1' />{' '}
-                                  {task.dueDate}
-                                </p>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              ))}
-          </div>
-        </DragDropContext>
-      </Spin>
-      {selectedTask && (
-        <Modal
-          title={selectedTask.title}
-          open={isModalVisible}
-          onCancel={() => setIsModalVisible(false)}
-          footer={[
-            <Button
-              key='close'
-              onClick={() => setIsModalVisible(false)}
-            >
-              Close
-            </Button>,
-          ]}
-          width={750}
-        >
-          <Card bordered={false}>
-            <div className='space-y-4'>
-              <div className='flex justify-between'>
-                <strong className='text-gray-700'>Tên hoạt động:</strong>
-                <p className='text-gray-900'>{selectedTask.activityName}</p>
-              </div>
-              <div className='flex justify-between'>
-                <strong className='text-gray-700'>Mô tả hoạt động:</strong>
-                <p className='text-gray-900'>
-                  {selectedTask.activityDescription}
-                </p>
-              </div>
-              <div className='flex justify-between'>
-                <strong className='text-gray-700'>Mô tả:</strong>
-                <p className='text-gray-900'>{selectedTask.description}</p>
-              </div>
-              <div className='flex justify-between'>
-                <strong className='text-gray-700'>Chi phí:</strong>
-                <p className='text-gray-900'>{selectedTask.cost} VND</p>
-              </div>
-              <div className='flex justify-between'>
-                <strong className='text-gray-700'>Trạng thái:</strong>
-                <p className='text-gray-900'>{selectedTask.status}</p>
-              </div>
-              <div className='flex justify-between'>
-                <strong className='text-gray-700'>Người phụ trách:</strong>
-                <p className='text-gray-900'>{selectedTask.userName}</p>
-              </div>
-              <Divider
-                orientation='center'
-                style={{ borderColor: '#9a9a9a', marginTop: '2rem' }}
-              >
-                <strong>Hoạt Động Thuộc Sự Kiện</strong>
-              </Divider>
-              <div className='flex flex-col'>
-                <strong className='text-gray-700 text-center text-lg'>
-                  Tên sự kiện:
-                </strong>
-                <p className='text-gray-900 text-center'>
-                  {selectedTask.eventName}
-                </p>
-              </div>
-              <div className='flex flex-col'>
-                <strong className='text-gray-700 text-center text-lg'>
-                  Mô tả sự kiện:
-                </strong>
-                <p className='text-gray-900 text-center'>
-                  {selectedTask.eventDescription}
-                </p>
-              </div>
+                    <h2
+                      className={`text-lg font-semibold p-4 border rounded-t ${
+                        columnColors[index % columnColors.length]
+                      }`}
+                    >
+                      {status}
+                    </h2>
+                    <Droppable droppableId={status}>
+                      {(
+                        provided = { innerRef: () => {}, droppableProps: {} }
+                      ) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={`p-4 border rounded-b max-h-[calc(100vh-350px)] overflow-y-auto ${
+                            columnColors[index % columnColors.length]
+                          }`}
+                        >
+                          {columns[status]?.map((task, index) => (
+                            <Draggable
+                              key={task.id}
+                              draggableId={task.id.toString()}
+                              index={index}
+                            >
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className='p-2 mt-2 bg-white rounded shadow-md cursor-pointer'
+                                  onClick={() => fetchTaskDetails(task.id)}
+                                >
+                                  <h3 className='font-medium'>{task.title}</h3>
+                                  <p className='text-sm text-gray-600'>
+                                    <FaUser className='inline mr-1' />{' '}
+                                    {task.assignedUser}
+                                  </p>
+                                  <p className='text-sm text-gray-600'>
+                                    <FaCalendarAlt className='inline mr-1' />{' '}
+                                    {task.dueDate}
+                                  </p>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </div>
+                ))}
             </div>
-          </Card>
-        </Modal>
+          </DragDropContext>
+        )}
+      </Spin>
+
+      {/* -----TASK DETAILS----- */}
+      {selectedTask && (
+        <TaskDetail
+          selectedTask={selectedTask}
+          isModalVisible={isModalVisible}
+          setIsModalVisible={handleModalClose}
+          isGroupLeader={isGroupLeader} // Pass isGroupLeader prop
+        />
       )}
     </div>
   );

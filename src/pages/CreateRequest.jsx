@@ -13,6 +13,14 @@ import EventAPI from '../apis/event_api';
 
 const { Option } = Select;
 
+export const validateActivityDates = (start, end) => {
+  if (start && end && end.diff(start, 'hours') > 24) {
+    message.warning('Hoạt Động chỉ được diễn ra trong ngày.');
+    return false;
+  }
+  return true;
+};
+
 export default function CreateRequest() {
   // ------STATES------
   const [userGroups, setUserGroups] = useState([]);
@@ -40,6 +48,8 @@ export default function CreateRequest() {
     ceremonyID: null,
     listActivities: [],
   });
+
+  const currentUserGroup = userGroups.length > 0 ? userGroups[0] : {};
 
   useEffect(() => {
     const fetchAllGroups = async () => {
@@ -135,6 +145,44 @@ export default function CreateRequest() {
     setTotalCost(total);
   };
 
+  const handleActivityTimeChange = (index, dates) => {
+    const [start, end] = dates;
+
+    if (
+      (start && start.isBefore(formData.fromDate)) ||
+      (end && end.isAfter(formData.toDate))
+    ) {
+      message.warning(
+        'Thời gian hoạt động phải nằm trong phạm vi của sự kiện.'
+      );
+      setActivities((prevActivities) => {
+        const updatedActivities = [...prevActivities];
+        updatedActivities[index].startTime = null;
+        updatedActivities[index].endTime = null;
+        return updatedActivities;
+      });
+      return;
+    }
+
+    if (!validateActivityDates(start, end)) {
+      setActivities((prevActivities) => {
+        const updatedActivities = [...prevActivities];
+        updatedActivities[index].startTime = null;
+        updatedActivities[index].endTime = null;
+        return updatedActivities;
+      });
+      return;
+    }
+
+    setActivities((prevActivities) => {
+      const updatedActivities = [...prevActivities];
+      updatedActivities[index].startTime = start ? start.toISOString() : null;
+      updatedActivities[index].endTime = end ? end.toISOString() : null;
+      return updatedActivities;
+    });
+    calculateTotalCost();
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
 
@@ -165,23 +213,24 @@ export default function CreateRequest() {
         fromDate: formData.fromDate.toISOString(),
         toDate: formData.toDate.toISOString(),
         isPublic: formData.isPublic,
-        ceremonyID: formData.ceremonyID,
-        totalCost: totalCost,
         location: 'Trong Giáo Xứ',
+        imageURL: '', // Add imageURL if needed
+        ceremonyID: formData.ceremonyID,
         listActivities: activities.map((activity) => ({
           activityName: activity.title,
           description: activity.description,
+          location: activity.location,
+          imageURL: '', // Add imageURL if needed
           startTime: activity.startTime
-            ? moment(activity.startTime).format('HH:mm:ss')
+            ? moment(activity.startTime).toISOString()
             : null,
           endTime: activity.endTime
-            ? moment(activity.endTime).format('HH:mm:ss')
+            ? moment(activity.endTime).toISOString()
             : null,
           groups: activity.selectedGroups.map((group) => ({
             groupID: group.groupID,
             cost: group.cost,
           })),
-          location: activity.location,
         })),
       };
 
@@ -283,7 +332,9 @@ export default function CreateRequest() {
         />
       )}
 
-      {selectedRequestType === 'Tạo tài khoản' && <RequestCreateAccount />}
+      {selectedRequestType === 'Tạo tài khoản' && (
+        <RequestCreateAccount currentUserGroup={currentUserGroup} />
+      )}
 
       {/* Buttons */}
       {!loading && (

@@ -5,8 +5,15 @@ class RequestAPI extends BaseAPI {
     super(`request`);
   }
 
+  // request create event
   createRequest(id, data) {
     const url = `${this.url}/CreateEvent?groupId=${id}`;
+    return super.postCustom(url, data);
+  }
+
+  // request create account
+  createAccount(groupId, data) {
+    const url = `${this.url}/CreateAccount?groupId=${groupId}`;
     return super.postCustom(url, data);
   }
 

@@ -16,6 +16,11 @@ class TaskAPI extends BaseAPI {
     return super.postCustom(url, taskData);
   }
 
+  getTasksByGroupAndUser(groupId, userId, activityId) {
+    const url = `${this.url}/group?GroupId=${groupId}&ActivityId=${activityId}&UserId=${userId}`;
+    return this.getCustom(url, { userId, activityId });
+  }
+
   getActivitiesByGroup(groupId) {
     const url = `${this.url}activity?GroupID=${groupId}`;
     console.log('url', url);
@@ -28,10 +33,16 @@ class TaskAPI extends BaseAPI {
     return super.getCustom(url, { groupId });
   }
 
-  // Update task status
+  // Update task's status
   updateTaskStatus(taskId, status) {
     const url = `${this.url}/${taskId}/status`;
     return this.putCustom(url, { status });
+  }
+
+  // Update hole task
+  updateTask(taskId, taskData) {
+    const url = `${this.url}/${taskId}`;
+    return this.putCustom(url, taskData);
   }
 }
 
