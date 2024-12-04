@@ -49,6 +49,8 @@ export default function CreateRequest() {
     listActivities: [],
   });
 
+  const currentUserGroup = userGroups.length > 0 ? userGroups[0] : {};
+
   useEffect(() => {
     const fetchAllGroups = async () => {
       try {
@@ -330,7 +332,9 @@ export default function CreateRequest() {
         />
       )}
 
-      {selectedRequestType === 'Tạo tài khoản' && <RequestCreateAccount />}
+      {selectedRequestType === 'Tạo tài khoản' && (
+        <RequestCreateAccount currentUserGroup={currentUserGroup} />
+      )}
 
       {/* Buttons */}
       {!loading && (
