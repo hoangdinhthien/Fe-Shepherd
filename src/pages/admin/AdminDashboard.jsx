@@ -328,9 +328,15 @@ const AdminDashboard = () => {
               </div>
               <div className='flex justify-between items-center pb-2 border-b'>
                 <span className='font-semibold'>Ngân Sách Dự Kiến</span>
-                <span className='text-green-600 font-bold'>
-                  {requestFirst.event.totalCost} VND
-                </span>
+                {requestFirst?.event?.totalCost ? (
+                  <span className='text-green-600 font-bold'>
+                    {requestFirst.event.totalCost} VND
+                  </span>
+                ) : (
+                  <span className='text-gray-500 font-semibold'>
+                    Không có ngân sách
+                  </span>
+                )}
               </div>
               <div className='flex justify-between items-center pb-2 border-b'>
                 <span className='font-semibold'>Trạng Thái</span>

@@ -12,6 +12,7 @@ import { useSelector } from 'react-redux';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import HeaderLogo from '../assets/header-logo-img.png';
 import { FaUserAlt, FaMoneyBillWave } from 'react-icons/fa';
+import { FaUserGroup } from 'react-icons/fa6';
 
 const userMenuItems = [
   { icon: MdDashboard, title: 'Bảng Điều Khiển', path: '/user/dashboard' },
@@ -30,6 +31,7 @@ const adminMenuItems = [
   { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/admin/event' },
   { icon: FaUserAlt, title: 'Người Dùng', path: '/admin/user' },
   { icon: FaMoneyBillWave, title: 'Ngân Sách', path: '/admin/budget' },
+  { icon: FaUserGroup, title: 'Nhóm', path: '/admin/group' },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {

@@ -9,6 +9,10 @@ class ActivityAPI extends BaseAPI {
     const url = `${this.url}`;
     return this.getCustom(url, { groupId });
   }
+  getAllActivities() {
+    const url = `${this.url}`;
+    return this.getCustom(url);
+  }
 }
 
 export default new ActivityAPI();

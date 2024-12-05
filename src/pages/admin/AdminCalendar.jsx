@@ -5,6 +5,7 @@ import 'moment/locale/vi';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Modal, Typography, Button } from 'antd';
 import AdminCalendarAPI from '../../apis/admin/admin_calendar_api';
+import EventAPI from '../../apis/event_api'; // Import EventAPI
 import CustomAdminHeaderBar from '../../components/calendar/CustomAdminHeaderBar';
 import EditCeremonyPopUp from '../../components/admin/EditCeremonyPopUp';
 
@@ -30,43 +31,75 @@ const getWeekRange = (weekNumber) => {
 
 const AdminCalendar = () => {
   const [ceremonies, setCeremonies] = useState([]);
-  const [selectedCeremony, setSelectedCeremony] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
+  const [selectedCeremony, setSelectedCeremony] = useState(null); // Ceremony hoặc Event được chọn
+  const [isModalVisible, setIsModalVisible] = useState(false); // Trạng thái modal
+  const [isEditPopupVisible, setIsEditPopupVisible] = useState(false); // Trạng thái edit popup
   const [selectedWeek, setSelectedWeek] = useState({
     week: moment().week(),
     year: moment().year(),
-  }); // Lưu cả tuần và năm
+  }); // Lưu tuần và năm
   const [currentDate, setCurrentDate] = useState(
     moment().startOf('week').toDate()
   );
 
+  // Hàm fetch sự kiện từ AdminCalendarAPI
   const fetchCeremonies = async () => {
     try {
       const ceremonies = await AdminCalendarAPI.getAllCeremonies();
       const ceremonyData = Array.isArray(ceremonies)
         ? ceremonies.map((ceremony) => ({
             id: ceremony.id,
-            title: ceremony.name,
-            start: new Date(ceremony.fromDate),
-            end: new Date(ceremony.toDate),
-            description: ceremony.description,
-            activities: ceremony.activityPresets || [],
+            title: ceremony.eventName, // Sử dụng eventName làm tiêu đề
+            start: new Date(ceremony.fromDate), // Ngày bắt đầu
+            end: new Date(ceremony.toDate), // Ngày kết thúc
+            description: ceremony.description, // Mô tả
+            status: ceremony.status, // Trạng thái sự kiện
+            activities: ceremony.activities || [], // Hoạt động liên quan
           }))
         : [];
-      setCeremonies(ceremonyData);
+      return ceremonyData;
     } catch (error) {
       console.error('Failed to fetch ceremonies:', error);
+      return [];
     }
   };
 
+  // Hàm fetch sự kiện từ EventAPI
+  const fetchEvents = async () => {
+    try {
+      const events = await EventAPI.getEventsByGroup(); // Lấy tất cả sự kiện từ EventAPI
+      const eventData = Array.isArray(events)
+        ? events.map((event) => ({
+            id: event.id,
+            title: event.name, // Sử dụng name làm tiêu đề
+            start: new Date(event.startDate), // Ngày bắt đầu
+            end: new Date(event.endDate), // Ngày kết thúc
+            description: event.description, // Mô tả
+            status: event.status, // Trạng thái sự kiện
+          }))
+        : [];
+      console.log(eventData);
+      return eventData;
+    } catch (error) {
+      console.error('Failed to fetch events:', error);
+      return [];
+    }
+  };
+
+  // Hàm lấy cả sự kiện từ AdminCalendarAPI và EventAPI
+  const fetchAllEvents = async () => {
+    const ceremonyData = await fetchCeremonies();
+    const eventData = await fetchEvents();
+    setCeremonies([...ceremonyData, ...eventData]); // Kết hợp dữ liệu từ hai API
+  };
+
   useEffect(() => {
-    fetchCeremonies();
+    fetchAllEvents(); // Lấy dữ liệu khi component mount hoặc currentDate thay đổi
   }, [currentDate]);
 
   const handleWeekChange = (weekNumber, year) => {
-    const newStartOfWeek = moment().year(year).week(weekNumber).startOf('week'); // Tính ngày đầu tuần
-    setSelectedWeek({ week: weekNumber, year }); // Cập nhật tuần và năm đã chọn
+    const newStartOfWeek = moment().year(year).week(weekNumber).startOf('week');
+    setSelectedWeek({ week: weekNumber, year }); // Cập nhật tuần và năm
     setCurrentDate(newStartOfWeek.toDate()); // Đồng bộ lịch hiển thị
   };
 
@@ -76,42 +109,46 @@ const AdminCalendar = () => {
     if (action === 'PREV') {
       week -= 1;
       if (week < 1) {
-        year -= 1; // Chuyển sang năm trước
-        week = moment().year(year).weeksInYear(); // Số tuần cuối cùng của năm trước
+        year -= 1; // Năm trước
+        week = moment().year(year).weeksInYear(); // Tuần cuối cùng
       }
     } else if (action === 'NEXT') {
       week += 1;
       if (week > moment().year(year).weeksInYear()) {
-        year += 1; // Chuyển sang năm sau
-        week = 1; // Tuần đầu tiên của năm mới
+        year += 1; // Năm tiếp theo
+        week = 1; // Tuần đầu tiên
       }
     } else if (action === 'TODAY') {
-      week = moment().week(); // Tuần hiện tại
-      year = moment().year(); // Năm hiện tại
+      week = moment().week();
+      year = moment().year();
     }
 
-    handleWeekChange(week, year); // Cập nhật tuần và năm
+    handleWeekChange(week, year);
+  };
+
+  const handleEventSelect = (event) => {
+    setSelectedCeremony(event); // Lưu thông tin ceremony hoặc event được chọn
+    setIsModalVisible(true); // Hiển thị modal chi tiết
   };
 
   return (
     <div style={{ height: '100vh' }}>
       <BigCalendar
         localizer={localizer}
-        events={ceremonies}
+        events={ceremonies} // Danh sách sự kiện với title là eventName
         startAccessor='start'
         endAccessor='end'
         defaultView='week'
         step={60}
         showMultiDayTimes
         date={currentDate}
-        onNavigate={(date) => setCurrentDate(date)}
-        onSelectEvent={setSelectedCeremony}
+        onSelectEvent={handleEventSelect} // Xử lý khi bấm vào sự kiện
         components={{
           toolbar: (props) => (
             <CustomAdminHeaderBar
               {...props}
-              currentWeek={selectedWeek.week} // Tuần hiện tại
-              selectedWeek={selectedWeek} // Truyền toàn bộ đối tượng selectedWeek
+              currentWeek={selectedWeek.week}
+              selectedWeek={selectedWeek}
               handleWeekChange={(weekNumber, year) =>
                 handleWeekChange(weekNumber, year)
               }
@@ -123,37 +160,40 @@ const AdminCalendar = () => {
         style={{ height: '100vh' }}
       />
 
-      {/* Các Modal */}
+      {/* Modal hiển thị chi tiết */}
       <Modal
         title={<Title level={3}>{selectedCeremony?.title}</Title>}
-        isOpen={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
-        footer={
-          <Button type='primary' onClick={() => setIsEditPopupVisible(true)}>
-            Edit
-          </Button>
-        }
+        footer={null}
         width={800}
         centered
       >
         {selectedCeremony && (
           <div>
-            <Text className='block text-lg font-semibold mb-4 text-gray-800'>
-              {selectedCeremony.description}
-            </Text>
+            <Text>{selectedCeremony.description}</Text>
+            <Title level={4}>Activities</Title>
+            <ul>
+              {selectedCeremony.activities?.map((activity) => (
+                <li key={activity.id}>
+                  <Text strong>{activity.activityName}</Text>:{' '}
+                  {activity.description}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </Modal>
 
+      {/* Popup chỉnh sửa ceremony */}
       <EditCeremonyPopUp
         isOpen={isEditPopupVisible}
         onClose={() => setIsEditPopupVisible(false)}
         onSave={(updatedCeremony) => {
-          // Cập nhật hoặc lưu lại ceremony tại đây
           console.log('Updated Ceremony:', updatedCeremony);
-          fetchCeremonies(); // Tải lại danh sách ceremonies
+          fetchAllEvents(); // Cập nhật lại sự kiện khi sửa thành công
         }}
-        ceremonies={ceremonies} // Truyền danh sách ceremonies vào
+        ceremonies={ceremonies}
       />
     </div>
   );
