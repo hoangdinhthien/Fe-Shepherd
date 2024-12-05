@@ -142,6 +142,7 @@ const AppRoutes = () => {
         <Route path='create-activity' element={<CreateActivity />} />
         <Route path='profile' element={<Profile />} />
         <Route path='budget-history' element={<BudgetHistory />} />
+        <Route path='' element={<Navigate to='dashboard' />} />
       </Route>
 
       <Route path='*' element={<Navigate to='/' />} />
