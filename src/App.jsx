@@ -86,17 +86,14 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path='/' element={<Navigate to={getRoute()} />} />
-      <Route path='/' element={<Navigate to={getRoute()} />} />
       <Route
         path='/welcome'
         element={
-          isAuthenticated ? <Navigate replace to='/user' /> : <WelcomePage />
           isAuthenticated ? <Navigate replace to='/user' /> : <WelcomePage />
         }
       />
       <Route
         path='/sign-in'
-        element={isAuthenticated ? <Navigate replace to='/user' /> : <SignIn />}
         element={isAuthenticated ? <Navigate replace to='/user' /> : <SignIn />}
       />
 
@@ -133,8 +130,6 @@ const AppRoutes = () => {
       >
         <Route path='requestDetails' element={<RequestDetail />} />
         <Route path='dashboard' index element={<Dashboard />} />
-        <Route path='requestDetails' element={<RequestDetail />} />
-        <Route path='dashboard' index element={<Dashboard />} />
 
         <Route path='request' element={<Request />} />
         <Route path='calendar' element={<Calendar />} />
@@ -146,15 +141,9 @@ const AppRoutes = () => {
         <Route path='create-request' element={<CreateRequest />} />
         <Route path='create-activity' element={<CreateActivity />} />
         <Route path='profile' element={<Profile />} />
-        <Route path='' element={<Navigate to='dashboard' />} />
-        <Route path='create-request' element={<CreateRequest />} />
-        <Route path='create-activity' element={<CreateActivity />} />
-        <Route path='profile' element={<Profile />} />
         <Route path='budget-history' element={<BudgetHistory />} />
-        <Route path='' element={<Navigate to='dashboard' />} />
       </Route>
 
-      <Route path='*' element={<Navigate to='/' />} />
       <Route path='*' element={<Navigate to='/' />} />
     </Routes>
   );
@@ -163,7 +152,6 @@ const AppRoutes = () => {
 function App() {
   return (
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
       <PersistGate loading={null} persistor={persistor}>
         <BrowserRouter>
           <AppRoutes />
