@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import UserAPI from '../apis/user_api';
 import GroupAPI from '../apis/group_api';
-import { message, Tag, Divider, Button, Checkbox, Input } from 'antd';
+import { message, Tag, Divider, Button, Checkbox } from 'antd';
 import moment from 'moment';
 import request_api from '../apis/request_api';
-import { useSelector } from 'react-redux';
 
 export default function RequestDetail() {
   // -----STATE-----
@@ -17,14 +16,12 @@ export default function RequestDetail() {
   const [activityAcceptance, setActivityAcceptance] = useState({});
   const [eventComment, setEventComment] = useState('');
   const [userRole, setUserRole] = useState('');
-  const [isCreator, setIsCreator] = useState(false);
-
-  const currentUser = useSelector((state) => state.user.currentUser);
 
   // -----LOCATION-----
   const location = useLocation();
   const navigate = useNavigate();
   const { requestId, isAccepted, requestingGroup } = location.state.request;
+  const currentUser = location.state.currentUser; // Get the current user
   console.log(`isAccepted:`, isAccepted);
 
   // -----USE EFFECT-----
@@ -44,7 +41,6 @@ export default function RequestDetail() {
             });
             if (userResponse.success) {
               setCreatedByName(userResponse.data.name || 'Unknown');
-              setIsCreator(userResponse.data.id === currentUser.user.id);
             }
           }
 
@@ -73,17 +69,6 @@ export default function RequestDetail() {
           } else {
             message.warning('Unable to fetch all requests to retrieve type.');
           }
-
-          // Fetch user role
-          const roleResponse = await UserAPI.getUserRole(currentUser.user.id);
-          if (roleResponse.success) {
-            const roles = roleResponse.data;
-            const isCouncil = currentUser.role === 'council';
-            const isLeader = roles.some(
-              (role) => role.roleName === 'Trưởng nhóm'
-            );
-            setUserRole(isCouncil ? 'council' : isLeader ? 'leader' : 'member');
-          }
         } else {
           message.error(response.message || 'Failed to fetch details.');
         }
@@ -94,11 +79,22 @@ export default function RequestDetail() {
     };
 
     fetchRequestDetails();
-  }, [requestId, currentUser.user.id]);
+  }, [requestId]);
+
+  useEffect(() => {
+    if (currentUser) {
+      setUserRole(currentUser.user.role);
+    }
+  }, [currentUser]);
 
   // -----FORMAT DATE TIME FUNCTION-----
   const formatDateTime = (date) => {
     return date ? moment(date).format('DD/MM/YYYY - HH:mm') : 'N/A';
+  };
+
+  // -----FORMAT COST FUNCTION-----
+  const formatCost = (cost) => {
+    return cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' VND';
   };
 
   // -----DISPLAY LOADING MESSAGE IF REQUEST DETAILS ARE NOT LOADED-----
@@ -292,17 +288,19 @@ export default function RequestDetail() {
         {/* -----EVENT COST----- */}
         <div>
           <p className='font-semibold text-gray-700'>Tổng Chi Phí Sự Kiện:</p>
-          <p className='text-gray-600'>{eventTotalCost} VND</p>
+          <p className='text-gray-600'>{formatCost(eventTotalCost)}</p>
         </div>
         {/* -----EVENT COMMENT----- */}
         <div>
           <p className='font-semibold text-gray-700'>Góp Ý:</p>
-          <p className='text-gray-600'>{requestDetails.comment}</p>
+          <p className='text-gray-600'>
+            {requestDetails.comment || 'Không có góp ý cho phần này'}
+          </p>
         </div>
       </div>
 
       {/* -----EVENT COMMENT INPUT----- */}
-      {isAccepted === null && (
+      {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
         <div className='p-3 bg-gray-50'>
           <h3
             htmlFor='eventComment'
@@ -316,7 +314,6 @@ export default function RequestDetail() {
             className='p-2 mt-3 block w-full rounded-md border-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
             placeholder='Nhập góp ý của bạn...'
             onChange={(e) => setEventComment(e.target.value)}
-            disabled={userRole !== 'council'}
           />
         </div>
       )}
@@ -336,7 +333,8 @@ export default function RequestDetail() {
             {/* -----ACTIVITY NAME----- */}
             <h3 className='text-xl font-semibold text-gray-800 mb-2'>
               {activity.activityName}
-              {isAccepted === null && userRole === 'council' && (
+              {/* -----CHECKBOX------ */}
+              {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
                 <Checkbox
                   className='ml-2'
                   onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -352,7 +350,7 @@ export default function RequestDetail() {
                   </p>
                   <p className='text-gray-600'>
                     {activity.description}
-                    {isAccepted === null && userRole === 'council' && (
+                    {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
                       <Checkbox
                         className='ml-2'
                         onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -370,7 +368,7 @@ export default function RequestDetail() {
                   <p className='font-semibold text-gray-700'>Thời gian:</p>
                   <p className='text-gray-600'>
                     {activity.startTime} - {activity.endTime}
-                    {isAccepted === null && userRole === 'council' && (
+                    {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
                       <Checkbox
                         className='ml-2'
                         onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -383,12 +381,22 @@ export default function RequestDetail() {
                   <p className='font-semibold text-gray-700'>
                     Tổng Chi Phí Hoạt Động:
                   </p>
-                  <p className='text-gray-600'>{activity.totalCost} VND</p>
+                  <p className='text-gray-600'>
+                    {formatCost(activity.totalCost)}
+                  </p>
                 </div>
                 {/* -----ACTIVITY COMMENT----- */}
                 <div>
+                  <p className='font-semibold text-gray-700'>
+                    Địa điểm tổ chức hoạt động:
+                  </p>
+                  <p className='text-gray-600'>{activity.location}</p>
+                </div>
+                <div>
                   <p className='font-semibold text-gray-700'>Góp Ý:</p>
-                  <p className='text-gray-600'>{activity.comment}</p>
+                  <p className='text-gray-600'>
+                    {activity.comment || 'Không có góp ý cho phần này'}
+                  </p>
                 </div>
               </div>
 
@@ -408,18 +416,33 @@ export default function RequestDetail() {
                     <span className='font-semibold'>
                       {groupNames[group.groupID] || 'Unknown'}
                     </span>{' '}
-                    - Chi Phí: {group.cost} VND
-                    {isAccepted === null && userRole === 'council' && (
+                    - Chi Phí: {formatCost(group.cost)}
+                    {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
                       <Checkbox
                         className='ml-2'
                         onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
                       />
                     )}
+                    {/* -----NAVIGATE TO TASK BUTTON----- */}
+                    {currentUser.listGroupRole?.some(
+                      (userGroup) =>
+                        userGroup.groupId === group.groupID &&
+                        userGroup.roleName === 'Trưởng nhóm'
+                    ) && (
+                      <div className='mb-3 ml-3'>
+                        <Link
+                          to={`/user/task?groupId=${group.groupID}&activityId=${activity.id}`}
+                          className='text-blue-500 hover:underline'
+                        >
+                          Tạo công việc và bàn giao thành viên cho hoạt động này
+                        </Link>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
               {/* -----ACTIVITY COMMENT INPUT----- */}
-              {isAccepted === null && (
+              {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
                 <div className='mt-4'>
                   <p
                     htmlFor='rejectionComment'
@@ -436,7 +459,6 @@ export default function RequestDetail() {
                     onChange={(e) =>
                       handleCommentChange(activity.id, e.target.value)
                     }
-                    disabled={userRole !== 'council'}
                   />
                 </div>
               )}
@@ -454,7 +476,7 @@ export default function RequestDetail() {
       )}
 
       {/* -----BUTTONS----- */}
-      {isAccepted === null && userRole === 'council' && (
+      {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
         <div className='flex justify-center space-x-4 mt-8'>
           <Button
             type='primary'

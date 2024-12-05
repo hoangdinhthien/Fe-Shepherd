@@ -5,9 +5,10 @@ class TaskAPI extends BaseAPI {
     super('task');
   }
 
+  // Fetch tasks by group
   getTasksByGroup(groupId, activityId) {
-    const url = `${this.url}/group`;
-    return super.getCustom(url, { groupId, activityId });
+    const url = `${this.url}/group?GroupId=${groupId}`;
+    return this.getCustom(url, { activityId });
   }
 
   createTask(taskData) {
@@ -15,20 +16,34 @@ class TaskAPI extends BaseAPI {
     return super.postCustom(url, taskData);
   }
 
-  getTaskById(taskId) {
-    const url = `${this.url}/${taskId}`;
-    return super.getCustom(url);
-  }
-
   getTasksByGroupAndUser(groupId, userId, activityId) {
-    const url = `${this.url}/group/${groupId}/${userId}/${activityId}`;
-    return this.getCustom(url);
+    const url = `${this.url}/group?GroupId=${groupId}&ActivityId=${activityId}&UserId=${userId}`;
+    return this.getCustom(url, { userId, activityId });
   }
 
+  getActivitiesByGroup(groupId) {
+    const url = `${this.url}activity?GroupID=${groupId}`;
+    console.log('url', url);
+    return super.getCustom(url, { groupId });
+  }
+
+  getUsersByGroup(groupId) {
+    const url = `${this.url}group-user?GroupId=${groupId}`;
+    console.log('urlUser', url);
+    return super.getCustom(url, { groupId });
+  }
+
+  // Update task's status
   updateTaskStatus(taskId, status) {
+    const url = `${this.url}/${taskId}/status`;
+    return this.putCustom(url, { status });
+  }
+
+  // Update hole task
+  updateTask(taskId, taskData) {
     const url = `${this.url}/${taskId}`;
-    return super.patchCustom(url, { status });
+    return this.putCustom(url, taskData);
   }
 }
 
-export default new TaskAPI('');
+export default new TaskAPI();
