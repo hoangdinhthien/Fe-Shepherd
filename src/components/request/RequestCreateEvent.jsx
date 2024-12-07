@@ -326,7 +326,7 @@ export default function RequestCreateEvent({
             </Select>
 
             <label className='block text-base font-medium mb-2'>
-              Chọn Nhóm và Chi Phí:
+              Chọn Đoàn thể và Chi Phí:
             </label>
             <Select
               mode='multiple'

@@ -12,8 +12,8 @@ class RequestAPI extends BaseAPI {
   }
 
   // request create account
-  createAccount(groupId, data) {
-    const url = `${this.url}/CreateAccount?groupId=${groupId}`;
+  createAccount(data) {
+    const url = `${this.url}/CreateAccount`;
     return super.postCustom(url, data);
   }
 
