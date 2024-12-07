@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import UserAPI from '../apis/user_api';
-import GroupAPI from '../apis/group_api';
+import UserAPI from '../../../apis/user_api';
+import GroupAPI from '../../../apis/group_api';
 import { message, Tag, Divider, Button, Checkbox } from 'antd';
 import moment from 'moment';
-import request_api from '../apis/request_api';
+import request_api from '../../../apis/request_api';
 
 export default function RequestDetail() {
   // -----STATE-----

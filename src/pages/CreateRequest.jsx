@@ -7,8 +7,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import group_api from '../apis/group_api';
 import RequestAPI from '../apis/request_api';
 import moment from 'moment';
-import RequestCreateEvent from '../components/request/RequestCreateEvent';
-import RequestCreateAccount from '../components/request/RequestCreateAccount';
+import RequestCreateEvent from '../components/request/request-create-event/RequestCreateEvent';
+import RequestCreateAccount from '../components/request/request-create-account/RequestCreateAccount';
 import EventAPI from '../apis/event_api';
 
 const { Option } = Select;

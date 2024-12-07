@@ -9,7 +9,7 @@ import moment from 'moment';
 import PropTypes from 'prop-types';
 import CurrencyInput from 'react-currency-input-field';
 import { useEffect } from 'react';
-import { validateActivityDates } from '../../pages/CreateRequest';
+import { validateActivityDates } from '../../../pages/CreateRequest';
 
 RequestCreateEvent.propTypes = {
   formData: PropTypes.object.isRequired,

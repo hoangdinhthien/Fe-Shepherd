@@ -89,16 +89,29 @@ const Request = () => {
 
     console.log('Navigating with isAccepted:', isAccepted);
 
-    navigate(`/user/requestDetails`, {
-      state: {
-        request: {
-          requestId: record.key,
-          isAccepted: isAccepted,
-          requestingGroup: record.from,
+    if (record.event === null) {
+      navigate(`/user/requestCreateAccountDetails`, {
+        state: {
+          request: {
+            requestId: record.key,
+            isAccepted: isAccepted,
+            requestingGroup: record.from,
+          },
+          currentUser: user, // Pass the current user
         },
-        currentUser: user, // Pass the current user
-      },
-    });
+      });
+    } else {
+      navigate(`/user/requestDetails`, {
+        state: {
+          request: {
+            requestId: record.key,
+            isAccepted: isAccepted,
+            requestingGroup: record.from,
+          },
+          currentUser: user, // Pass the current user
+        },
+      });
+    }
   };
 
   const getTime = (dateString) => {
