@@ -96,10 +96,16 @@ const Request = () => {
             requestId: record.key,
             isAccepted: isAccepted,
             requestingGroup: record.from,
+            title: record.title,
+            content: record.content,
+            createdDate: record.createdDate,
+            to: record.to,
+            user: record.createdUser,
           },
           currentUser: user, // Pass the current user
         },
       });
+      console.log('Record:', record);
     } else {
       navigate(`/user/requestDetails`, {
         state: {
