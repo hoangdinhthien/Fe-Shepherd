@@ -37,9 +37,9 @@ export default function Dashboard() {
   const { groups, loading: loadingGroups } = useFetchGroups(); // Fetch groups from custom hook
   const user = useSelector((state) => state.user.currentUser);
 
-  // Chart Data
+  // Dữ liệu Biểu đồ
   const pieChartData = {
-    labels: ['Meetings', 'Tasks', 'Events', 'Calls'],
+    labels: ['Cuộc họp', 'Nhiệm vụ', 'Sự kiện', 'Cuộc gọi'],
     datasets: [
       {
         data: [30, 25, 20, 25],
@@ -48,10 +48,10 @@ export default function Dashboard() {
     ],
   };
   const lineChartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6'],
     datasets: [
       {
-        label: 'Transactions',
+        label: 'Giao dịch',
         data: [65, 59, 80, 81, 56, 55],
         fill: false,
         borderColor: 'rgb(75, 192, 192)',
@@ -61,43 +61,69 @@ export default function Dashboard() {
   };
 
   const messages = [
-    { id: 1, text: 'New meeting scheduled at 3 PM', unread: true },
-    { id: 2, text: 'New meeting scheduled at 3 PM', unread: false },
-    { id: 3, text: 'New meeting scheduled at 3 PM', unread: true },
-    { id: 4, text: 'New meeting scheduled at 3 PM', unread: true },
+    {
+      id: 1,
+      text: 'Cuộc họp mới được lên lịch vào lúc 3 giờ chiều',
+      unread: true,
+    },
+    {
+      id: 2,
+      text: 'Cuộc họp mới được lên lịch vào lúc 3 giờ chiều',
+      unread: false,
+    },
+    {
+      id: 3,
+      text: 'Cuộc họp mới được lên lịch vào lúc 3 giờ chiều',
+      unread: true,
+    },
+    {
+      id: 4,
+      text: 'Cuộc họp mới được lên lịch vào lúc 3 giờ chiều',
+      unread: true,
+    },
   ];
 
-  // set the first group as the default group selected when groups are fetched
+  // Chọn nhóm mặc định khi nhóm được tải về
   useEffect(() => {
     if (groups.length > 0 && !selectedGroup) {
       setSelectedGroup(groups[0].id);
     }
-  }, [groups, selectedGroup]),
-    // Fetch events for the selected group(s)
-    useEffect(() => {
-      const fetchEvents = async () => {
-        if (!selectedGroup) return;
+  }, [groups, selectedGroup]);
 
-        try {
-          const response = await EventAPI.getEventsByGroup({
-            groupId: selectedGroup, // => pass directly id
-          });
-          setEvents(response.data || []);
-        } catch (error) {
-          console.error('Error fetching events:', error);
-        }
-      };
+  // Lấy sự kiện cho nhóm đã chọn
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!selectedGroup) return;
 
-      fetchEvents();
-    }, [selectedGroup]);
+      try {
+        const response = await EventAPI.getEventsByGroup({
+          groupId: selectedGroup, // => pass directly id
+        });
+        setEvents(response.data || []);
+      } catch (error) {
+        console.error('Lỗi khi lấy sự kiện:', error);
+      }
+    };
 
-  const daysOfWeek = ['Mon', 'Tues', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'];
+    fetchEvents();
+  }, [selectedGroup]);
+
+  const daysOfWeek = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
   const getDaysInMonth = (year, month) =>
     new Date(year, month + 1, 0).getDate();
 
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
+  // Tạo danh sách các ngày có sự kiện
+  const eventDays = events.flatMap((event) => [
+    new Date(event.fromDate).getDate(),
+    ...event.activities.map((activity) =>
+      new Date(activity.startTime).getDate()
+    ),
+  ]);
+
+  // Render ngày trong lịch với đánh dấu sự kiện
   const renderCalendar = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -107,18 +133,17 @@ export default function Dashboard() {
     const calendarDays = [];
     for (let i = 0; i < firstDayOfMonth; i++) {
       calendarDays.push(
-        <div
-          key={`empty-${i}`}
-          className='text-center p-1'
-        ></div>
+        <div key={`empty-${i}`} className='text-center p-1'></div>
       );
     }
     for (let day = 1; day <= daysInMonth; day++) {
       calendarDays.push(
         <div
           key={day}
-          className='text-center p-1'
-          aria-label={`Calendar day ${day}`}
+          className={`text-center p-1 ${
+            eventDays.includes(day) ? 'bg-yellow-200' : ''
+          }`}
+          aria-label={`Ngày ${day} trong lịch`}
         >
           {day}
         </div>
@@ -130,34 +155,31 @@ export default function Dashboard() {
 
   return (
     <div className='p-4 bg-transparent'>
-      {/* GROUP DROPDOWN FILTER */}
+      {/* CHỌN NHÓM */}
       <div className='mb-6'>
         <Select
           value={selectedGroup}
           className='w-full md:w-1/3'
           loading={loadingGroups}
           onChange={(value) => setSelectedGroup(value)}
-          placeholder='---Select Organization---'
+          placeholder='---Chọn tổ chức---'
         >
           {groups.map((group) => (
-            <Option
-              key={group.id}
-              value={group.id}
-            >
+            <Option key={group.id} value={group.id}>
               {group.groupName}
             </Option>
           ))}
         </Select>
       </div>
 
-      {/* CALENDAR AND ACTIVITY WRAPPER */}
+      {/* BẢNG LỊCH VÀ HOẠT ĐỘNG */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
-        {/* CALENDAR WRAPPER */}
+        {/* BẢNG LỊCH */}
         <div className='bg-white p-4 rounded-lg shadow-md md:col-span-3'>
           <div className='flex justify-between items-center mb-4'>
             <button
               className='p-2 rounded-full hover:bg-gray-200 transition-colors'
-              aria-label='Previous month'
+              aria-label='Tháng trước'
               onClick={() =>
                 setCurrentMonth(
                   new Date(currentMonth.setMonth(currentMonth.getMonth() - 1))
@@ -174,7 +196,7 @@ export default function Dashboard() {
             </h2>
             <button
               className='p-2 rounded-full hover:bg-gray-200 transition-colors'
-              aria-label='Next month'
+              aria-label='Tháng sau'
               onClick={() =>
                 setCurrentMonth(
                   new Date(currentMonth.setMonth(currentMonth.getMonth() + 1))
@@ -186,10 +208,7 @@ export default function Dashboard() {
           </div>
           <div className='grid grid-cols-7 gap-2'>
             {daysOfWeek.map((day) => (
-              <div
-                key={day}
-                className='text-center font-semibold'
-              >
+              <div key={day} className='text-center font-semibold'>
                 {day}
               </div>
             ))}
@@ -197,52 +216,45 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* EVENTS AND ACTIVITIES */}
+        {/* SỰ KIỆN VÀ HOẠT ĐỘNG */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
-          <h2 className='text-xl font-semibold mb-4'>Events and Activities</h2>
+          <h2 className='text-xl font-semibold mb-4'>Sự kiện và Hoạt động</h2>
           <ul className='space-y-2'>
             {events.length > 0 ? (
               events.map((event) => (
-                <li
-                  key={event.id}
-                  className='p-2 bg-blue-100 rounded-md'
-                >
+                <li key={event.id} className='p-2 bg-blue-100 rounded-md'>
                   {event.eventName} -{' '}
                   {new Date(event.fromDate).toLocaleTimeString()}
                 </li>
               ))
             ) : (
-              <li className='text-gray-500'>No events found for this group.</li>
+              <li className='text-gray-500'>
+                Không có sự kiện nào cho nhóm này.
+              </li>
             )}
           </ul>
         </div>
       </div>
 
-      {/* CHARTS AND MESSAGES WRAPPER */}
+      {/* BIỂU ĐỒ VÀ THÔNG BÁO */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mt-6'>
-        {/* PIE CHART */}
+        {/* BIỂU ĐỒ PIE */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
           <h2 className='text-xl font-semibold mb-4'>
-            Your Activities of the Week
+            Hoạt động của bạn trong tuần
           </h2>
-          <Pie
-            data={pieChartData}
-            options={{ responsive: true }}
-          />
+          <Pie data={pieChartData} options={{ responsive: true }} />
         </div>
 
-        {/* LINE CHART */}
+        {/* BIỂU ĐỒ LINE */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
-          <h2 className='text-xl font-semibold mb-4'>Transactions</h2>
-          <Line
-            data={lineChartData}
-            options={{ responsive: true }}
-          />
+          <h2 className='text-xl font-semibold mb-4'>Giao dịch</h2>
+          <Line data={lineChartData} options={{ responsive: true }} />
         </div>
 
-        {/* MESSAGES */}
+        {/* THÔNG BÁO */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
-          <h2 className='text-xl font-semibold mb-4'>Messages</h2>
+          <h2 className='text-xl font-semibold mb-4'>Thông báo</h2>
           <ul className='space-y-2'>
             {messages.map((message) => (
               <li
@@ -252,7 +264,7 @@ export default function Dashboard() {
                 }`}
               >
                 <span className='font-semibold'>
-                  {message.unread ? 'New: ' : ''}
+                  {message.unread ? 'Mới: ' : ''}
                 </span>
                 {message.text}
               </li>

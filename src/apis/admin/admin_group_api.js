@@ -60,6 +60,16 @@ class AdminGroupAPI extends BaseAPI {
     const url = `${this.url}/${groupId}`; // URL để xóa nhóm
     return super.deleteCustom(url); // Gọi phương thức DELETE từ BaseAPI
   }
+
+  getEventActivitiesByGroup() {
+    const url = `${this.url}/EventActivity?Filter=2`; // URL để lấy tất cả các EventActivity của nhóm
+    return this.getCustom(url).then((response) => {
+      if (Array.isArray(response)) {
+        return response; // Nếu response đã là mảng, trả về trực tiếp
+      }
+      return Object.values(response); // Chuyển đổi object thành mảng
+    });
+  }
 }
 
 export default new AdminGroupAPI();

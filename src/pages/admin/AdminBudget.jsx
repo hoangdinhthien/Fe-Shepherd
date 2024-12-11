@@ -36,34 +36,28 @@ const AdminBudget = () => {
     )
     .filter((transaction) => {
       if (sortValue === 'all') return true;
-      if (sortValue === 'approved')
-        return transaction.approvalStatus.toLowerCase() === 'approved';
-      if (sortValue === 'pending')
-        return transaction.approvalStatus.toLowerCase() === 'pending';
+      if (sortValue === 'Đã duyệt')
+        return transaction.approvalStatus.toLowerCase() === 'Đã duyệt';
+      if (sortValue === 'Chờ duyệt')
+        return transaction.approvalStatus.toLowerCase() === 'Chờ duyệt';
       return true;
     });
 
   const statusCounts = {
     approved: filteredTransactions.filter(
-      (t) => t.approvalStatus === 'Approved'
+      (t) => t.approvalStatus === 'Đã duyệt'
     ).length,
-    pending: filteredTransactions.filter((t) => t.approvalStatus === 'Pending')
-      .length,
-    rejected: filteredTransactions.filter(
-      (t) => t.approvalStatus === 'Rejected'
+    pending: filteredTransactions.filter(
+      (t) => t.approvalStatus === 'Chờ duyệt'
     ).length,
   };
 
   const pieData = {
-    labels: ['Đã xong', 'Đang xử lý', 'Từ chối'],
+    labels: ['Đã xong', 'Đang xử lý'],
     datasets: [
       {
-        data: [
-          statusCounts.approved,
-          statusCounts.pending,
-          statusCounts.rejected,
-        ],
-        backgroundColor: ['#4caf50', '#ff9800', '#f44336'],
+        data: [statusCounts.approved, statusCounts.pending],
+        backgroundColor: ['#4caf50', '#ff9800'],
       },
     ],
   };
@@ -204,22 +198,24 @@ const AdminBudget = () => {
                   border: '1px solid #ddd',
                   padding: '8px',
                   color:
-                    transaction.approvalStatus === 'Approved'
+                    transaction.approvalStatus === 'Đã duyệt'
                       ? '#4caf50'
-                      : transaction.approvalStatus === 'Pending'
+                      : transaction.approvalStatus === 'Chờ duyệt'
                       ? '#ffcc00'
                       : '#f44336',
                   fontWeight: 'bold',
                 }}
               >
-                {transaction.approvalStatus === 'Approved'
+                {transaction.approvalStatus === 'Đã duyệt'
                   ? 'Đã xong'
-                  : transaction.approvalStatus === 'Pending'
+                  : transaction.approvalStatus === 'Chờ duyệt'
                   ? 'Đang xử lý'
                   : 'Đã từ chối'}
               </td>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                {transaction.group.groupName}
+                {transaction.group && transaction.group.groupName
+                  ? transaction.group.groupName
+                  : 'Không có nhóm'}
               </td>
             </tr>
           ))}

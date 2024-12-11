@@ -12,8 +12,8 @@ class BudgetAPI extends BaseAPI {
   }
 
   // Phương thức cập nhật thông tin ngân sách
-  updateBudget(budgetId, budgetData) {
-    const url = `${this.url}/${budgetId}`; // URL để cập nhật ngân sách
+  updateBudget(budgetData) {
+    const url = `${this.url}/Donation`; // URL để cập nhật ngân sách
     return super.putCustom(url, budgetData); // Gọi phương thức PUT từ BaseAPI
   }
 }
