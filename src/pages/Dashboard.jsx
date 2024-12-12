@@ -141,7 +141,10 @@ export default function Dashboard() {
     const calendarDays = [];
     for (let i = 0; i < firstDayOfMonth; i++) {
       calendarDays.push(
-        <div key={`empty-${i}`} className='text-center p-1'></div>
+        <div
+          key={`empty-${i}`}
+          className='text-center p-1'
+        ></div>
       );
     }
     for (let day = 1; day <= daysInMonth; day++) {
@@ -222,7 +225,10 @@ export default function Dashboard() {
           </div>
           <div className='grid grid-cols-7 gap-2'>
             {daysOfWeek.map((day) => (
-              <div key={day} className='text-center font-semibold'>
+              <div
+                key={day}
+                className='text-center font-semibold'
+              >
                 {day}
               </div>
             ))}
@@ -236,15 +242,15 @@ export default function Dashboard() {
           <ul className='space-y-2'>
             {events.length > 0 ? (
               events.map((event) => (
-                <li key={event.id} className='p-2 bg-blue-100 rounded-md'>
+                <li
+                  key={event.id}
+                  className='p-2 bg-blue-100 rounded-md'
+                >
                   {event.eventName} -{' '}
                   {new Date(event.fromDate).toLocaleTimeString()}
                 </li>
               ))
             ) : (
-              <li className='text-gray-500'>
-                Không có sự kiện nào cho nhóm này.
-              </li>
               <li className='text-gray-500'>
                 Không có sự kiện nào cho nhóm này.
               </li>
@@ -260,7 +266,10 @@ export default function Dashboard() {
           <h2 className='text-xl font-semibold mb-4'>
             Hoạt Động Của Bạn Trong Tuần
           </h2>
-          <Pie data={pieChartData} options={{ responsive: true }} />
+          <Pie
+            data={pieChartData}
+            options={{ responsive: true }}
+          />
         </div>
 
         {/* BIỂU ĐỒ LINE */}
@@ -284,7 +293,6 @@ export default function Dashboard() {
                 }`}
               >
                 <span className='font-semibold'>
-                  {message.unread ? 'Mới: ' : ''}
                   {message.unread ? 'Mới: ' : ''}
                 </span>
                 {message.text}
