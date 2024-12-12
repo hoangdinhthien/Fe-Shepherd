@@ -3,11 +3,13 @@ import { useLocation } from 'react-router-dom';
 import { Tag, Divider, message } from 'antd';
 import moment from 'moment';
 import request_api from '../../../apis/request_api';
+import UserAPI from '../../../apis/user_api'; // Import UserAPI
 
 export default function RequestCreateAccountDetail() {
   const location = useLocation();
-  const { requestId } = location.state.request;
+  const { requestId, requestingGroup } = location.state.request;
   const [request, setRequest] = useState(null);
+  const [createdByName, setCreatedByName] = useState(''); // Add state for createdByName
 
   useEffect(() => {
     const fetchRequestDetails = async () => {
@@ -15,6 +17,16 @@ export default function RequestCreateAccountDetail() {
         const response = await request_api.getRequestDetails(requestId);
         if (response.success) {
           setRequest(response.data);
+
+          // Fetch user name for createdBy
+          if (response.data.createdBy) {
+            const userResponse = await UserAPI.getUser({
+              userId: response.data.createdBy,
+            });
+            if (userResponse.success) {
+              setCreatedByName(userResponse.data.name || 'Unknown');
+            }
+          }
         } else {
           message.error(response.message || 'Failed to fetch details.');
         }
@@ -37,22 +49,17 @@ export default function RequestCreateAccountDetail() {
       {/* -----HEADER SECTION----- */}
       <div className='flex justify-between items-center mb-4'>
         <div className='flex space-x-2'>
-          <p className='font-semibold text-gray-700'>Tiêu Đề:</p>
-          <p className='text-gray-600'>{request.title}</p>
+          <p className='font-semibold text-gray-700'>Yêu Cầu Được Tạo Bởi:</p>
+          <p className='text-gray-600'>{createdByName}</p>{' '}
+          {/* Use createdByName */}
         </div>
         <div className='flex space-x-2'>
-          <p className='font-semibold text-gray-700'>Người Yêu Cầu:</p>
-          <p className='text-gray-600'>{request.user.name}</p>
+          <p className='font-semibold text-gray-700'>Đoàn Thể Yêu Cầu:</p>
+          <p className='text-gray-600'>{requestingGroup}</p>
         </div>
         <div className='flex space-x-2'>
-          <p className='font-semibold text-gray-700'>Trạng Thái:</p>
-          <Tag color={request.isAccepted ? 'success' : 'warning'}>
-            {request.isAccepted === null
-              ? 'Pending'
-              : request.isAccepted
-              ? 'Accepted'
-              : 'Rejected'}
-          </Tag>
+          <p className='font-semibold text-gray-700'>Loại Yêu Cầu:</p>
+          <p className='text-gray-600'>{request.type || 'N/A'}</p>
         </div>
       </div>
       {/* -----DIVIDER----- */}
@@ -95,6 +102,16 @@ export default function RequestCreateAccountDetail() {
         <div>
           <p className='font-semibold text-gray-700'>Mật Khẩu:</p>
           <p className='text-gray-600'>{request.user.password}</p>
+        </div>
+        <div>
+          <p className='font-semibold text-gray-700'>Trạng Thái:</p>
+          <Tag color={request.isAccepted ? 'success' : 'warning'}>
+            {request.isAccepted === null
+              ? 'Pending'
+              : request.isAccepted
+              ? 'Accepted'
+              : 'Rejected'}
+          </Tag>
         </div>
       </div>
     </div>
