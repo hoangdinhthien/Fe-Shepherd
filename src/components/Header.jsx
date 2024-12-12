@@ -10,6 +10,7 @@ import {
   MdOutlineLocalActivity,
 } from 'react-icons/md';
 import { FaRegCircleUser } from 'react-icons/fa6';
+import PropTypes from 'prop-types';
 
 export default function Header({
   sidebarOpen,
@@ -22,7 +23,8 @@ export default function Header({
   console.log(isFixed);
   const ADMIN = import.meta.env.VITE_ROLE_ADMIN;
   const LEADER = import.meta.env.VITE_ROLE_GROUP_LEADER;
-  const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
+  // const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
+  const COUNCIL = 'Hội động mục vụ';
 
   return (
     <header
@@ -121,3 +123,16 @@ export default function Header({
     </header>
   );
 }
+
+Header.propTypes = {
+  sidebarOpen: PropTypes.bool.isRequired,
+  setSidebarOpen: PropTypes.func.isRequired,
+  notifications: PropTypes.array,
+  onNotificationClick: PropTypes.func.isRequired,
+  isFixed: PropTypes.bool,
+};
+
+Header.defaultProps = {
+  notifications: [],
+  isFixed: false,
+};
