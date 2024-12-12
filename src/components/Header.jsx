@@ -24,7 +24,7 @@ export default function Header({
   // const ADMIN = import.meta.env.VITE_ROLE_ADMIN;
   // const LEADER = import.meta.env.VITE_ROLE_GROUP_LEADER;
   // const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
-  const COUNCIL = 'Hội động mục vụ';
+  const COUNCIL = 'Hội đồng mục vụ';
   const ADMIN = 'Admin';
   const LEADER = 'Trưởng nhóm';
   console.log(COUNCIL);
