@@ -39,11 +39,16 @@ import RequestCreateAccountDetail from './components/request/request-create-acco
 
 const AppRoutes = () => {
   const roles = [
-    import.meta.env.VITE_ROLE_ADMIN,
-    import.meta.env.VITE_ROLE_MEMBER,
-    import.meta.env.VITE_ROLE_PARISH_PRIEST,
-    import.meta.env.VITE_ROLE_COUNCIL,
-    import.meta.env.VITE_ROLE_ACCOUNTANT,
+    // import.meta.env.VITE_ROLE_ADMIN,
+    // import.meta.env.VITE_ROLE_MEMBER,
+    // import.meta.env.VITE_ROLE_PARISH_PRIEST,
+    // import.meta.env.VITE_ROLE_COUNCIL,
+    // import.meta.env.VITE_ROLE_ACCOUNTANT,
+    'Admin',
+    'Thành viên',
+    'Cha xứ',
+    'Hội đồng mục vụ',
+    'Thủ quỹ',
   ];
 
   const user = useSelector((state) => state.user.currentUser);

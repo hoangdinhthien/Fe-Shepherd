@@ -35,7 +35,8 @@ export default function EventActivityPage() {
   const [formData, setFormData] = useState({});
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
-  const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
+  // const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
+  const COUNCIL = 'Hội đồng mục vụ';
 
   // New function to handle event selection
   const handleEventChange = (eventId) => {

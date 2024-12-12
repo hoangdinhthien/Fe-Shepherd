@@ -44,7 +44,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     setActive(location.pathname);
   }, [location]);
 
-  const ADMIN = import.meta.env.VITE_ROLE_ADMIN;
+  // const ADMIN = import.meta.env.VITE_ROLE_ADMIN;
+  const ADMIN = 'Admin';
 
   const navItems =
     currentUser.user.role !== ADMIN ? userMenuItems : adminMenuItems;

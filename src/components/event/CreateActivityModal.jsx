@@ -32,8 +32,10 @@ const CreateActivityModal = ({
     setShowCreateActivity(true);
   };
 
-  const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
-  const PRIEST = import.meta.env.VITE_ROLE_PARISH_PRIEST;
+  // const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
+  // const PRIEST = import.meta.env.VITE_ROLE_PARISH_PRIEST;
+  const COUNCIL = 'Hội đồng mục vụ';
+  const PRIEST = 'Cha xứ';
   const { currentUser } = useSelector((state) => state.user);
   const user = currentUser.user;
   return (

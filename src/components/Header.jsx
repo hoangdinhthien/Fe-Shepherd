@@ -21,10 +21,13 @@ export default function Header({
 }) {
   const { currentUser } = useSelector((state) => state.user);
   console.log(isFixed);
-  const ADMIN = import.meta.env.VITE_ROLE_ADMIN;
-  const LEADER = import.meta.env.VITE_ROLE_GROUP_LEADER;
+  // const ADMIN = import.meta.env.VITE_ROLE_ADMIN;
+  // const LEADER = import.meta.env.VITE_ROLE_GROUP_LEADER;
   // const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
   const COUNCIL = 'Hội động mục vụ';
+  const ADMIN = 'Admin';
+  const LEADER = 'Trưởng nhóm';
+  console.log(COUNCIL);
 
   return (
     <header
