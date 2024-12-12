@@ -13,6 +13,8 @@ import {
   Legend,
 } from 'chart.js';
 import AdminDashboardAPI from '../../apis/admin/admin_dashboard';
+import AdminGroupAPI from '../../apis/admin/admin_group_api';
+import TransactionAPI from '../../apis/transaction_api';
 
 ChartJS.register(
   CategoryScale,
@@ -35,6 +37,11 @@ const AdminDashboard = () => {
   });
   const [monthlyEventCounts, setMonthlyEventCounts] = useState([]);
   const [requestFirst, setRequestFirst] = useState(null);
+  const [budget, setBudget] = useState(0);
+  const [transactionsData, setTransactionsData] = useState({
+    labels: [],
+    datasets: [],
+  });
 
   const eventChange = AdminDashboardAPI.calculatePercentageChange(
     eventCount.thisMonth,
@@ -49,7 +56,185 @@ const AdminDashboard = () => {
     requestCount.lastMonth
   );
 
-  const [budget, setBudget] = useState(0);
+  const [dashboardData, setDashboardData] = useState({
+    eventCount: { thisMonth: 0, lastMonth: 0 },
+    userCount: { thisMonth: 0, lastMonth: 0 },
+    requestCount: { thisMonth: 0, lastMonth: 0 },
+    monthlyEventCounts: [],
+    budget: 0,
+    requestFirst: null,
+    groupActivities: {
+      labels: [], // Ensure this is an empty array by default
+      data: [], // Ensure this is an empty array by default
+    },
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        console.log('Fetching dashboard data...');
+
+        const [
+          eventCount,
+          userCount,
+          requestCount,
+          budget,
+          allEvents,
+          requestFirst,
+          groupActivities,
+          transactionsResponse,
+        ] = await Promise.all([
+          AdminDashboardAPI.getEventCount().catch((err) => {
+            console.error('Error fetching event count:', err);
+            return 0;
+          }),
+          AdminDashboardAPI.getUserCount().catch((err) => {
+            console.error('Error fetching user count:', err);
+            return 0;
+          }),
+          AdminDashboardAPI.getRequestCount().catch((err) => {
+            console.error('Error fetching request count:', err);
+            return 0;
+          }),
+          AdminDashboardAPI.getSurplusOrDeficit().catch((err) => {
+            console.error('Error fetching budget:', err);
+            return 0;
+          }),
+          AdminDashboardAPI.getAllEvents().catch((err) => {
+            console.error('Error fetching all events:', err);
+            return [];
+          }),
+          AdminDashboardAPI.getRequestFirst().catch((err) => {
+            console.error('Error fetching latest request:', err);
+            return null;
+          }),
+          AdminGroupAPI.getEventActivitiesByGroup(),
+          TransactionAPI.getTransactionOverview().catch((err) => {
+            console.error('Error fetching transactions:', err);
+            return [];
+          }),
+        ]);
+
+        console.log('Raw fetched data:');
+        console.log('Event Count:', eventCount);
+        console.log('User Count:', userCount);
+        console.log('Request Count:', requestCount);
+        console.log('Budget:', budget);
+        console.log('All Events:', allEvents);
+        console.log('Request First:', requestFirst);
+        console.log('Group Activities:', groupActivities);
+
+        const transactionsArray = Array.isArray(transactionsResponse)
+          ? transactionsResponse
+          : Object.values(transactionsResponse);
+
+        console.log('Transactions Array:', transactionsArray);
+
+        const flatTransactionsArray = transactionsArray
+          .flat() // Làm phẳng nếu có mảng lồng
+          .filter(
+            (item) =>
+              item && // Bỏ qua null hoặc undefined
+              typeof item === 'object' && // Chỉ giữ các object
+              'year' in item && // Đảm bảo có thuộc tính 'year'
+              'month' in item // Đảm bảo có thuộc tính 'month'
+          );
+
+        console.log('Flat Transactions Array:', flatTransactionsArray);
+
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth();
+        const monthlyEventCounts = Array(currentMonth + 1).fill(0);
+
+        allEvents.forEach((event) => {
+          const eventDate = new Date(event.fromDate);
+          if (eventDate.getFullYear() === currentYear) {
+            const month = eventDate.getMonth();
+            if (month <= currentMonth) {
+              monthlyEventCounts[month] += 1;
+            }
+          }
+        });
+
+        // Format group activities data
+        const formattedGroupActivities = {
+          labels: groupActivities[1].map(
+            (group) => group.groupName || 'Chưa xác định'
+          ),
+          data: groupActivities[1].map((group) => group.activityCount || 0),
+        };
+        const filteredTransactions = flatTransactionsArray.filter(
+          (item) =>
+            item && item.year === currentYear && item.month <= currentMonth
+        );
+        console.log('Filtered Transactions:', filteredTransactions);
+        const labels = filteredTransactions.map(
+          (item) => `Tháng ${item.month}`
+        );
+        const transactionCounts = filteredTransactions.map(
+          (item) => item.totalTransactions
+        );
+
+        setTransactionsData({
+          labels,
+          datasets: [
+            {
+              label: 'Số Giao Dịch',
+              data: transactionCounts,
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 2,
+              tension: 0.3,
+            },
+          ],
+        });
+
+        const monthlyEventCountsData = Array(currentMonth + 1).fill(0);
+        allEvents.forEach((event) => {
+          const eventDate = new Date(event.fromDate);
+          if (eventDate.getFullYear() === currentYear) {
+            const month = eventDate.getMonth();
+            if (month <= currentMonth) {
+              monthlyEventCountsData[month] += 1;
+            }
+          }
+        });
+
+        setDashboardData((prev) => ({
+          ...prev,
+          groupActivities: formattedGroupActivities,
+        }));
+
+        console.log('Formatted Group Activities:', formattedGroupActivities);
+
+        setDashboardData((prev) => ({
+          ...prev,
+          eventCount: {
+            thisMonth: eventCount,
+            lastMonth: prev.eventCount?.lastMonth || 0,
+          },
+          userCount: {
+            thisMonth: userCount,
+            lastMonth: prev.userCount?.lastMonth || 0,
+          },
+          requestCount: {
+            thisMonth: requestCount,
+            lastMonth: prev.requestCount?.lastMonth || 0,
+          },
+          monthlyEventCounts,
+          budget,
+          requestFirst,
+          groupActivities: formattedGroupActivities,
+        }));
+
+        console.log('Dashboard data updated successfully.');
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   useEffect(() => {
     // Lấy tổng số sự kiện
@@ -94,19 +279,6 @@ const AdminDashboard = () => {
     });
   }, []);
 
-  // Sample data for the charts
-  // const recurringEventsData = {
-  //   labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-  //   datasets: [
-  //     {
-  //       label: 'Các sự kiện không định kỳ',
-  //       data: [12, 19, 3, 5, 2, 3],
-  //       backgroundColor: 'rgba(75, 192, 192, 0.2)',
-  //       borderColor: 'rgba(75, 192, 192, 1)',
-  //       borderWidth: 1,
-  //     },
-  //   ],
-  // };
   const chartData = {
     labels: [
       'Tháng 1',
@@ -147,68 +319,6 @@ const AdminDashboard = () => {
     },
   };
 
-  // const latestRequestData = {
-  //   group: 'Group A',
-  //   leaderName: 'John Doe',
-  //   eventDate: '2023-05-01',
-  //   towho: 'Council',
-  //   subject: 'Annual Retreat',
-  //   budget: '$5,000',
-  //   status: 'Pending',
-  //   description: 'This is the description of the latest request.',
-  // };
-
-  // const nonRecurringEventsData = {
-  //   labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-  //   datasets: [
-  //     {
-  //       label: 'Non-Recurring Events',
-  //       data: [8, 12, 6, 9, 4, 7],
-  //       backgroundColor: 'rgba(255, 99, 132, 0.2)',
-  //       borderColor: 'rgba(255, 99, 132, 1)',
-  //       borderWidth: 1,
-  //     },
-  //   ],
-  // };
-
-  const leaderActivitiesData = {
-    labels: ['Leader A', 'Leader B', 'Leader C', 'Leader D', 'Leader E'],
-    datasets: [
-      {
-        label: 'Leader Activities',
-        data: [12, 19, 3, 5, 2],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(153, 102, 255, 0.2)',
-        ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const transactionsData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Transactions',
-        data: [120, 190, 30, 50, 20, 30],
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
   // Add this chartOptions object at the component level
   const chartOptions = {
     maintainAspectRatio: false,
@@ -225,7 +335,7 @@ const AdminDashboard = () => {
       {/* Stats Overview */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
         <div
-          onClick={() => navigate('/admin/event')}
+          onDoubleClick={() => navigate('/admin/event')}
           className='bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white'
         >
           <h3 className='text-lg font-semibold'>Tổng Số Sự Kiện</h3>
@@ -238,7 +348,7 @@ const AdminDashboard = () => {
           )}
         </div>
         <div
-          onClick={() => navigate('/admin/user')}
+          onDoubleClick={() => navigate('/admin/user')}
           className='bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white'
         >
           <h3 className='text-lg font-semibold'>Số Người Dùng</h3>
@@ -251,7 +361,7 @@ const AdminDashboard = () => {
           )}
         </div>
         <div
-          onClick={() => navigate('/admin/budget')}
+          onDoubleClick={() => navigate('/admin/budget')}
           className='bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white'
         >
           <h3 className='text-lg font-semibold'>Ngân Sách</h3>
@@ -261,7 +371,7 @@ const AdminDashboard = () => {
           <p className='text-sm mt-1'></p>
         </div>
         <div
-          onClick={() => navigate('/admin/request')}
+          onDoubleClick={() => navigate('/admin/request')}
           className='bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white'
         >
           <h3 className='text-lg font-semibold'>Số Yêu Cầu</h3>
@@ -278,7 +388,7 @@ const AdminDashboard = () => {
       <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
         {/* Charts Section */}
         <div
-          onClick={() => navigate('/admin/event')}
+          onDoubleClick={() => navigate('/admin/event')}
           className='bg-white rounded-xl shadow-lg p-6 md:col-span-3'
         >
           <h2 className='text-xl font-bold mb-4'>
@@ -291,7 +401,7 @@ const AdminDashboard = () => {
 
         {/* Latest Request Card */}
         <div
-          onClick={() => navigate('/admin/request')}
+          onDoubleClick={() => navigate('/admin/request')}
           className='bg-white rounded-xl shadow-lg p-6'
         >
           <h2 className='text-xl font-bold mb-4'>Yêu Cầu Mới Nhất</h2>
@@ -362,15 +472,63 @@ const AdminDashboard = () => {
 
         {/* Bottom Charts */}
         <div className='bg-white rounded-xl shadow-lg p-6'>
-          <h2 className='text-xl font-bold mb-4'>Leader Activities</h2>
+          <h2 className='text-xl font-bold mb-4'>Hoạt Động Trưởng Nhóm</h2>
           <div className='h-[300px]'>
-            <Pie data={leaderActivitiesData} options={chartOptions} />
+            <Pie
+              data={{
+                labels: dashboardData.groupActivities?.labels || [],
+                datasets: [
+                  {
+                    label: 'Hoạt động',
+                    data: dashboardData.groupActivities?.data || [],
+                    backgroundColor: [
+                      'rgba(255, 99, 132, 0.2)',
+                      'rgba(54, 162, 235, 0.2)',
+                      'rgba(255, 206, 86, 0.2)',
+                      'rgba(75, 192, 192, 0.2)',
+                      'rgba(153, 102, 255, 0.2)',
+                      'rgba(255, 159, 64, 0.2)',
+                    ],
+                    borderColor: [
+                      'rgba(255, 99, 132, 1)',
+                      'rgba(54, 162, 235, 1)',
+                      'rgba(255, 206, 86, 1)',
+                      'rgba(75, 192, 192, 1)',
+                      'rgba(153, 102, 255, 1)',
+                      'rgba(255, 159, 64, 1)',
+                    ],
+                    borderWidth: 1,
+                  },
+                ],
+              }}
+              options={chartOptions}
+            />
+          </div>
+          <div className='mt-4'>
+            <h3 className='text-lg font-semibold mb-2'>Chi Tiết Hoạt Động</h3>
+            <ul className='space-y-2'>
+              {dashboardData.groupActivities.labels.map((label, index) => (
+                <li
+                  key={index}
+                  className='flex justify-between items-center border-b pb-2'
+                >
+                  <span className='font-medium'>{label}</span>
+                  <span>
+                    {dashboardData.groupActivities.data[index]} hoạt động
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
         <div className='bg-white rounded-xl shadow-lg p-6 md:col-span-3'>
-          <h2 className='text-xl font-bold mb-4'>Transactions Overview</h2>
+          <h2 className='text-xl font-bold mb-4'>Tổng Quan Giao Dịch</h2>
           <div className='h-[300px]'>
-            <Line data={transactionsData} options={chartOptions} />
+            {transactionsData.labels.length > 0 ? (
+              <Line data={transactionsData} options={chartOptions} />
+            ) : (
+              <p>Không có dữ liệu giao dịch để hiển thị.</p>
+            )}
           </div>
         </div>
       </div>

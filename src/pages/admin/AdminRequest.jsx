@@ -59,8 +59,10 @@ const AdminRequest = () => {
   };
 
   // Điều hướng tạo tài khoản
-  const handleCreateAccount = () => {
-    navigate('/admin/user', { state: { popup: 'UserCreatePopUp' } });
+  const handleCreateAccount = (request) => {
+    navigate('/admin/user', {
+      state: { popup: 'UserCreatePopUp', requestId: request.id },
+    });
   };
 
   if (loading) return <p>Đang tải...</p>;
@@ -121,10 +123,7 @@ const AdminRequest = () => {
             alignItems: 'center',
           }}
         >
-          <Pie
-            data={pieData}
-            options={pieOptions}
-          />
+          <Pie data={pieData} options={pieOptions} />
         </div>
       </div>
 

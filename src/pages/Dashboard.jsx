@@ -37,7 +37,7 @@ export default function Dashboard() {
   const { groups, loading: loadingGroups } = useFetchGroups(); // Fetch groups from custom hook
   const user = useSelector((state) => state.user.currentUser);
 
-  // Chart Data
+  // Dữ liệu Biểu đồ
   const pieChartData = {
     labels: ['Cuộc họp', 'Nhiệm vụ', 'Sự kiện', 'Cuộc gọi'],
     datasets: [
@@ -83,29 +83,30 @@ export default function Dashboard() {
     },
   ];
 
-  // set the first group as the default group selected when groups are fetched
+  // Chọn nhóm mặc định khi nhóm được tải về
   useEffect(() => {
     if (groups.length > 0 && !selectedGroup) {
       setSelectedGroup(groups[0].id);
     }
-  }, [groups, selectedGroup]),
-    // Fetch events for the selected group(s)
-    useEffect(() => {
-      const fetchEvents = async () => {
-        if (!selectedGroup) return;
+  }, [groups, selectedGroup]);
 
-        try {
-          const response = await EventAPI.getEventsByGroup({
-            groupId: selectedGroup, // => pass directly id
-          });
-          setEvents(response.data || []);
-        } catch (error) {
-          console.error('Error fetching events:', error);
-        }
-      };
+  // Lấy sự kiện cho nhóm đã chọn
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!selectedGroup) return;
 
-      fetchEvents();
-    }, [selectedGroup]);
+      try {
+        const response = await EventAPI.getEventsByGroup({
+          groupId: selectedGroup, // => pass directly id
+        });
+        setEvents(response.data || []);
+      } catch (error) {
+        console.error('Lỗi khi lấy sự kiện:', error);
+      }
+    };
+
+    fetchEvents();
+  }, [selectedGroup]);
 
   const daysOfWeek = [
     'Thứ 2',
@@ -122,6 +123,15 @@ export default function Dashboard() {
 
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
+  // Tạo danh sách các ngày có sự kiện
+  const eventDays = events.flatMap((event) => [
+    new Date(event.fromDate).getDate(),
+    ...event.activities.map((activity) =>
+      new Date(activity.startTime).getDate()
+    ),
+  ]);
+
+  // Render ngày trong lịch với đánh dấu sự kiện
   const renderCalendar = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -131,18 +141,17 @@ export default function Dashboard() {
     const calendarDays = [];
     for (let i = 0; i < firstDayOfMonth; i++) {
       calendarDays.push(
-        <div
-          key={`empty-${i}`}
-          className='text-center p-1'
-        ></div>
+        <div key={`empty-${i}`} className='text-center p-1'></div>
       );
     }
     for (let day = 1; day <= daysInMonth; day++) {
       calendarDays.push(
         <div
           key={day}
-          className='text-center p-1'
-          aria-label={`Calendar day ${day}`}
+          className={`text-center p-1 ${
+            eventDays.includes(day) ? 'bg-yellow-200' : ''
+          }`}
+          aria-label={`Ngày ${day} trong lịch`}
         >
           {day}
         </div>
@@ -154,7 +163,7 @@ export default function Dashboard() {
 
   return (
     <div className='p-4 bg-transparent'>
-      {/* GROUP DROPDOWN FILTER */}
+      {/* CHỌN NHÓM */}
       <div className='mb-6'>
         <div className='flex items-center'>
           <span className='mr-2 font-semibold'>Chọn Đoàn Thể</span>
@@ -177,9 +186,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* CALENDAR AND ACTIVITY WRAPPER */}
+      {/* BẢNG LỊCH VÀ HOẠT ĐỘNG */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
-        {/* CALENDAR WRAPPER */}
+        {/* BẢNG LỊCH */}
         <div className='bg-white p-4 rounded-lg shadow-md md:col-span-3'>
           <div className='flex justify-between items-center mb-4'>
             <button
@@ -213,10 +222,7 @@ export default function Dashboard() {
           </div>
           <div className='grid grid-cols-7 gap-2'>
             {daysOfWeek.map((day) => (
-              <div
-                key={day}
-                className='text-center font-semibold'
-              >
+              <div key={day} className='text-center font-semibold'>
                 {day}
               </div>
             ))}
@@ -224,16 +230,13 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* EVENTS AND ACTIVITIES */}
+        {/* SỰ KIỆN VÀ HOẠT ĐỘNG */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
           <h2 className='text-xl font-semibold mb-4'>Sự Kiện và Hoạt Động</h2>
           <ul className='space-y-2'>
             {events.length > 0 ? (
               events.map((event) => (
-                <li
-                  key={event.id}
-                  className='p-2 bg-blue-100 rounded-md'
-                >
+                <li key={event.id} className='p-2 bg-blue-100 rounded-md'>
                   {event.eventName} -{' '}
                   {new Date(event.fromDate).toLocaleTimeString()}
                 </li>
@@ -242,25 +245,25 @@ export default function Dashboard() {
               <li className='text-gray-500'>
                 Không có sự kiện nào cho nhóm này.
               </li>
+              <li className='text-gray-500'>
+                Không có sự kiện nào cho nhóm này.
+              </li>
             )}
           </ul>
         </div>
       </div>
 
-      {/* CHARTS AND MESSAGES WRAPPER */}
+      {/* BIỂU ĐỒ VÀ THÔNG BÁO */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mt-6'>
-        {/* PIE CHART */}
+        {/* BIỂU ĐỒ PIE */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
           <h2 className='text-xl font-semibold mb-4'>
             Hoạt Động Của Bạn Trong Tuần
           </h2>
-          <Pie
-            data={pieChartData}
-            options={{ responsive: true }}
-          />
+          <Pie data={pieChartData} options={{ responsive: true }} />
         </div>
 
-        {/* LINE CHART */}
+        {/* BIỂU ĐỒ LINE */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
           <h2 className='text-xl font-semibold mb-4'>Giao Dịch</h2>
           <Line
@@ -269,7 +272,7 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* MESSAGES */}
+        {/* THÔNG BÁO */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
           <h2 className='text-xl font-semibold mb-4'>Tin Nhắn</h2>
           <ul className='space-y-2'>
@@ -281,6 +284,7 @@ export default function Dashboard() {
                 }`}
               >
                 <span className='font-semibold'>
+                  {message.unread ? 'Mới: ' : ''}
                   {message.unread ? 'Mới: ' : ''}
                 </span>
                 {message.text}

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import AdminUserAPI from '../../apis/admin/admin_user_api';
+import RequestAPI from '../../apis/admin/request_api';
 
 const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
   const [name, setName] = useState('');
@@ -9,8 +11,47 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('Thành viên');
   const [isLoading, setIsLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({}); // Để hiển thị lỗi chi tiết theo trường
-  const [errorMessage, setErrorMessage] = useState(''); // Lỗi chung nếu có
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const location = useLocation();
+  const { requestId } = location.state || {}; // Lấy requestId từ state (nếu có)
+
+  useEffect(() => {
+    // Kiểm tra nếu có requestId (được điều hướng từ trang yêu cầu)
+    if (requestId) {
+      const fetchRequestDetails = async () => {
+        try {
+          console.log('Request ID:', requestId);
+          const response = await RequestAPI.getDetailRequests(requestId);
+          if (response.success) {
+            const { user } = response.data; // Lấy thông tin user từ response
+            if (user) {
+              setName(user.name || '');
+              setPhone(user.phone || '');
+              setEmail(user.email || '');
+              setPassword(user.password || '');
+              setRole(user.role || 'Thành viên');
+            }
+          } else {
+            console.error('Không thể lấy thông tin yêu cầu.');
+          }
+        } catch (error) {
+          console.error('Lỗi khi lấy chi tiết yêu cầu:', error);
+        }
+      };
+
+      fetchRequestDetails();
+    } else {
+      // Nếu không có requestId, đảm bảo để trống tất cả các trường
+      console.log('Không có requestId, để trống các trường');
+      setName('');
+      setPhone('');
+      setEmail('');
+      setPassword('');
+      setRole('Thành viên');
+    }
+  }, [requestId]);
 
   const validateFields = () => {
     const errors = {};
@@ -20,7 +61,6 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
     if (!password.trim()) errors.password = 'Mật khẩu không được để trống';
     if (password.length < 6)
       errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-
     return errors;
   };
 
@@ -30,6 +70,7 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
     setFieldErrors({});
     setErrorMessage('');
 
+    // Kiểm tra lỗi form
     const errors = validateFields();
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -37,10 +78,32 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
       return;
     }
 
-    const userData = { name, phone, email, password, role };
-
     try {
-      const response = await AdminUserAPI.createUser(userData);
+      // Nếu có requestId, cập nhật trạng thái yêu cầu
+      if (requestId) {
+        const updateResponse = await RequestAPI.updateAcceptRequest(requestId);
+        if (!updateResponse.success) {
+          setErrorMessage('Không thể cập nhật yêu cầu.');
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Tiến hành tạo tài khoản
+      const userData = {
+        name,
+        phone,
+        email,
+        password,
+        role,
+        groupId: '3fa85f64-5717-4562-b3fc-2c963f66afa6', // Group ID hợp lệ
+      };
+
+      const response = await AdminUserAPI.createUser(userData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (response.success) {
         if (typeof onUserCreated === 'function') {
@@ -51,8 +114,10 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
         setErrorMessage(response.message || 'Không thể tạo tài khoản.');
       }
     } catch (error) {
-      setErrorMessage('Có lỗi xảy ra. Vui lòng thử lại sau.');
-      console.error('Lỗi khi tạo tài khoản:', error);
+      console.error('Lỗi khi gọi API:', error);
+      setErrorMessage(
+        error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.'
+      );
     } finally {
       setIsLoading(false);
     }
