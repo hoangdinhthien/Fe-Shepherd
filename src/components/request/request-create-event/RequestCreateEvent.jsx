@@ -9,7 +9,7 @@ import moment from 'moment';
 import PropTypes from 'prop-types';
 import CurrencyInput from 'react-currency-input-field';
 import { useEffect } from 'react';
-import { validateActivityDates } from '../../pages/CreateRequest';
+import { validateActivityDates } from '../../../pages/CreateRequest';
 
 RequestCreateEvent.propTypes = {
   formData: PropTypes.object.isRequired,
@@ -326,7 +326,7 @@ export default function RequestCreateEvent({
             </Select>
 
             <label className='block text-base font-medium mb-2'>
-              Chọn Nhóm và Chi Phí:
+              Chọn Đoàn thể và Chi Phí:
             </label>
             <Select
               mode='multiple'

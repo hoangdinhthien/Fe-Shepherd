@@ -1,6 +1,6 @@
 import { CalendarFilled, FileTextFilled } from '@ant-design/icons';
 import { Spinner } from '@material-tailwind/react';
-import { Card, message, Select, Tabs, Typography, Button } from 'antd';
+import { Card, message, Typography, Button } from 'antd';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -26,7 +26,6 @@ export default function EventActivityPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [isUpdate, setIsUpdate] = useState(false);
-  const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
   const { currentUser } = useSelector((state) => state.user);
   const groupIds =
     currentUser.listGroupRole.map(({ groupId }) => groupId) || [];
@@ -34,6 +33,9 @@ export default function EventActivityPage() {
     groupIds.map((groupId) => ({ groupID: groupId, cost: 0 })) || [];
 
   const [formData, setFormData] = useState({});
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+
+  const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
 
   // New function to handle event selection
   const handleEventChange = (eventId) => {
@@ -88,17 +90,13 @@ export default function EventActivityPage() {
     }
   };
 
-  useEffect(
-    () => {
-      if (activeTab === 'events') {
-        fetchEvents();
-      } else if (activeTab === 'activities') {
-        // Gọi fetchActivities có truyền eventId vào nếu có
-        fetchActivities(selectedItem?.id); // Chỉ truyền eventId nếu đã chọn sự kiện
-      }
-    },
-    [activeTab, currentPage, filter, selectedItem?.id] // Theo dõi khi selectedItem thay đổi
-  );
+  useEffect(() => {
+    if (activeTab === 'events') {
+      fetchEvents();
+    } else if (activeTab === 'activities') {
+      fetchActivities(selectedItem?.id);
+    }
+  }, [activeTab, currentPage, filter, selectedItem?.id]);
 
   const fetchEvents = async () => {
     try {
@@ -120,6 +118,7 @@ export default function EventActivityPage() {
 
   const fetchActivities = async (eventId) => {
     try {
+      setActivitiesLoading(true);
       setLoading(true);
       const params = {
         PageNumber: currentPage,
@@ -128,17 +127,27 @@ export default function EventActivityPage() {
       };
 
       if (eventId) {
-        params.eventId = eventId; // Lọc các hoạt động theo eventId
+        params.eventId = eventId;
       }
 
       const response = await ActivityAPI.getAll(params);
       setActivities(response.result);
       setFilteredActivities(response.result);
       setTotal(response.pagination.totalCount);
+
+      if (response.result.length === 0) {
+        setFilteredActivities([
+          {
+            id: 'no-activities',
+            eventName: `Không có Hoạt Động`,
+          },
+        ]);
+      }
     } catch (error) {
       console.error('Failed to fetch activities:', error);
     } finally {
       setLoading(false);
+      setActivitiesLoading(false);
     }
   };
 
@@ -156,16 +165,26 @@ export default function EventActivityPage() {
     }
     setSelectedItem(item);
     setIsModalVisible(true);
+
+    if (activeTab === 'activities') {
+      setFilteredActivities(activities);
+    }
   };
 
   const handleModalClose = () => {
     setIsModalVisible(false);
-    setSelectedItem(null);
+    if (activeTab === 'events') {
+      setSelectedItem(null);
+    }
+    if (activeTab === 'activities') {
+      setFilteredActivities(activities);
+    }
   };
 
   const handleGoToActivities = (eventId) => {
     setActiveTab('activities');
-    fetchActivities(eventId); // Lọc các hoạt động theo eventId
+    setSelectedItem({ id: eventId });
+    fetchActivities(eventId);
     console.log('Event ID:', eventId);
   };
 
@@ -179,79 +198,103 @@ export default function EventActivityPage() {
           currentPage={currentPage}
           total={total}
           setCurrentPage={setCurrentPage}
-          showEventDropdown={activeTab === 'activities'} // Only show dropdown in 'activities' tab
-          handleEventChange={handleEventChange} // Pass handleEventChange function
-          events={events} // Pass events list to dropdown
-          activeTab={activeTab} // Pass activeTab as prop to EventHeader
+          showEventDropdown={activeTab === 'activities'}
+          handleEventChange={handleEventChange}
+          events={events}
+          activeTab={activeTab}
+          selectedItem={selectedItem}
         />
 
-        {loading && (
+        {(loading || activitiesLoading) && (
           <div className='h-full w-full flex justify-center items-center'>
-            <Spinner className='h-[40px] w-[40px]' spinning='true' />
+            <Spinner
+              className='h-[40px] w-[40px]'
+              spinning='true'
+            />
           </div>
         )}
 
-        {!loading && (
+        {!loading && !activitiesLoading && (
           <div
             className={`grid w-full h-full grid-cols-4 grid-rows-2 px-4 gap-4`}
           >
             {(activeTab === 'events'
               ? filteredEvents
               : filteredActivities
-            )?.map((item) => (
-              <Card
-                key={item.id}
-                hoverable
-                className='rounded-2xl overflow-hidden shadow-md'
-                onClick={() => {
-                  showModal(item);
-                  setShowCreateActivity(false);
-                }}
-                cover={
-                  <div
-                    className={`${activeTab === 'activities' && 'relative'}`}
+            )?.map((item) =>
+              item.id === 'no-activities' ? (
+                <p
+                  key={item.id}
+                  className='col-span-4 text-center text-gray-500'
+                >
+                  {item.eventName}
+                </p>
+              ) : (
+                <Card
+                  key={item.id}
+                  hoverable
+                  className='rounded-2xl overflow-hidden shadow-md transition-transform transform hover:scale-105'
+                  onClick={() => {
+                    showModal(item);
+                    setShowCreateActivity(false);
+                  }}
+                  cover={
+                    <div
+                      className={`${activeTab === 'activities' && 'relative'}`}
+                    >
+                      <img
+                        alt={item.eventName || item.activityName}
+                        src={ALT}
+                        className='w-full h-48 object-cover'
+                      />
+                      {activeTab === 'activities' && (
+                        <div className='absolute bottom-2 left-2 rounded-xl bg-[#71BE63] max-w-[300px] shadow-lg overflow-ellipsis text-white font-bold p-2 px-3 text-sm'>
+                          {item.event.eventName}
+                        </div>
+                      )}
+                    </div>
+                  }
+                >
+                  <Title
+                    ellipsis={{ rows: 1 }}
+                    level={4}
+                    className='text-lg font-semibold text-gray-800'
                   >
-                    <img alt={item.eventName || item.activityName} src={ALT} />
-                    {activeTab === 'activities' && (
-                      <div className='absolute bottom-2 left-2 rounded-xl bg-[#71BE63] max-w-[300px] shadow-lg overflow-ellipsis text-white font-bold p-2 px-3 text-sm'>
-                        {item.event.eventName}
-                      </div>
-                    )}
+                    {item.eventName || item.activityName}
+                  </Title>
+                  <div className='flex items-center w-full text-gray-500 mb-1'>
+                    <CalendarFilled className='mr-2' />
+                    <span>
+                      {moment(item.fromDate || item.startDate).format(
+                        'DD/MM/YYYY'
+                      )}
+                    </span>
+                    <span className='mx-5'>to</span>
+                    <span>
+                      {moment(item.toDate || item.endDate).format('DD/MM/YYYY')}
+                    </span>
                   </div>
-                }
-              >
-                <Title ellipsis={{ rows: 1 }} level={4}>
-                  {item.eventName || item.activityName}
-                </Title>
-                <div className='flex items-center w-full text-gray-500 mb-1'>
-                  <CalendarFilled className='mr-2' />
-                  <span>
-                    {moment(item.fromDate || item.startDate).format(
-                      'DD/MM/YYYY'
-                    )}
-                  </span>
-                  <span className='mx-5'>to</span>
-                  <span>
-                    {moment(item.toDate || item.endDate).format('DD/MM/YYYY')}
-                  </span>
-                </div>
-                <div className='flex items-start justify-start w-full text-gray-500'>
-                  <FileTextFilled className='mr-2 mt-1' />
-                  <Paragraph ellipsis={{ rows: 1 }}>
-                    {item.description ?? 'N/A'}
-                  </Paragraph>
-                </div>
-                {activeTab === 'events' && (
-                  <Button
-                    type='link'
-                    onClick={() => handleGoToActivities(item.id)}
-                    className='text-blue-500 mt-2'
-                  >
-                    Đi đến những hoạt động của sự kiện này
-                  </Button>
-                )}
-              </Card>
-            ))}
+                  <div className='flex items-start justify-start w-full text-gray-500'>
+                    <FileTextFilled className='mr-2 mt-1' />
+                    <Paragraph ellipsis={{ rows: 1 }}>
+                      {item.description ?? 'N/A'}
+                    </Paragraph>
+                  </div>
+                  {activeTab === 'events' && (
+                    <Button
+                      type='link'
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleGoToActivities(item.id);
+                      }}
+                      className='text-blue-500 mt-2 p-0'
+                    >
+                      Đi đến những hoạt động của sự kiện này
+                    </Button>
+                  )}
+                </Card>
+              )
+            )}
           </div>
         )}
 
@@ -270,6 +313,7 @@ export default function EventActivityPage() {
           setFormData={setFormData}
           handleChange={handleChange}
           onSubmit={onSubmit}
+          handleGoToActivities={handleGoToActivities}
         />
       </div>
     </div>

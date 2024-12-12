@@ -7,6 +7,7 @@ import {
 import { DatePicker, Modal, Typography } from 'antd';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
+import PropTypes from 'prop-types';
 const { Title, Paragraph } = Typography;
 
 const CreateActivityModal = ({
@@ -24,6 +25,7 @@ const CreateActivityModal = ({
   setFormData,
   handleChange,
   onSubmit,
+  handleGoToActivities, // Add new prop
 }) => {
   const onUpdateClicked = () => {
     setIsUpdate(true);
@@ -130,7 +132,14 @@ const CreateActivityModal = ({
           )}
           <div className='flex w-full justify-between items-center'>
             {!isUpdate && (
-              <a href='#' className='text-blue-500'>
+              <a
+                href='#'
+                className='text-blue-500'
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleGoToActivities(selectedItem.id); // Use handleGoToActivities function
+                }}
+              >
                 Đi đến{' '}
                 {activeTab === 'events'
                   ? 'những hoạt động của sự kiện này'
@@ -220,6 +229,24 @@ const CreateActivityModal = ({
       )}
     </Modal>
   );
+};
+
+CreateActivityModal.propTypes = {
+  isUpdate: PropTypes.bool.isRequired,
+  setIsUpdate: PropTypes.func.isRequired,
+  image: PropTypes.string.isRequired,
+  loading: PropTypes.bool.isRequired,
+  isModalVisible: PropTypes.bool.isRequired,
+  handleModalClose: PropTypes.func.isRequired,
+  selectedItem: PropTypes.object, // Make selectedItem optional
+  showCreateActivity: PropTypes.bool.isRequired,
+  setShowCreateActivity: PropTypes.func.isRequired,
+  activeTab: PropTypes.string.isRequired,
+  formData: PropTypes.object.isRequired,
+  setFormData: PropTypes.func.isRequired,
+  handleChange: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  handleGoToActivities: PropTypes.func.isRequired, // Add new prop type
 };
 
 export default CreateActivityModal;

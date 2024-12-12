@@ -7,8 +7,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import group_api from '../apis/group_api';
 import RequestAPI from '../apis/request_api';
 import moment from 'moment';
-import RequestCreateEvent from '../components/request/RequestCreateEvent';
-import RequestCreateAccount from '../components/request/RequestCreateAccount';
+import RequestCreateEvent from '../components/request/request-create-event/RequestCreateEvent';
+import RequestCreateAccount from '../components/request/request-create-account/RequestCreateAccount';
 import EventAPI from '../apis/event_api';
 
 const { Option } = Select;
@@ -32,6 +32,13 @@ export default function CreateRequest() {
   const [activities, setActivities] = useState([]);
   const [totalCost, setTotalCost] = useState(0);
   const [locations, setLocations] = useState([]);
+  const [accountData, setAccountData] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    role: '',
+    password: '',
+  });
 
   // Select `currentUser` and rehydration state separately
   const currentUser = useSelector((state) => state.user.currentUser);
@@ -186,72 +193,128 @@ export default function CreateRequest() {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !formData.fromDate ||
-      !formData.toDate ||
-      !formData.eventName ||
-      !formData.description
-    ) {
-      message.error('Please fill all the fields.');
+    if (!selectedRequestType) {
+      message.error('Please select a request type.');
       return;
     }
 
-    const loadingKey = 'loading';
-    try {
-      setLoading(true);
-      message.loading({
-        content: 'Submitting request...',
-        key: loadingKey,
-        duration: 0,
-      });
+    if (selectedRequestType === 'Tạo sự kiện') {
+      if (
+        !formData.fromDate ||
+        !formData.toDate ||
+        !formData.eventName ||
+        !formData.description
+      ) {
+        message.error('Please fill all the fields.');
+        return;
+      }
 
-      calculateTotalCost();
+      const loadingKey = 'loading';
+      try {
+        setLoading(true);
+        message.loading({
+          content: 'Submitting request...',
+          key: loadingKey,
+          duration: 0,
+        });
 
-      const data = {
-        eventName: formData.eventName,
-        description: formData.description,
-        fromDate: formData.fromDate.toISOString(),
-        toDate: formData.toDate.toISOString(),
-        isPublic: formData.isPublic,
-        location: 'Trong Giáo Xứ',
-        imageURL: '', // Add imageURL if needed
-        ceremonyID: formData.ceremonyID,
-        listActivities: activities.map((activity) => ({
-          activityName: activity.title,
-          description: activity.description,
-          location: activity.location,
-          imageURL: '', // Add imageURL if needed
-          startTime: activity.startTime
-            ? moment(activity.startTime).toISOString()
-            : null,
-          endTime: activity.endTime
-            ? moment(activity.endTime).toISOString()
-            : null,
-          groups: activity.selectedGroups.map((group) => ({
-            groupID: group.groupID,
-            cost: group.cost,
+        calculateTotalCost();
+
+        const data = {
+          eventName: formData.eventName,
+          description: formData.description,
+          fromDate: formData.fromDate.toISOString(),
+          toDate: formData.toDate.toISOString(),
+          isPublic: formData.isPublic,
+          location: 'Trong Giáo Xứ',
+          imageURL: '',
+          ceremonyID: formData.ceremonyID,
+          listActivities: activities.map((activity) => ({
+            activityName: activity.title,
+            description: activity.description,
+            location: activity.location,
+            imageURL: '',
+            startTime: activity.startTime
+              ? moment(activity.startTime).toISOString()
+              : null,
+            endTime: activity.endTime
+              ? moment(activity.endTime).toISOString()
+              : null,
+            groups: activity.selectedGroups.map((group) => ({
+              groupID: group.groupID,
+              cost: group.cost,
+            })),
           })),
-        })),
-      };
+        };
 
-      console.log('Data being sent to API:', JSON.stringify(data));
-      await RequestAPI.createRequest(selectedGroup, data);
+        console.log('Data being sent to API:', JSON.stringify(data));
+        await RequestAPI.createRequest(selectedGroup, data);
 
-      message.success({
-        content: 'Request submitted successfully!',
-        key: loadingKey,
-      });
-      console.log('Request submitted:', data);
+        message.success({
+          content: 'Request submitted successfully!',
+          key: loadingKey,
+        });
+        console.log('Request submitted:', data);
 
-      navigate('/user/request');
-    } catch (error) {
-      message.error({
-        content: `Error submitting request: ${error.message}`,
-        key: loadingKey,
-      });
-      console.error('Error details:', error.response?.data?.errors || error);
-    } finally {
-      setLoading(false);
+        navigate('/user/request');
+      } catch (error) {
+        message.error({
+          content: `Error submitting request: ${error.message}`,
+          key: loadingKey,
+        });
+        console.error('Error details:', error.response?.data?.errors || error);
+      } finally {
+        setLoading(false);
+      }
+    } else if (selectedRequestType === 'Tạo tài khoản') {
+      if (
+        !accountData.name ||
+        !accountData.phone ||
+        !accountData.email ||
+        !accountData.role ||
+        !accountData.password
+      ) {
+        message.error('Please fill all the fields.');
+        return;
+      }
+
+      const loadingKey = 'loading';
+      try {
+        setLoading(true);
+        message.loading({
+          content: 'Submitting request...',
+          key: loadingKey,
+          duration: 0,
+        });
+
+        const data = {
+          name: accountData.name,
+          phone: accountData.phone,
+          email: accountData.email,
+          role: accountData.role,
+          password: accountData.password,
+          groupId: currentUserGroup.id,
+        };
+
+        console.log('Data being sent to API:', JSON.stringify(data));
+        await RequestAPI.createAccount(data);
+
+        message.success({
+          content: 'Account creation request submitted successfully!',
+          key: loadingKey,
+        });
+        console.log('Account creation request submitted:', data);
+
+        navigate('/user/request');
+      } catch (error) {
+        message.error({
+          content: `Error submitting request: ${error.message}`,
+          key: loadingKey,
+        });
+        console.error('Error details:', error.response?.data?.errors || error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -269,7 +332,7 @@ export default function CreateRequest() {
           >
             <IoArrowBack className='text-2xl' />
           </Link>
-          <h1 className='text-2xl font-bold'>Tạo Yêu Cầu</h1>
+          <h1 className='text-2xl font-bold'>Tạo Sự Kiện</h1>
         </div>
       </div>
       <hr className='border-t border-gray-400 my-6' />
@@ -333,7 +396,11 @@ export default function CreateRequest() {
       )}
 
       {selectedRequestType === 'Tạo tài khoản' && (
-        <RequestCreateAccount currentUserGroup={currentUserGroup} />
+        <RequestCreateAccount
+          currentUserGroup={currentUserGroup}
+          accountData={accountData}
+          setAccountData={setAccountData}
+        />
       )}
 
       {/* Buttons */}
