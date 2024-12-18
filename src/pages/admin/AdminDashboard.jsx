@@ -328,6 +328,15 @@ const AdminDashboard = () => {
         position: 'top',
       },
     },
+    scales: {
+      y: {
+        beginAtZero: true, // Bắt đầu từ 0
+        suggestedMax:
+          transactionsData.datasets?.[0]?.data?.length > 0
+            ? Math.max(...transactionsData.datasets[0].data) + 5
+            : 10, // Nếu không có dữ liệu, giá trị mặc định là 10
+      },
+    },
   };
 
   return (
@@ -405,7 +414,7 @@ const AdminDashboard = () => {
           className='bg-white rounded-xl shadow-lg p-6'
         >
           <h2 className='text-xl font-bold mb-4'>Yêu Cầu Mới Nhất</h2>
-          {requestFirst && (
+          {requestFirst ? (
             <div className='space-y-3'>
               <div className='flex justify-between items-center pb-2 border-b'>
                 <span className='font-semibold'>Nhóm</span>
@@ -467,6 +476,8 @@ const AdminDashboard = () => {
                 </span>
               </div>
             </div>
+          ) : (
+            <p className='text-gray-500'>Không có yêu cầu nào.</p>
           )}
         </div>
 
