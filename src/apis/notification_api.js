@@ -2,11 +2,17 @@ import BaseAPI from '../config/baseAPI';
 
 class NotificationAPI extends BaseAPI {
   constructor() {
-    super('notification/GetAll');
+    super('notification');
   }
 
   getNotifications(params) {
-    return super.getAll(params);
+    const url = `${this.url}/GetAll`;
+    return super.getCustom(url, params);
+  }
+
+  getNotificationByGroupId(groupId, params) {
+    const url = `${this.url}?GroupID=${groupId}`;
+    return super.getCustom(url, params);
   }
 }
 

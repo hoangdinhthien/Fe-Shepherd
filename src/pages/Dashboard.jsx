@@ -4,6 +4,8 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Select } from 'antd';
 import useFetchGroups from '../hooks/useFetchGroups'; // Import custom hook for fetching groups
 import EventAPI from '../apis/event_api';
+import TransactionAPI from '../apis/transaction_api';
+import NotificationAPI from '../apis/notification_api';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -36,7 +38,12 @@ export default function Dashboard() {
   const [events, setEvents] = useState([]);
   const { groups, loading: loadingGroups } = useFetchGroups(); // Fetch groups from custom hook
   const user = useSelector((state) => state.user.currentUser);
-
+  const [transactionOverview, setTransactionOverview] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [lineChartData, setLineChartData] = useState({
+    labels: [],
+    datasets: [],
+  });
   // Dữ liệu Biểu đồ
   const pieChartData = {
     labels: ['Cuộc họp', 'Nhiệm vụ', 'Sự kiện', 'Cuộc gọi'],
@@ -44,18 +51,6 @@ export default function Dashboard() {
       {
         data: [30, 25, 20, 25],
         backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'],
-      },
-    ],
-  };
-  const lineChartData = {
-    labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6'],
-    datasets: [
-      {
-        label: 'Giao dịch',
-        data: [65, 59, 80, 81, 56, 55],
-        fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1,
       },
     ],
   };
@@ -93,19 +88,158 @@ export default function Dashboard() {
   // Lấy sự kiện cho nhóm đã chọn
   useEffect(() => {
     const fetchEvents = async () => {
-      if (!selectedGroup) return;
+      if (!selectedGroup) {
+        console.warn('No group selected!');
+        return;
+      }
 
       try {
+        console.log('Fetching events for group ID:', selectedGroup);
         const response = await EventAPI.getEventsByGroup({
-          groupId: selectedGroup, // => pass directly id
+          groupId: selectedGroup,
         });
-        setEvents(response.data || []);
+        console.log('Full API Response:', response);
+
+        const eventsArray = response.data ? Object.values(response.data) : [];
+        console.log('Converted Events Array:', eventsArray);
+
+        setEvents(eventsArray);
       } catch (error) {
-        console.error('Lỗi khi lấy sự kiện:', error);
+        console.error('Error fetching events:', error.message);
       }
     };
 
     fetchEvents();
+  }, [selectedGroup]);
+
+  useEffect(() => {
+    const fetchTransactionOverview = async () => {
+      if (!selectedGroup) return;
+
+      try {
+        const response = await TransactionAPI.getTransactionGroupOverview(
+          selectedGroup
+        );
+        console.log('Transaction Overview API Response:', response);
+
+        const overviewData = response.data ? Object.values(response.data) : [];
+        setTransactionOverview(overviewData);
+
+        // Tạo labels và data cho Line Chart
+        const labels = overviewData.map((item) => `Tháng ${item.month}`);
+        const totalTransactions = overviewData.map(
+          (item) => item.totalTransactions
+        );
+
+        setLineChartData({
+          labels,
+          datasets: [
+            {
+              label: 'Tổng Giao Dịch',
+              data: totalTransactions,
+              fill: false,
+              borderColor: '#4BC0C0',
+              tension: 0.1,
+              pointRadius: 5,
+              pointBackgroundColor: '#4BC0C0',
+            },
+          ],
+        });
+      } catch (error) {
+        console.error('Error fetching transaction overview:', error);
+      }
+    };
+
+    fetchTransactionOverview();
+  }, [selectedGroup]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!selectedGroup) return;
+
+      try {
+        const response = await NotificationAPI.getNotificationByGroupId(
+          selectedGroup,
+          { limit: 10 } // Ví dụ: Giới hạn 10 thông báo
+        );
+
+        console.log('Notification API Response:', response);
+
+        const notificationData = response.data
+          ? Object.values(response.data)
+          : [];
+        setNotifications(notificationData);
+      } catch (error) {
+        console.error('Error fetching notifications:', error.message);
+      }
+    };
+
+    fetchNotifications();
+  }, [selectedGroup]);
+
+  useEffect(() => {
+    const fetchTransactionOverview = async () => {
+      if (!selectedGroup) return;
+
+      try {
+        const response = await TransactionAPI.getTransactionGroupOverview(
+          selectedGroup
+        );
+        console.log('Transaction Overview API Response:', response);
+
+        const overviewData = response.data ? Object.values(response.data) : [];
+        setTransactionOverview(overviewData);
+
+        // Tạo labels và data cho Line Chart
+        const labels = overviewData.map((item) => `Tháng ${item.month}`);
+        const totalTransactions = overviewData.map(
+          (item) => item.totalTransactions
+        );
+
+        setLineChartData({
+          labels,
+          datasets: [
+            {
+              label: 'Tổng Giao Dịch',
+              data: totalTransactions,
+              fill: false,
+              borderColor: '#4BC0C0',
+              tension: 0.1,
+              pointRadius: 5,
+              pointBackgroundColor: '#4BC0C0',
+            },
+          ],
+        });
+      } catch (error) {
+        console.error('Error fetching transaction overview:', error);
+      }
+    };
+
+    fetchTransactionOverview();
+  }, [selectedGroup]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!selectedGroup) return;
+
+      try {
+        const response = await NotificationAPI.getNotificationByGroupId(
+          selectedGroup,
+          { limit: 10 } // Ví dụ: Giới hạn 10 thông báo
+        );
+
+        console.log('Notification API Response:', response);
+
+        const notificationData = response.data
+          ? Object.values(response.data)
+          : [];
+        setNotifications(notificationData);
+      } catch (error) {
+        console.error('Error fetching notifications:', error.message);
+      }
+    };
+
+    fetchNotifications();
   }, [selectedGroup]);
 
   const daysOfWeek = [
@@ -124,12 +258,38 @@ export default function Dashboard() {
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
   // Tạo danh sách các ngày có sự kiện
-  const eventDays = events.flatMap((event) => [
-    new Date(event.fromDate).getDate(),
-    ...event.activities.map((activity) =>
-      new Date(activity.startTime).getDate()
-    ),
-  ]);
+  const getEventDays = (events, year, month) => {
+    const days = [];
+    console.log('Events:', events); // Kiểm tra dữ liệu events
+
+    events.forEach((event) => {
+      const fromDate = new Date(event.fromDate);
+      const toDate = new Date(event.toDate);
+
+      console.log('Event From Date:', fromDate, 'To Date:', toDate); // Kiểm tra từ ngày và đến ngày
+
+      // Chỉ lấy các sự kiện thuộc tháng và năm hiện tại
+      if (
+        (fromDate.getMonth() === month && fromDate.getFullYear() === year) ||
+        (toDate.getMonth() === month && toDate.getFullYear() === year)
+      ) {
+        let currentDate = new Date(fromDate);
+
+        while (currentDate <= toDate) {
+          if (
+            currentDate.getMonth() === month &&
+            currentDate.getFullYear() === year
+          ) {
+            days.push(currentDate.getDate());
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      }
+    });
+
+    console.log('Event Days:', days); // Log danh sách ngày có sự kiện
+    return days;
+  };
 
   // Render ngày trong lịch với đánh dấu sự kiện
   const renderCalendar = () => {
@@ -138,7 +298,12 @@ export default function Dashboard() {
     const daysInMonth = getDaysInMonth(year, month);
     const firstDayOfMonth = getFirstDayOfMonth(year, month);
 
+    // Lấy danh sách các ngày có sự kiện trong tháng hiện tại
+    const eventDays = getEventDays(events, year, month);
+
     const calendarDays = [];
+
+    // Các ô trống đầu tháng
     for (let i = 0; i < firstDayOfMonth; i++) {
       calendarDays.push(
         <div
@@ -147,12 +312,15 @@ export default function Dashboard() {
         ></div>
       );
     }
+
+    // Các ngày trong tháng
     for (let day = 1; day <= daysInMonth; day++) {
+      const isEventDay = eventDays.includes(day);
       calendarDays.push(
         <div
           key={day}
-          className={`text-center p-1 ${
-            eventDays.includes(day) ? 'bg-yellow-200' : ''
+          className={`text-center p-1 rounded ${
+            isEventDay ? 'bg-orange-400 text-white font-bold' : 'bg-gray-100'
           }`}
           aria-label={`Ngày ${day} trong lịch`}
         >
@@ -261,43 +429,59 @@ export default function Dashboard() {
 
       {/* BIỂU ĐỒ VÀ THÔNG BÁO */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mt-6'>
-        {/* BIỂU ĐỒ PIE */}
-        <div className='bg-white p-4 rounded-lg shadow-md'>
-          <h2 className='text-xl font-semibold mb-4'>
-            Hoạt Động Của Bạn Trong Tuần
-          </h2>
-          <Pie
-            data={pieChartData}
-            options={{ responsive: true }}
-          />
-        </div>
-
-        {/* BIỂU ĐỒ LINE */}
-        <div className='bg-white p-4 rounded-lg shadow-md'>
-          <h2 className='text-xl font-semibold mb-4'>Giao Dịch</h2>
+        {/* BIỂU ĐỒ LINE - Chiếm 2 phần */}
+        <div className='bg-white p-4 rounded-lg shadow-md md:col-span-2'>
+          <h2 className='text-xl font-semibold mb-4'>Tổng quan giao dịch</h2>
           <Line
             data={lineChartData}
-            options={{ responsive: true }}
+            options={{
+              responsive: true,
+              scales: {
+                y: {
+                  beginAtZero: true, // Start Y-axis from 0
+                  suggestedMax:
+                    lineChartData?.datasets?.[0]?.data?.length > 0
+                      ? Math.max(...lineChartData.datasets[0].data) + 5
+                      : 10, // Default to 10 if data is unavailable
+                  ticks: {
+                    stepSize: 1, // Adjust spacing between values
+                  },
+                },
+              },
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'top', // Position legend at the top
+                },
+              },
+            }}
           />
         </div>
 
-        {/* THÔNG BÁO */}
+        {/* THÔNG BÁO - Chiếm 1 phần */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
           <h2 className='text-xl font-semibold mb-4'>Tin Nhắn</h2>
           <ul className='space-y-2'>
-            {messages.map((message) => (
-              <li
-                key={message.id}
-                className={`p-2 rounded ${
-                  message.unread ? 'bg-blue-100' : 'bg-gray-100'
-                }`}
-              >
-                <span className='font-semibold'>
-                  {message.unread ? 'Mới: ' : ''}
-                </span>
-                {message.text}
-              </li>
-            ))}
+            {notifications.length > 0 ? (
+              notifications.map((notification) => (
+                <li
+                  key={notification.id}
+                  className='p-2 rounded bg-gray-100 cursor-pointer hover:bg-blue-50 transition'
+                  onDoubleClick={() => {
+                    // navigate(`/notification-detail/${notification.id}`); // Điều hướng đến chi tiết thông báo
+                  }}
+                >
+                  <span className='font-semibold'>
+                    {notification.title || 'Thông báo'}
+                  </span>
+                  <p className='text-sm text-gray-600'>
+                    {notification.description}
+                  </p>
+                </li>
+              ))
+            ) : (
+              <li className='text-gray-500'>Không có thông báo nào.</li>
+            )}
           </ul>
         </div>
       </div>

@@ -13,5 +13,9 @@ class TransactionAPI extends BaseAPI {
     const url = `/transaction/GetStatistics`;
     return this.getCustom(url);
   }
+  getTransactionGroupOverview(groupId) {
+    const url = `/transaction/GetStatistics?GroupID=${groupId}`;
+    return this.getCustom(url);
+  }
 }
 export default new TransactionAPI();

@@ -67,19 +67,25 @@ const AdminCalendar = () => {
   // Hàm fetch sự kiện từ EventAPI
   const fetchEvents = async () => {
     try {
-      const events = await EventAPI.getEventsByGroup(); // Lấy tất cả sự kiện từ EventAPI
-      const eventData = Array.isArray(events)
-        ? events.map((event) => ({
-            id: event.id,
-            title: event.name, // Sử dụng name làm tiêu đề
-            start: new Date(event.startDate), // Ngày bắt đầu
-            end: new Date(event.endDate), // Ngày kết thúc
-            description: event.description, // Mô tả
-            status: event.status, // Trạng thái sự kiện
-          }))
+      const events = await EventAPI.getEventsByGroup();
+      console.log('API Response for Events:', events);
+
+      // Sử dụng đúng trường từ API
+      const eventData = Array.isArray(events?.data)
+        ? events.data.filter((event) => event && event.id) // Loại bỏ phần tử null hoặc không hợp lệ
         : [];
-      console.log(eventData);
-      return eventData;
+
+      console.log('Filtered Events:', eventData);
+
+      return eventData.map((event) => ({
+        id: event.id,
+        title: event.eventName, // Sử dụng eventName làm tiêu đề
+        start: new Date(event.fromDate), // Sử dụng fromDate làm ngày bắt đầu
+        end: new Date(event.toDate), // Sử dụng toDate làm ngày kết thúc
+        description: event.description, // Mô tả sự kiện
+        status: event.status, // Trạng thái sự kiện
+        type: 'event', // Đánh dấu loại
+      }));
     } catch (error) {
       console.error('Failed to fetch events:', error);
       return [];
@@ -88,13 +94,35 @@ const AdminCalendar = () => {
 
   // Hàm lấy cả sự kiện từ AdminCalendarAPI và EventAPI
   const fetchAllEvents = async () => {
-    const ceremonyData = await fetchCeremonies();
-    const eventData = await fetchEvents();
-    setCeremonies([...ceremonyData, ...eventData]); // Kết hợp dữ liệu từ hai API
+    try {
+      const ceremonyData = await fetchCeremonies();
+      console.log('Ceremony Data:', ceremonyData);
+
+      const eventData = await fetchEvents();
+      console.log('Event Data:', eventData);
+
+      // Kết hợp dữ liệu từ cả hai nguồn
+      setCeremonies([...ceremonyData, ...eventData]);
+    } catch (error) {
+      console.error('Error fetching all events:', error);
+    }
   };
 
   useEffect(() => {
-    fetchAllEvents(); // Lấy dữ liệu khi component mount hoặc currentDate thay đổi
+    const fetchAllEvents = async () => {
+      try {
+        const ceremonyData = await fetchCeremonies();
+        const eventData = await fetchEvents();
+
+        console.log('Final Combined Data:', [...ceremonyData, ...eventData]);
+
+        setCeremonies([...ceremonyData, ...eventData]);
+      } catch (error) {
+        console.error('Error fetching all events:', error);
+      }
+    };
+
+    fetchAllEvents();
   }, [currentDate]);
 
   const handleWeekChange = (weekNumber, year) => {
@@ -135,14 +163,23 @@ const AdminCalendar = () => {
     <div style={{ height: '100vh' }}>
       <BigCalendar
         localizer={localizer}
-        events={ceremonies} // Danh sách sự kiện với title là eventName
+        events={ceremonies} // Sử dụng danh sách đã kết hợp
         startAccessor='start'
         endAccessor='end'
         defaultView='week'
         step={60}
         showMultiDayTimes
         date={currentDate}
-        onSelectEvent={handleEventSelect} // Xử lý khi bấm vào sự kiện
+        onNavigate={(date) => setCurrentDate(date)}
+        eventPropGetter={(event) => {
+          let backgroundColor;
+          if (event.type === 'ceremony') {
+            backgroundColor = '#85C1E9'; // Màu xanh cho ceremony
+          } else if (event.type === 'event') {
+            backgroundColor = '#FAD7A0'; // Màu cam nhạt cho event
+          }
+          return { style: { backgroundColor, color: 'black' } };
+        }}
         components={{
           toolbar: (props) => (
             <CustomAdminHeaderBar
@@ -171,6 +208,11 @@ const AdminCalendar = () => {
       >
         {selectedCeremony && (
           <div>
+            <Text>
+              <strong>Loại:</strong>{' '}
+              {selectedCeremony.type === 'ceremony' ? 'Ceremony' : 'Event'}
+            </Text>
+            <br />
             <Text>{selectedCeremony.description}</Text>
             <Title level={4}>Activities</Title>
             <ul>

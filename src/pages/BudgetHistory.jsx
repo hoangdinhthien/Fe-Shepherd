@@ -16,6 +16,7 @@ import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 import TransactionAPI from '../apis/transaction_api';
 import BudgetAPI from '../apis/budget_api';
+import { useLocation } from 'react-router-dom'; // Import useLocation
 
 const { Title } = Typography;
 
@@ -31,18 +32,15 @@ function BudgetHistory() {
   const navigate = useNavigate();
 
   // Fetch transactions and surplus
-  // Fetch dữ liệu từ API
   const fetchTransactions = async () => {
     try {
       setLoading(true);
 
-      // Lấy danh sách giao dịch
       const response = await TransactionAPI.getChurchBudgetHistory();
       const dataArray = Array.isArray(response.result)
         ? response.result
         : Object.values(response.result || {});
 
-      // Định dạng dữ liệu giao dịch
       const formattedData = dataArray.map((item) => ({
         id: item.id || 'N/A',
         type: item.type || 'Không xác định',
@@ -51,19 +49,15 @@ function BudgetHistory() {
           ? moment(item.date).format('YYYY-MM-DD')
           : 'Không có ngày',
         approvalStatus: item.approvalStatus || 'Không xác định',
-        group: item.group?.groupName || 'Không có nhóm',
+        group: item.group?.groupName || '',
       }));
 
       setTransactions(formattedData);
       setFilteredTransactions(formattedData);
 
-      // Lấy số dư ngân sách
-      const surplusResponse = await BudgetAPI.getBudgets(); // Gọi API lấy ngân sách
-      console.log('Surplus Response:', surplusResponse);
-
-      const surplusAmount = surplusResponse?.data?.surplusOrDeficit || 0; // Lấy giá trị từ `data`
-      setSurplus(surplusAmount); // Cập nhật số dư ngân sách
-      console.log('Surplus Amount:', surplusAmount);
+      const surplusResponse = await BudgetAPI.getBudgets();
+      const surplusAmount = surplusResponse?.data?.surplusOrDeficit || 0;
+      setSurplus(surplusAmount);
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu:', error);
       message.error('Không thể tải dữ liệu ngân sách!');
@@ -71,6 +65,16 @@ function BudgetHistory() {
       setLoading(false);
     }
   };
+  const location = useLocation(); // Lấy thông tin trạng thái từ điều hướng
+
+  useEffect(() => {
+    fetchTransactions();
+
+    // Mở popup nếu trạng thái 'openAddBudgetModal' được truyền vào
+    if (location.state?.openAddBudgetModal) {
+      setIsModalVisible(true);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchTransactions();
@@ -106,8 +110,8 @@ function BudgetHistory() {
   const handleSaveBudget = async () => {
     try {
       const values = await form.validateFields();
-      const rawAmount = form.getFieldValue('amount').replace(/[^\d]/g, '');
-      const finalAmount = parseInt(rawAmount, 10) * 1000;
+      const rawAmount = form.getFieldValue('amount').replace(/[^\d]/g, ''); // Lấy số tiền không có đuôi VND
+      const finalAmount = parseInt(rawAmount, 10); // Nhân với 1000 để lưu vào API
 
       Modal.confirm({
         title: 'Xác nhận',
@@ -136,6 +140,45 @@ function BudgetHistory() {
       console.error('Validation error:', error);
       message.error('Vui lòng nhập đầy đủ thông tin!');
     }
+  };
+
+  // Hàm xử lý khi người dùng nhập số tiền
+  const handleAmountChange = (e) => {
+    let value = e.target.value;
+
+    // Chỉ cho phép nhập số và loại bỏ các ký tự đặc biệt
+    value = value.replace(/[^0-9]/g, ''); // Chỉ cho phép nhập số
+
+    // Cập nhật lại giá trị vào form
+    form.setFieldsValue({ amount: value });
+  };
+
+  // Hàm xử lý khi focus vào ô nhập liệu
+  const handleFocus = () => {
+    const value = form.getFieldValue('amount');
+    // Xóa phần "VND" và ".000" nếu có
+    if (value) {
+      form.setFieldsValue({
+        amount: value.replace(' VND', '').replace('.000', ''),
+      });
+    }
+  };
+
+  // Hàm xử lý khi blur khỏi ô nhập liệu
+  const handleBlur = () => {
+    const value = form.getFieldValue('amount');
+    // Chuyển số thành định dạng với dấu chấm sau mỗi ba chữ số
+    if (value && value !== '') {
+      const formattedValue = formatNumber(value);
+      form.setFieldsValue({ amount: `${formattedValue}.000 VND` });
+    }
+  };
+
+  // Hàm định dạng số với dấu chấm phân tách ba chữ số
+  const formatNumber = (value) => {
+    // Chuyển thành số và định dạng với dấu chấm
+    const number = Number(value);
+    return number.toLocaleString();
   };
 
   const transactionColumns = [
@@ -259,38 +302,49 @@ function BudgetHistory() {
           columns={transactionColumns}
           dataSource={filteredTransactions}
           rowKey='id'
-          pagination={{ pageSize: 5 }}
-          bordered
-          style={{
-            marginTop: '20px',
-            borderRadius: '10px',
-            overflow: 'hidden',
-          }}
+          pagination={{ pageSize: 10 }}
         />
       </Spin>
 
+      {/* Modal thêm ngân sách */}
       <Modal
         title='Thêm Ngân Sách'
         visible={isModalVisible}
-        onOk={handleSaveBudget}
         onCancel={() => setIsModalVisible(false)}
-        okText='Lưu'
-        cancelText='Hủy'
+        footer={null}
       >
-        <Form form={form} layout='vertical'>
+        <Form
+          form={form}
+          onFinish={handleSaveBudget}
+          initialValues={{ amount: '', description: '' }}
+        >
           <Form.Item
             label='Số Tiền'
             name='amount'
-            rules={[{ required: true, message: 'Vui lòng nhập số tiền!' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập số tiền' }]}
           >
-            <Input placeholder='Nhập số tiền' />
+            <Input
+              type='text'
+              placeholder='Nhập số tiền'
+              onChange={handleAmountChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              value={form.getFieldValue('amount')}
+            />
           </Form.Item>
+
           <Form.Item
             label='Mô Tả'
             name='description'
-            rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
           >
             <Input.TextArea rows={4} placeholder='Nhập mô tả' />
+          </Form.Item>
+
+          <Form.Item>
+            <Button type='primary' htmlType='submit' block>
+              Lưu
+            </Button>
           </Form.Item>
         </Form>
       </Modal>
