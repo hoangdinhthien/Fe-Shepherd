@@ -31,7 +31,7 @@ const adminMenuItems = [
   { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/admin/event' },
   { icon: FaUserAlt, title: 'Người Dùng', path: '/admin/user' },
   { icon: FaMoneyBillWave, title: 'Ngân Sách', path: '/admin/budget' },
-  { icon: FaUserGroup, title: 'Nhóm', path: '/admin/group' },
+  { icon: FaUserGroup, title: 'Đoàn Thể', path: '/admin/group' },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {

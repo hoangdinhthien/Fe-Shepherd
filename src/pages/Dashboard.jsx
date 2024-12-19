@@ -177,80 +177,7 @@ export default function Dashboard() {
     fetchNotifications();
   }, [selectedGroup]);
 
-  useEffect(() => {
-    const fetchTransactionOverview = async () => {
-      if (!selectedGroup) return;
-
-      try {
-        const response = await TransactionAPI.getTransactionGroupOverview(
-          selectedGroup
-        );
-        console.log('Transaction Overview API Response:', response);
-
-        const overviewData = response.data ? Object.values(response.data) : [];
-        setTransactionOverview(overviewData);
-
-        // Tạo labels và data cho Line Chart
-        const labels = overviewData.map((item) => `Tháng ${item.month}`);
-        const totalTransactions = overviewData.map(
-          (item) => item.totalTransactions
-        );
-
-        setLineChartData({
-          labels,
-          datasets: [
-            {
-              label: 'Tổng Giao Dịch',
-              data: totalTransactions,
-              fill: false,
-              borderColor: '#4BC0C0',
-              tension: 0.1,
-              pointRadius: 5,
-              pointBackgroundColor: '#4BC0C0',
-            },
-          ],
-        });
-      } catch (error) {
-        console.error('Error fetching transaction overview:', error);
-      }
-    };
-
-    fetchTransactionOverview();
-  }, [selectedGroup]);
-
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      if (!selectedGroup) return;
-
-      try {
-        const response = await NotificationAPI.getNotificationByGroupId(
-          selectedGroup,
-          { limit: 10 } // Ví dụ: Giới hạn 10 thông báo
-        );
-
-        console.log('Notification API Response:', response);
-
-        const notificationData = response.data
-          ? Object.values(response.data)
-          : [];
-        setNotifications(notificationData);
-      } catch (error) {
-        console.error('Error fetching notifications:', error.message);
-      }
-    };
-
-    fetchNotifications();
-  }, [selectedGroup]);
-
-  const daysOfWeek = [
-    'Thứ 2',
-    'Thứ 3',
-    'Thứ 4',
-    'Thứ 5',
-    'Thứ 6',
-    'Thứ 7',
-    'CN',
-  ];
+  const daysOfWeek = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
   const getDaysInMonth = (year, month) =>
     new Date(year, month + 1, 0).getDate();
@@ -336,25 +263,22 @@ export default function Dashboard() {
     <div className='p-4 bg-transparent'>
       {/* CHỌN NHÓM */}
       <div className='mb-6'>
-        <div className='flex items-center'>
-          <span className='mr-2 font-semibold'>Chọn Đoàn Thể</span>
-          <Select
-            value={selectedGroup}
-            className='w-full md:w-1/3'
-            loading={loadingGroups}
-            onChange={(value) => setSelectedGroup(value)}
-            placeholder='---Chọn Đoàn Thể---'
-          >
-            {groups.map((group) => (
-              <Option
-                key={group.id}
-                value={group.id}
-              >
-                {group.groupName}
-              </Option>
-            ))}
-          </Select>
-        </div>
+        <Select
+          value={selectedGroup}
+          className='w-full md:w-1/3'
+          loading={loadingGroups}
+          onChange={(value) => setSelectedGroup(value)}
+          placeholder='---Chọn tổ chức---'
+        >
+          {groups.map((group) => (
+            <Option
+              key={group.id}
+              value={group.id}
+            >
+              {group.groupName}
+            </Option>
+          ))}
+        </Select>
       </div>
 
       {/* BẢNG LỊCH VÀ HOẠT ĐỘNG */}
@@ -406,7 +330,7 @@ export default function Dashboard() {
 
         {/* SỰ KIỆN VÀ HOẠT ĐỘNG */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
-          <h2 className='text-xl font-semibold mb-4'>Sự Kiện và Hoạt Động</h2>
+          <h2 className='text-xl font-semibold mb-4'>Sự kiện và Hoạt động</h2>
           <ul className='space-y-2'>
             {events.length > 0 ? (
               events.map((event) => (
@@ -460,7 +384,7 @@ export default function Dashboard() {
 
         {/* THÔNG BÁO - Chiếm 1 phần */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
-          <h2 className='text-xl font-semibold mb-4'>Tin Nhắn</h2>
+          <h2 className='text-xl font-semibold mb-4'>Thông báo</h2>
           <ul className='space-y-2'>
             {notifications.length > 0 ? (
               notifications.map((notification) => (
