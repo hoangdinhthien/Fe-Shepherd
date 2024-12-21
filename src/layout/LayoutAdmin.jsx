@@ -12,14 +12,7 @@ export default function LayoutAdmin() {
   const [notifications, setNotifications] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
-
-  const addNotification = (type, content) => {
-    const newNotification = { id: Date.now(), type, content };
-    setNotifications((prevNotifications) => [
-      ...prevNotifications,
-      newNotification,
-    ]);
-  };
+  const [notiCount, setNotiCount] = useState(0);
 
   const removeNotification = (id) => {
     setNotifications((prevNotifications) =>
@@ -28,6 +21,9 @@ export default function LayoutAdmin() {
   };
 
   const toggleModal = () => {
+    if (notiCount > 0) {
+      setNotiCount(0);
+    }
     setIsModalOpen(!isModalOpen);
   };
 
@@ -55,18 +51,18 @@ export default function LayoutAdmin() {
         className='w-64'
       />
       <div
-        className={`${
-          isFixedHeader
+        className={`${isFixedHeader
             ? 'flex-1'
             : 'flex flex-col h-screen w-full'
-        }`}
+          }`}
       >
         <Header
-          notifications={notifications}
           onNotificationClick={toggleModal}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           isFixed={isFixedHeader}
+          notiCount={notiCount}
+          setNotiCount={setNotiCount}
         />
         <NotificationPopup
           isOpen={isModalOpen}
@@ -76,11 +72,10 @@ export default function LayoutAdmin() {
           handleReject={handleReject}
         />
         <div
-          className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${
-            isFixedHeader
+          className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${isFixedHeader
               ? 'mt-20 px-4 py-2'
               : ' flex overflow-auto'
-          } duration-300`}
+            } duration-300`}
         >
           <Outlet />
         </div>

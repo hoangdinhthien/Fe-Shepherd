@@ -15,6 +15,7 @@ export default function LayoutMain() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [notiCount, setNotiCount] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
 
@@ -31,14 +32,6 @@ export default function LayoutMain() {
     }
   }, [currentUser, dispatch]);
 
-  const addNotification = (type, content) => {
-    const newNotification = { id: Date.now(), type, content };
-    setNotifications((prevNotifications) => [
-      ...prevNotifications,
-      newNotification,
-    ]);
-  };
-
   const removeNotification = (id) => {
     setNotifications((prevNotifications) =>
       prevNotifications.filter((notification) => notification.id !== id)
@@ -46,6 +39,9 @@ export default function LayoutMain() {
   };
 
   const toggleModal = () => {
+    if (notiCount > 0) {
+      setNotiCount(0);
+    }
     setIsModalOpen(!isModalOpen);
   };
 
@@ -76,16 +72,16 @@ export default function LayoutMain() {
         className='w-64'
       />
       <div
-        className={`${
-          isFixedHeader ? 'flex-1' : 'flex flex-col h-screen w-full'
-        }`}
+        className={`${isFixedHeader ? 'flex-1' : 'flex flex-col h-screen w-full'
+          }`}
       >
         <Header
-          notifications={notifications}
           onNotificationClick={toggleModal}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           isFixed={isFixedHeader}
+          notiCount={notiCount}
+          setNotiCount={setNotiCount}
         />
         <NotificationPopup
           isOpen={isModalOpen}
@@ -95,11 +91,10 @@ export default function LayoutMain() {
           handleReject={handleReject}
         />
         <div
-          className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${
-            isFixedHeader
-              ? 'mt-20 px-4 py-2'
-              : 'h-full overflow-auto flex justify-center items-center'
-          } duration-300`}
+          className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${isFixedHeader
+            ? 'mt-20 px-4 py-2'
+            : 'h-full overflow-auto flex justify-center items-center'
+            } duration-300`}
         >
           <Outlet />
         </div>

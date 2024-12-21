@@ -88,7 +88,7 @@ export default function NotificationPopup({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className='fixed right-0 mt-24 mr-6 w-80 bg-white rounded-lg shadow-xl z-50'
+          className='fixed right-0 mt-24 mr-6 w-96 bg-white rounded-lg shadow-xl z-50'
         >
           <div className='p-4 border-b'>
             <h2 className='text-xl font-semibold text-gray-800'>Notifications</h2>
@@ -96,7 +96,7 @@ export default function NotificationPopup({
           <div
             ref={listRef}
             onScroll={handleScroll}
-            className='overflow-y-auto max-h-80'
+            className='overflow-y-auto h-1/2'
           >
             {notifications.length === 0 && !isLoading ? (
               <p className='text-center text-gray-500 py-4'>No notifications</p>
@@ -104,9 +104,8 @@ export default function NotificationPopup({
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b last:border-b-0 hover:bg-gray-50 ${
-                    notification.IsRead ? 'bg-gray-200' : ''
-                  }`}
+                  className={`p-4 border-b last:border-b-0 hover:bg-gray-50 ${!notification.isRead ? 'bg-gray-200 border-white' : ''
+                    }`}
                 >
                   <div className='flex items-center mb-2'>
                     <div className='mr-3'>
@@ -124,7 +123,7 @@ export default function NotificationPopup({
                       )}
                     </div>
                     <div className='flex-grow'>
-                      <p className='text-sm text-gray-800'>
+                      <p className={`text-sm mr-5 text-gray-800 ${!notification.isRead && 'font-bold'}`}>
                         {notification.content}
                       </p>
                       <p className='text-xs text-gray-500 mt-1'>

@@ -36,6 +36,8 @@ import RequestDetail from './components/request/request-create-event/RequestDeta
 import BudgetHistory from './pages/BudgetHistory';
 import AdminGroup from './pages/admin/AdminGroup';
 import RequestCreateAccountDetail from './components/request/request-create-account/RequestCreateAccountDetail';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AppRoutes = () => {
   const roles = [
@@ -259,6 +261,7 @@ function App() {
         loading={null}
         persistor={persistor}
       >
+        <ToastContainer />
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>

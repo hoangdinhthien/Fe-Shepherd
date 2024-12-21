@@ -6,7 +6,7 @@ class NotificationAPI extends BaseAPI {
   }
 
   getNotifications(params) {
-    const url = `${this.url}/GetAll`;
+    const url = `${this.url}`;
     return super.getCustom(url, params);
   }
 
