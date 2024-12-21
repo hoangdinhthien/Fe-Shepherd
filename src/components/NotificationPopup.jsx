@@ -17,6 +17,8 @@ export default function NotificationPopup({
   removeNotification,
   handleAccept,
   handleReject,
+  notiCount,
+  setNotiCount,
 }) {
   const dropdownRef = useRef(null);
   const listRef = useRef(null);
@@ -50,7 +52,7 @@ export default function NotificationPopup({
       setHasMore(true);
       GetNotification(1);
     }
-  }, [isOpen]);
+  }, [isOpen, notiCount]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -61,8 +63,6 @@ export default function NotificationPopup({
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
@@ -83,15 +83,21 @@ export default function NotificationPopup({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          ref={dropdownRef}
+          // ref={dropdownRef}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className='fixed right-0 mt-24 mr-6 w-96 bg-white rounded-lg shadow-xl z-50'
+          className='fixed right-0 mt-24 mr-6 w-[26%] bg-white rounded-lg shadow-xl z-50'
         >
-          <div className='p-4 border-b'>
-            <h2 className='text-xl font-semibold text-gray-800'>Notifications</h2>
+          <div className='p-4 border-b flex flex-row justify-between'>
+            <h2 className='text-xl font-semibold text-black'>Notifications</h2>
+            <button
+              onClick={onClose}
+              className='text-gray-400 hover:text-gray-600 focus:outline-none'
+            >
+              <FaTimes className='h-5 w-5' />
+            </button>
           </div>
           <div
             ref={listRef}
@@ -130,12 +136,12 @@ export default function NotificationPopup({
                         {notification.timeAgo}
                       </p>
                     </div>
-                    <button
+                    {/* <button
                       onClick={() => removeNotification(notification.id)}
                       className='text-gray-400 hover:text-gray-600 focus:outline-none'
                     >
                       <FaTimes className='h-4 w-4' />
-                    </button>
+                    </button> */}
                   </div>
                   {notification.type === 'Task' && (
                     <div className='mt-2 flex justify-end space-x-2'>

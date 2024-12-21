@@ -39,9 +39,6 @@ export default function LayoutMain() {
   };
 
   const toggleModal = () => {
-    if (notiCount > 0) {
-      setNotiCount(0);
-    }
     setIsModalOpen(!isModalOpen);
   };
 
@@ -89,6 +86,8 @@ export default function LayoutMain() {
           notifications={notifications}
           handleAccept={handleAccept}
           handleReject={handleReject}
+          notiCount={notiCount}
+          setNotiCount={setNotiCount}
         />
         <div
           className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${isFixedHeader

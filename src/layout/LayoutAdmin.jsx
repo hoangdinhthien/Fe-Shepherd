@@ -21,9 +21,6 @@ export default function LayoutAdmin() {
   };
 
   const toggleModal = () => {
-    if (notiCount > 0) {
-      setNotiCount(0);
-    }
     setIsModalOpen(!isModalOpen);
   };
 
@@ -52,8 +49,8 @@ export default function LayoutAdmin() {
       />
       <div
         className={`${isFixedHeader
-            ? 'flex-1'
-            : 'flex flex-col h-screen w-full'
+          ? 'flex-1'
+          : 'flex flex-col h-screen w-full'
           }`}
       >
         <Header
@@ -70,11 +67,13 @@ export default function LayoutAdmin() {
           notifications={notifications}
           handleAccept={handleAccept}
           handleReject={handleReject}
+          notiCount={notiCount}
+          setNotiCount={setNotiCount}
         />
         <div
           className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${isFixedHeader
-              ? 'mt-20 px-4 py-2'
-              : ' flex overflow-auto'
+            ? 'mt-20 px-4 py-2'
+            : ' flex overflow-auto'
             } duration-300`}
         >
           <Outlet />
