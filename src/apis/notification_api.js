@@ -14,6 +14,16 @@ class NotificationAPI extends BaseAPI {
     const url = `${this.url}?GroupID=${groupId}`;
     return super.getCustom(url, params);
   }
+
+  readOneNotification(id) {
+    const url = `${this.url}/ReadOne/${id}`;
+    return super.putCustom(url, true);
+  }
+
+  readAllNotifications() {
+    const url = `${this.url}/ReadAll`;
+    return super.putCustom(url);
+  }
 }
 
 export default new NotificationAPI();

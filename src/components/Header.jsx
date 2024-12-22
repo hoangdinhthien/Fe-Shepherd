@@ -92,6 +92,20 @@ export default function Header({
     }
   }, [notiCount]);
 
+  useEffect(() => {
+    const broadcast = new BroadcastChannel('notification_channel');
+    broadcast.onmessage = (event) => {
+      const payload = event.data;
+      console.log('Background message received in active tab:', payload);
+      setNotiCount((prevCount) => prevCount + 1);
+    };
+
+    return () => {
+      broadcast.close();
+    };
+  }, []);
+
+
   return (
     <header
       className={`${isFixed && 'fixed top-0 right-0 left-0 z-40'
@@ -141,7 +155,7 @@ export default function Header({
               content='Thông báo'
               placement='bottom'
             >
-              <button onClick={onNotificationClick}>
+              <button onClick={onNotificationClick} id='noti-button'>
                 <div className='relative'>
                   <IoMdNotifications className='h-8 w-8 text-slate-700 duration-300 hover:scale-125' />
                   {/* NOTIFICATION COUNT */}

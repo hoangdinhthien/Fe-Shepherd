@@ -20,4 +20,8 @@ messaging.onBackgroundMessage((payload) => {
         body: payload.notification.body,
     };
     self.registration.showNotification(notificationTitle, notificationOptions);
+
+    // Send the message to the active tab
+  const broadcast = new BroadcastChannel('notification_channel');
+  broadcast.postMessage(payload);
 });

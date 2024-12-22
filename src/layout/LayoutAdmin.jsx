@@ -4,6 +4,7 @@ import NotificationPopup from '../components/NotificationPopup';
 import Sidebar from '../components/Sidebar';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import notification_api from '../apis/notification_api';
 
 export default function LayoutAdmin() {
   const { currentUser } = useSelector((state) => state.user);
@@ -13,6 +14,7 @@ export default function LayoutAdmin() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
   const [notiCount, setNotiCount] = useState(0);
+  const [readNotiIds, setReadNotiIds] = useState([]);
 
   const removeNotification = (id) => {
     setNotifications((prevNotifications) =>
@@ -20,8 +22,21 @@ export default function LayoutAdmin() {
     );
   };
 
-  const toggleModal = () => {
+  const toggleModal = async () => {
+    const change = !isModalOpen;
     setIsModalOpen(!isModalOpen);
+    if (!change) {
+      console.log('Marking all notifications as read...');
+      if (notiCount > 0) {
+        console.log(`Read ${readNotiIds.length}`, readNotiIds);
+        for (let id of readNotiIds) {
+          await notification_api.readOneNotification(id);
+        }
+      } else {
+        console.log('Read All noti.');
+        await notification_api.readAllNotifications();
+      }
+    };
   };
 
   const handleAccept = (id) => {
@@ -69,6 +84,7 @@ export default function LayoutAdmin() {
           handleReject={handleReject}
           notiCount={notiCount}
           setNotiCount={setNotiCount}
+          setReadNotiIds={setReadNotiIds}
         />
         <div
           className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${isFixedHeader

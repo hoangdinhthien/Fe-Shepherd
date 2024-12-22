@@ -19,6 +19,7 @@ export default function NotificationPopup({
   handleReject,
   notiCount,
   setNotiCount,
+  setReadNotiIds,
 }) {
   const dropdownRef = useRef(null);
   const listRef = useRef(null);
@@ -27,6 +28,7 @@ export default function NotificationPopup({
   const [pageNumber, setPageNumber] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [unread, setUnread] = useState(0);
 
   const GetNotification = async (page) => {
     if (isLoading || !hasMore) return;
@@ -38,6 +40,7 @@ export default function NotificationPopup({
       } else {
         setNotifications((prev) => [...prev, ...data.result]);
         setPageNumber(page + 1);
+        setUnread(data.result.filter((noti) => !noti.isRead).length);
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -45,8 +48,11 @@ export default function NotificationPopup({
     setIsLoading(false);
   };
 
+
   useEffect(() => {
-    if (isOpen) {
+    console.log('unread:', unread);
+    console.log('notiCount:', notiCount);
+    if (isOpen && notiCount >= unread) {
       setNotifications([]);
       setPageNumber(1);
       setHasMore(true);
@@ -54,15 +60,21 @@ export default function NotificationPopup({
     }
   }, [isOpen, notiCount]);
 
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      const notiButton = document.getElementById('noti-button');
+      if (dropdownRef.current
+        && !dropdownRef.current.contains(event.target)
+        && !notiButton.contains(event.target)) {
         onClose();
       }
     };
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
@@ -83,7 +95,7 @@ export default function NotificationPopup({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          // ref={dropdownRef}
+          ref={dropdownRef}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
@@ -92,12 +104,21 @@ export default function NotificationPopup({
         >
           <div className='p-4 border-b flex flex-row justify-between'>
             <h2 className='text-xl font-semibold text-black'>Notifications</h2>
-            <button
-              onClick={onClose}
-              className='text-gray-400 hover:text-gray-600 focus:outline-none'
+
+            {notiCount > 0 && <button
+              onClick={() => {
+                setNotifications((prevNotifications) =>
+                  prevNotifications.map((noti) => ({ ...noti, isRead: true }))
+                );
+                if (notiCount > 0)
+                  setNotiCount(0);
+                setReadNotiIds(notifications.filter((noti) => !noti.isRead).map((noti) => noti.id));
+              }}
+              className='text-amber-600 hover:text-amber-400 focus:outline-none text-md font-medium'
             >
-              <FaTimes className='h-5 w-5' />
-            </button>
+              {/* <FaTimes className='h-5 w-5' /> */}
+              Read all
+            </button>}
           </div>
           <div
             ref={listRef}
@@ -112,6 +133,18 @@ export default function NotificationPopup({
                   key={notification.id}
                   className={`p-4 border-b last:border-b-0 hover:bg-gray-50 ${!notification.isRead ? 'bg-gray-200 border-white' : ''
                     }`}
+                  onClick={() => {
+                    setNotifications((prevNotifications) =>
+                      prevNotifications.map((noti) =>
+                        noti.id === notification.id
+                          ? { ...noti, isRead: true }
+                          : noti
+                      )
+                    );
+                    setNotiCount((prevCount) => Math.max(prevCount - 1, 0));
+                    setReadNotiIds((prevIds) => [...prevIds, notification.id]);
+                  }}
+
                 >
                   <div className='flex items-center mb-2'>
                     <div className='mr-3'>
