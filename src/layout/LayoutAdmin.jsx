@@ -4,6 +4,7 @@ import NotificationPopup from '../components/NotificationPopup';
 import Sidebar from '../components/Sidebar';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import notification_api from '../apis/notification_api';
 
 export default function LayoutAdmin() {
   const { currentUser } = useSelector((state) => state.user);
@@ -12,14 +13,8 @@ export default function LayoutAdmin() {
   const [notifications, setNotifications] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
-
-  const addNotification = (type, content) => {
-    const newNotification = { id: Date.now(), type, content };
-    setNotifications((prevNotifications) => [
-      ...prevNotifications,
-      newNotification,
-    ]);
-  };
+  const [notiCount, setNotiCount] = useState(0);
+  const [readNotiIds, setReadNotiIds] = useState([]);
 
   const removeNotification = (id) => {
     setNotifications((prevNotifications) =>
@@ -27,8 +22,21 @@ export default function LayoutAdmin() {
     );
   };
 
-  const toggleModal = () => {
+  const toggleModal = async () => {
+    const change = !isModalOpen;
     setIsModalOpen(!isModalOpen);
+    if (!change) {
+      console.log('Marking all notifications as read...');
+      if (notiCount > 0) {
+        console.log(`Read ${readNotiIds.length}`, readNotiIds);
+        for (let id of readNotiIds) {
+          await notification_api.readOneNotification(id);
+        }
+      } else {
+        console.log('Read All noti.');
+        await notification_api.readAllNotifications();
+      }
+    };
   };
 
   const handleAccept = (id) => {
@@ -55,18 +63,18 @@ export default function LayoutAdmin() {
         className='w-64'
       />
       <div
-        className={`${
-          isFixedHeader
-            ? 'flex-1'
-            : 'flex flex-col h-screen w-full'
-        }`}
+        className={`${isFixedHeader
+          ? 'flex-1'
+          : 'flex flex-col h-screen w-full'
+          }`}
       >
         <Header
-          notifications={notifications}
           onNotificationClick={toggleModal}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           isFixed={isFixedHeader}
+          notiCount={notiCount}
+          setNotiCount={setNotiCount}
         />
         <NotificationPopup
           isOpen={isModalOpen}
@@ -74,13 +82,15 @@ export default function LayoutAdmin() {
           notifications={notifications}
           handleAccept={handleAccept}
           handleReject={handleReject}
+          notiCount={notiCount}
+          setNotiCount={setNotiCount}
+          setReadNotiIds={setReadNotiIds}
         />
         <div
-          className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${
-            isFixedHeader
-              ? 'mt-20 px-4 py-2'
-              : ' flex overflow-auto'
-          } duration-300`}
+          className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${isFixedHeader
+            ? 'mt-20 px-4 py-2'
+            : ' flex overflow-auto'
+            } duration-300`}
         >
           <Outlet />
         </div>

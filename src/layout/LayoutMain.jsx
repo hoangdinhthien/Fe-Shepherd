@@ -8,6 +8,7 @@ import { useDispatch } from 'react-redux';
 import storageService from '../config/local_storage';
 import { jwtDecode } from 'jwt-decode';
 import { logIn } from '../redux/user/userSlice';
+import notification_api from '../apis/notification_api';
 
 export default function LayoutMain() {
   const dispatch = useDispatch();
@@ -15,6 +16,8 @@ export default function LayoutMain() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [notiCount, setNotiCount] = useState(0);
+  const [readNotiIds, setReadNotiIds] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
 
@@ -31,22 +34,27 @@ export default function LayoutMain() {
     }
   }, [currentUser, dispatch]);
 
-  const addNotification = (type, content) => {
-    const newNotification = { id: Date.now(), type, content };
-    setNotifications((prevNotifications) => [
-      ...prevNotifications,
-      newNotification,
-    ]);
-  };
-
   const removeNotification = (id) => {
     setNotifications((prevNotifications) =>
       prevNotifications.filter((notification) => notification.id !== id)
     );
   };
 
-  const toggleModal = () => {
+  const toggleModal = async () => {
+    const change = !isModalOpen;
     setIsModalOpen(!isModalOpen);
+    if (!change) {
+      console.log('Marking all notifications as read...');
+      if (notiCount > 0) {
+        console.log(`Read ${readNotiIds.length}`, readNotiIds);
+        for (let id of readNotiIds) {
+          await notification_api.readOneNotification(id);
+        }
+      } else {
+        console.log('Read All noti.');
+        await notification_api.readAllNotifications();
+      }
+    };
   };
 
   const handleAccept = (id) => {
@@ -76,16 +84,16 @@ export default function LayoutMain() {
         className='w-64'
       />
       <div
-        className={`${
-          isFixedHeader ? 'flex-1' : 'flex flex-col h-screen w-full'
-        }`}
+        className={`${isFixedHeader ? 'flex-1' : 'flex flex-col h-screen w-full'
+          }`}
       >
         <Header
-          notifications={notifications}
           onNotificationClick={toggleModal}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           isFixed={isFixedHeader}
+          notiCount={notiCount}
+          setNotiCount={setNotiCount}
         />
         <NotificationPopup
           isOpen={isModalOpen}
@@ -93,13 +101,15 @@ export default function LayoutMain() {
           notifications={notifications}
           handleAccept={handleAccept}
           handleReject={handleReject}
+          notiCount={notiCount}
+          setNotiCount={setNotiCount}
+          setReadNotiIds={setReadNotiIds}
         />
         <div
-          className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${
-            isFixedHeader
-              ? 'mt-20 px-4 py-2'
-              : 'h-full overflow-auto flex justify-center items-center'
-          } duration-300`}
+          className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${isFixedHeader
+            ? 'mt-20 px-4 py-2'
+            : 'h-full overflow-auto flex justify-center items-center'
+            } duration-300`}
         >
           <Outlet />
         </div>

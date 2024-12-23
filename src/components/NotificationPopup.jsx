@@ -17,6 +17,9 @@ export default function NotificationPopup({
   removeNotification,
   handleAccept,
   handleReject,
+  notiCount,
+  setNotiCount,
+  setReadNotiIds,
 }) {
   const dropdownRef = useRef(null);
   const listRef = useRef(null);
@@ -25,6 +28,7 @@ export default function NotificationPopup({
   const [pageNumber, setPageNumber] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [unread, setUnread] = useState(0);
 
   const GetNotification = async (page) => {
     if (isLoading || !hasMore) return;
@@ -36,6 +40,7 @@ export default function NotificationPopup({
       } else {
         setNotifications((prev) => [...prev, ...data.result]);
         setPageNumber(page + 1);
+        setUnread(data.result.filter((noti) => !noti.isRead).length);
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -44,17 +49,24 @@ export default function NotificationPopup({
   };
 
   useEffect(() => {
-    if (isOpen) {
+    console.log('unread:', unread);
+    console.log('notiCount:', notiCount);
+    if (isOpen && notiCount >= unread) {
       setNotifications([]);
       setPageNumber(1);
       setHasMore(true);
       GetNotification(1);
     }
-  }, [isOpen]);
+  }, [isOpen, notiCount]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      const notiButton = document.getElementById('noti-button');
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        !notiButton.contains(event.target)
+      ) {
         onClose();
       }
     };
@@ -88,15 +100,35 @@ export default function NotificationPopup({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className='fixed right-0 mt-24 mr-6 w-80 bg-white rounded-lg shadow-xl z-50'
+          className='fixed right-0 mt-24 mr-6 w-[26%] bg-white rounded-lg shadow-xl z-50'
         >
-          <div className='p-4 border-b'>
-            <h2 className='text-xl font-semibold text-gray-800'>Notifications</h2>
+          <div className='p-4 border-b flex flex-row justify-between'>
+            <h2 className='text-xl font-semibold text-black'>Notifications</h2>
+
+            {notiCount > 0 && (
+              <button
+                onClick={() => {
+                  setNotifications((prevNotifications) =>
+                    prevNotifications.map((noti) => ({ ...noti, isRead: true }))
+                  );
+                  if (notiCount > 0) setNotiCount(0);
+                  setReadNotiIds(
+                    notifications
+                      .filter((noti) => !noti.isRead)
+                      .map((noti) => noti.id)
+                  );
+                }}
+                className='text-amber-600 hover:text-amber-400 focus:outline-none text-md font-medium'
+              >
+                {/* <FaTimes className='h-5 w-5' /> */}
+                Read all
+              </button>
+            )}
           </div>
           <div
             ref={listRef}
             onScroll={handleScroll}
-            className='overflow-y-auto max-h-80'
+            className='overflow-y-auto h-[500px]'
           >
             {notifications.length === 0 && !isLoading ? (
               <p className='text-center text-gray-500 py-4'>No notifications</p>
@@ -105,8 +137,19 @@ export default function NotificationPopup({
                 <div
                   key={notification.id}
                   className={`p-4 border-b last:border-b-0 hover:bg-gray-50 ${
-                    notification.IsRead ? 'bg-gray-200' : ''
+                    !notification.isRead ? 'bg-gray-200 border-white' : ''
                   }`}
+                  onClick={() => {
+                    setNotifications((prevNotifications) =>
+                      prevNotifications.map((noti) =>
+                        noti.id === notification.id
+                          ? { ...noti, isRead: true }
+                          : noti
+                      )
+                    );
+                    setNotiCount((prevCount) => Math.max(prevCount - 1, 0));
+                    setReadNotiIds((prevIds) => [...prevIds, notification.id]);
+                  }}
                 >
                   <div className='flex items-center mb-2'>
                     <div className='mr-3'>
@@ -124,19 +167,23 @@ export default function NotificationPopup({
                       )}
                     </div>
                     <div className='flex-grow'>
-                      <p className='text-sm text-gray-800'>
+                      <p
+                        className={`text-sm mr-5 text-gray-800 ${
+                          !notification.isRead && 'font-bold'
+                        }`}
+                      >
                         {notification.content}
                       </p>
                       <p className='text-xs text-gray-500 mt-1'>
                         {notification.timeAgo}
                       </p>
                     </div>
-                    <button
+                    {/* <button
                       onClick={() => removeNotification(notification.id)}
                       className='text-gray-400 hover:text-gray-600 focus:outline-none'
                     >
                       <FaTimes className='h-4 w-4' />
-                    </button>
+                    </button> */}
                   </div>
                   {notification.type === 'Task' && (
                     <div className='mt-2 flex justify-end space-x-2'>

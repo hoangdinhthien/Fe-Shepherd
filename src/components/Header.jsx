@@ -11,12 +11,19 @@ import {
 } from 'react-icons/md';
 import { FaRegCircleUser } from 'react-icons/fa6';
 import PropTypes from 'prop-types';
+import { useEffect, useState } from 'react';
+import { messaging } from '../config/firebase/firebase';
+import { showNotification } from '../config/message_service';
+import { getToken, onMessage } from '@firebase/messaging';
+import device_api from '../apis/device_api';
+import notification_api from '../apis/notification_api';
 
 export default function Header({
   sidebarOpen,
   setSidebarOpen,
-  notifications = [],
   onNotificationClick,
+  notiCount,
+  setNotiCount,
   isFixed,
 }) {
   const { currentUser } = useSelector((state) => state.user);
@@ -28,6 +35,79 @@ export default function Header({
   const ADMIN = 'Admin';
   const LEADER = 'Trưởng nhóm';
   console.log(COUNCIL);
+
+  const updateFcmToken = async (fcmToken) => {
+    try {
+      const res = await device_api.create({
+        userId: currentUser.user.id,
+        deviceId: fcmToken,
+      });
+      console.log('FCM token updated:', res);
+    } catch (error) {
+      console.error('Error updating FCM token:', error);
+    }
+  };
+
+  const getUnread = async () => {
+    try {
+      const unread = await notification_api.getNotifications({
+        PageNumber: 1,
+        PageSize: 1,
+        IsRead: false,
+      });
+      console.log('Unread notifications:', unread);
+      setNotiCount(unread.pagination.totalCount);
+    } catch (error) {
+      console.error('Error fetching unread notifications:', error);
+    }
+  };
+
+  useEffect(() => {
+    async function setupPermision() {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        // Get the FCM token
+        const token = await getToken(messaging);
+        console.log('FCM Token:', token);
+        await updateFcmToken(token);
+      } else {
+        console.error('Permission denied');
+      }
+    }
+    setupPermision();
+    getUnread();
+    return () => {
+      // Cleanup logic here
+    };
+  }, []);
+
+  useEffect(() => {
+    try {
+      // Handle foreground notifications
+      onMessage(messaging, (payload) => {
+        console.log('Message received. ', payload);
+        const title = payload.notification.title;
+        const body = payload.notification.body;
+        setNotiCount(notiCount + 1);
+        showNotification({ title, body });
+      });
+    } catch (error) {
+      console.error('Error setting up notifications:', error);
+    }
+  }, [notiCount]);
+
+  useEffect(() => {
+    const broadcast = new BroadcastChannel('notification_channel');
+    broadcast.onmessage = (event) => {
+      const payload = event.data;
+      console.log('Background message received in active tab:', payload);
+      setNotiCount((prevCount) => prevCount + 1);
+    };
+
+    return () => {
+      broadcast.close();
+    };
+  }, []);
 
   return (
     <header
@@ -76,23 +156,28 @@ export default function Header({
           {/* CREATE REQUEST */}
           {/*  */}
           {/* NOTIFICATION */}
-          {currentUser.user.role !== ADMIN && (
-            <Tooltip
-              content='Thông báo'
-              placement='bottom'
+          {/* {currentUser.user.role !== ADMIN && ( */}
+          <Tooltip
+            content='Thông báo'
+            placement='bottom'
+          >
+            <button
+              onClick={onNotificationClick}
+              id='noti-button'
             >
-              <button onClick={onNotificationClick}>
+              <div className='relative'>
                 <IoMdNotifications className='h-8 w-8 text-slate-700 duration-300 hover:scale-125' />
                 {/* NOTIFICATION COUNT */}
-                {notifications && notifications.length > 0 && (
+                {notiCount > 0 && (
                   <span className='absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full'>
-                    {/* {notifications.length} */}
+                    {notiCount}
                   </span>
                 )}
-                {/* NOTIFICATION COUNT */}
-              </button>
-            </Tooltip>
-          )}
+              </div>
+              {/* NOTIFICATION COUNT */}
+            </button>
+          </Tooltip>
+          {/* )} */}
           {/* NOTIFICATION */}
 
           {/* PROFILE */}
@@ -130,12 +215,13 @@ export default function Header({
 Header.propTypes = {
   sidebarOpen: PropTypes.bool.isRequired,
   setSidebarOpen: PropTypes.func.isRequired,
-  notifications: PropTypes.array,
   onNotificationClick: PropTypes.func.isRequired,
+  notiCount: PropTypes.number,
+  setNotiCount: PropTypes.func,
   isFixed: PropTypes.bool,
 };
 
 Header.defaultProps = {
-  notifications: [],
   isFixed: false,
+  notiCount: 0,
 };
