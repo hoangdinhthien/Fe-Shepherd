@@ -48,7 +48,6 @@ export default function NotificationPopup({
     setIsLoading(false);
   };
 
-
   useEffect(() => {
     console.log('unread:', unread);
     console.log('notiCount:', notiCount);
@@ -60,13 +59,14 @@ export default function NotificationPopup({
     }
   }, [isOpen, notiCount]);
 
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       const notiButton = document.getElementById('noti-button');
-      if (dropdownRef.current
-        && !dropdownRef.current.contains(event.target)
-        && !notiButton.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        !notiButton.contains(event.target)
+      ) {
         onClose();
       }
     };
@@ -105,25 +105,30 @@ export default function NotificationPopup({
           <div className='p-4 border-b flex flex-row justify-between'>
             <h2 className='text-xl font-semibold text-black'>Notifications</h2>
 
-            {notiCount > 0 && <button
-              onClick={() => {
-                setNotifications((prevNotifications) =>
-                  prevNotifications.map((noti) => ({ ...noti, isRead: true }))
-                );
-                if (notiCount > 0)
-                  setNotiCount(0);
-                setReadNotiIds(notifications.filter((noti) => !noti.isRead).map((noti) => noti.id));
-              }}
-              className='text-amber-600 hover:text-amber-400 focus:outline-none text-md font-medium'
-            >
-              {/* <FaTimes className='h-5 w-5' /> */}
-              Read all
-            </button>}
+            {notiCount > 0 && (
+              <button
+                onClick={() => {
+                  setNotifications((prevNotifications) =>
+                    prevNotifications.map((noti) => ({ ...noti, isRead: true }))
+                  );
+                  if (notiCount > 0) setNotiCount(0);
+                  setReadNotiIds(
+                    notifications
+                      .filter((noti) => !noti.isRead)
+                      .map((noti) => noti.id)
+                  );
+                }}
+                className='text-amber-600 hover:text-amber-400 focus:outline-none text-md font-medium'
+              >
+                {/* <FaTimes className='h-5 w-5' /> */}
+                Read all
+              </button>
+            )}
           </div>
           <div
             ref={listRef}
             onScroll={handleScroll}
-            className='overflow-y-auto h-1/2'
+            className='overflow-y-auto h-[500px]'
           >
             {notifications.length === 0 && !isLoading ? (
               <p className='text-center text-gray-500 py-4'>No notifications</p>
@@ -131,8 +136,9 @@ export default function NotificationPopup({
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b last:border-b-0 hover:bg-gray-50 ${!notification.isRead ? 'bg-gray-200 border-white' : ''
-                    }`}
+                  className={`p-4 border-b last:border-b-0 hover:bg-gray-50 ${
+                    !notification.isRead ? 'bg-gray-200 border-white' : ''
+                  }`}
                   onClick={() => {
                     setNotifications((prevNotifications) =>
                       prevNotifications.map((noti) =>
@@ -144,7 +150,6 @@ export default function NotificationPopup({
                     setNotiCount((prevCount) => Math.max(prevCount - 1, 0));
                     setReadNotiIds((prevIds) => [...prevIds, notification.id]);
                   }}
-
                 >
                   <div className='flex items-center mb-2'>
                     <div className='mr-3'>
@@ -162,7 +167,11 @@ export default function NotificationPopup({
                       )}
                     </div>
                     <div className='flex-grow'>
-                      <p className={`text-sm mr-5 text-gray-800 ${!notification.isRead && 'font-bold'}`}>
+                      <p
+                        className={`text-sm mr-5 text-gray-800 ${
+                          !notification.isRead && 'font-bold'
+                        }`}
+                      >
                         {notification.content}
                       </p>
                       <p className='text-xs text-gray-500 mt-1'>
