@@ -160,14 +160,14 @@ export default function Dashboard() {
       try {
         const response = await NotificationAPI.getNotificationByGroupId(
           selectedGroup,
-          { limit: 10 } // Ví dụ: Giới hạn 10 thông báo
+          {
+            pageSize: 10,
+          } // Ví dụ: Giới hạn 10 thông báo
         );
 
         console.log('Notification API Response:', response);
 
-        const notificationData = response.data
-          ? Object.values(response.data)
-          : [];
+        const notificationData = response ? Object.values(response.result) : [];
         setNotifications(notificationData);
       } catch (error) {
         console.error('Error fetching notifications:', error.message);
@@ -399,7 +399,7 @@ export default function Dashboard() {
                     {notification.title || 'Thông báo'}
                   </span>
                   <p className='text-sm text-gray-600'>
-                    {notification.description}
+                    {notification.content}
                   </p>
                 </li>
               ))

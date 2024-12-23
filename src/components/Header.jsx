@@ -50,7 +50,11 @@ export default function Header({
 
   const getUnread = async () => {
     try {
-      const unread = await notification_api.getNotifications({ PageNumber: 1, PageSize: 1, IsRead: false });
+      const unread = await notification_api.getNotifications({
+        PageNumber: 1,
+        PageSize: 1,
+        IsRead: false,
+      });
       console.log('Unread notifications:', unread);
       setNotiCount(unread.pagination.totalCount);
     } catch (error) {
@@ -69,7 +73,7 @@ export default function Header({
       } else {
         console.error('Permission denied');
       }
-    };
+    }
     setupPermision();
     getUnread();
     return () => {
@@ -105,18 +109,20 @@ export default function Header({
     };
   }, []);
 
-
   return (
     <header
-      className={`${isFixed && 'fixed top-0 right-0 left-0 z-40'
-        } bg-amber-400 shadow-md shadow-slate-300 pr-4 ${sidebarOpen ? 'pl-52' : 'pl-24'
-        } py-2 border-b border-blue-gray-700`}
+      className={`${
+        isFixed && 'fixed top-0 right-0 left-0 z-40'
+      } bg-amber-400 shadow-md shadow-slate-300 pr-4 ${
+        sidebarOpen ? 'pl-52' : 'pl-24'
+      } py-2 border-b border-blue-gray-700`}
     >
       <div className='flex justify-between items-center w-full p-3'>
         {/* NAVIGATE */}
         <MdKeyboardArrowLeft
-          className={`w-7 h-7 rounded-full bg-white border-2 border-blue-gray-700 transition-transform hover:scale-125 duration-300 ${sidebarOpen ? '' : 'rotate-180'
-            }`}
+          className={`w-7 h-7 rounded-full bg-white border-2 border-blue-gray-700 transition-transform hover:scale-125 duration-300 ${
+            sidebarOpen ? '' : 'rotate-180'
+          }`}
           onClick={() => setSidebarOpen(!sidebarOpen)}
         />
         <div className='flex justify-between items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8'>
@@ -138,37 +144,40 @@ export default function Header({
             ({ roleName }) => roleName === LEADER
           ) ||
             currentUser.user.role === COUNCIL) && (
-              <Tooltip
-                content='Tạo một yêu cầu'
-                placement='bottom'
-              >
-                <Link to='/user/create-request'>
-                  <IoDocumentText className='h-8 w-8 text-slate-700 duration-300 hover:scale-125' />
-                </Link>
-              </Tooltip>
-            )}
+            <Tooltip
+              content='Tạo một yêu cầu'
+              placement='bottom'
+            >
+              <Link to='/user/create-request'>
+                <IoDocumentText className='h-8 w-8 text-slate-700 duration-300 hover:scale-125' />
+              </Link>
+            </Tooltip>
+          )}
           {/* CREATE REQUEST */}
           {/*  */}
           {/* NOTIFICATION */}
-          {currentUser.user.role !== ADMIN && (
-            <Tooltip
-              content='Thông báo'
-              placement='bottom'
+          {/* {currentUser.user.role !== ADMIN && ( */}
+          <Tooltip
+            content='Thông báo'
+            placement='bottom'
+          >
+            <button
+              onClick={onNotificationClick}
+              id='noti-button'
             >
-              <button onClick={onNotificationClick} id='noti-button'>
-                <div className='relative'>
-                  <IoMdNotifications className='h-8 w-8 text-slate-700 duration-300 hover:scale-125' />
-                  {/* NOTIFICATION COUNT */}
-                  {notiCount > 0 && (
-                    <span className='absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full'>
-                      {notiCount}
-                    </span>
-                  )}
-                </div>
+              <div className='relative'>
+                <IoMdNotifications className='h-8 w-8 text-slate-700 duration-300 hover:scale-125' />
                 {/* NOTIFICATION COUNT */}
-              </button>
-            </Tooltip>
-          )}
+                {notiCount > 0 && (
+                  <span className='absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full'>
+                    {notiCount}
+                  </span>
+                )}
+              </div>
+              {/* NOTIFICATION COUNT */}
+            </button>
+          </Tooltip>
+          {/* )} */}
           {/* NOTIFICATION */}
 
           {/* PROFILE */}
@@ -202,7 +211,6 @@ export default function Header({
     </header>
   );
 }
-
 
 Header.propTypes = {
   sidebarOpen: PropTypes.bool.isRequired,
