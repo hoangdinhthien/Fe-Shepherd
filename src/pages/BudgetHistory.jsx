@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   Table,
@@ -13,10 +13,9 @@ import {
   message,
 } from 'antd';
 import moment from 'moment';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import TransactionAPI from '../apis/transaction_api';
 import BudgetAPI from '../apis/budget_api';
-import { useLocation } from 'react-router-dom'; // Import useLocation
 
 const { Title } = Typography;
 
@@ -24,22 +23,55 @@ function BudgetHistory() {
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [surplus, setSurplus] = useState(0); // For displaying church surplus
+  const [saving, setSaving] = useState(false);
+  const [surplus, setSurplus] = useState(0);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const handleApproveClick = (transaction) => {
+    setSelectedTransaction(transaction);
+    setIsApproveModalVisible(true);
+  };
 
-  // Fetch transactions and surplus
+  const handleApproveConfirm = async () => {
+    if (selectedTransaction) {
+      try {
+        await TransactionAPI.updateStatusTransaction(selectedTransaction.id);
+        message.success(
+          `Bạn đã chuyển thành công số tiền ${formatNumber(
+            selectedTransaction.amount
+          )} VND cho nhóm ${selectedTransaction.group}.`
+        );
+        setIsApproveModalVisible(false);
+        fetchTransactions(); // Tải lại danh sách
+      } catch (error) {
+        message.error('Có lỗi xảy ra khi cập nhật trạng thái giao dịch!');
+      }
+    }
+  };
+
+  const handleApproveCancel = () => {
+    setIsApproveModalVisible(false);
+  };
+
+  const formatNumber = (value) => {
+    return new Intl.NumberFormat('vi-VN').format(Number(value));
+  };
+
   const fetchTransactions = async () => {
     try {
       setLoading(true);
-
       const response = await TransactionAPI.getChurchBudgetHistory();
       const dataArray = Array.isArray(response.result)
         ? response.result
         : Object.values(response.result || {});
+
+      console.log('Data Array:', dataArray);
 
       const formattedData = dataArray.map((item) => ({
         id: item.id || 'N/A',
@@ -56,8 +88,7 @@ function BudgetHistory() {
       setFilteredTransactions(formattedData);
 
       const surplusResponse = await BudgetAPI.getBudgets();
-      const surplusAmount = surplusResponse?.data?.surplusOrDeficit || 0;
-      setSurplus(surplusAmount);
+      setSurplus(surplusResponse?.data?.surplusOrDeficit || 0);
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu:', error);
       message.error('Không thể tải dữ liệu ngân sách!');
@@ -65,20 +96,13 @@ function BudgetHistory() {
       setLoading(false);
     }
   };
-  const location = useLocation(); // Lấy thông tin trạng thái từ điều hướng
 
   useEffect(() => {
     fetchTransactions();
-
-    // Mở popup nếu trạng thái 'openAddBudgetModal' được truyền vào
     if (location.state?.openAddBudgetModal) {
       setIsModalVisible(true);
     }
   }, [location.state]);
-
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
 
   const handleSearchChange = (e) => {
     const keyword = e.target.value.toLowerCase();
@@ -109,9 +133,10 @@ function BudgetHistory() {
 
   const handleSaveBudget = async () => {
     try {
+      setSaving(true);
       const values = await form.validateFields();
-      const rawAmount = form.getFieldValue('amount').replace(/[^\d]/g, ''); // Lấy số tiền không có đuôi VND
-      const finalAmount = parseInt(rawAmount, 10); // Nhân với 1000 để lưu vào API
+      const rawAmount = form.getFieldValue('amount').replace(/[^\d]/g, '');
+      const finalAmount = parseInt(rawAmount, 10);
 
       Modal.confirm({
         title: 'Xác nhận',
@@ -119,7 +144,6 @@ function BudgetHistory() {
         okText: 'Xác nhận',
         cancelText: 'Hủy',
         onOk: async () => {
-          setLoading(true);
           try {
             await BudgetAPI.updateBudget({
               amount: finalAmount,
@@ -131,96 +155,113 @@ function BudgetHistory() {
           } catch (error) {
             console.error('Error updating budget:', error);
             message.error('Có lỗi xảy ra khi cập nhật ngân sách!');
-          } finally {
-            setLoading(false);
           }
         },
       });
     } catch (error) {
       console.error('Validation error:', error);
       message.error('Vui lòng nhập đầy đủ thông tin!');
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Hàm xử lý khi người dùng nhập số tiền
   const handleAmountChange = (e) => {
-    let value = e.target.value;
-
-    // Chỉ cho phép nhập số và loại bỏ các ký tự đặc biệt
-    value = value.replace(/[^0-9]/g, ''); // Chỉ cho phép nhập số
-
-    // Cập nhật lại giá trị vào form
-    form.setFieldsValue({ amount: value });
+    const value = e.target.value.replace(/\D/g, '');
+    form.setFieldsValue({
+      amount: formatNumber(value),
+    });
   };
 
-  // Hàm xử lý khi focus vào ô nhập liệu
   const handleFocus = () => {
     const value = form.getFieldValue('amount');
-    // Xóa phần "VND" và ".000" nếu có
+    form.setFieldsValue({
+      amount: value.replace(/[^\d]/g, ''),
+    });
+  };
+
+  const handleBlur = () => {
+    const value = form.getFieldValue('amount');
     if (value) {
       form.setFieldsValue({
-        amount: value.replace(' VND', '').replace('.000', ''),
+        amount: `${formatNumber(value)} VND`,
       });
     }
   };
 
-  // Hàm xử lý khi blur khỏi ô nhập liệu
-  const handleBlur = () => {
-    const value = form.getFieldValue('amount');
-    // Chuyển số thành định dạng với dấu chấm sau mỗi ba chữ số
-    if (value && value !== '') {
-      const formattedValue = formatNumber(value);
-      form.setFieldsValue({ amount: `${formattedValue}.000 VND` });
-    }
-  };
-
-  // Hàm định dạng số với dấu chấm phân tách ba chữ số
-  const formatNumber = (value) => {
-    // Chuyển thành số và định dạng với dấu chấm
-    const number = Number(value);
-    return number.toLocaleString();
-  };
-
-  const transactionColumns = [
-    {
-      title: 'Mã Giao Dịch',
-      dataIndex: 'id',
-      key: 'id',
-      render: (id) => <span>{id}</span>,
-    },
-    {
-      title: 'Loại',
-      dataIndex: 'type',
-      key: 'type',
-      render: (type) => <span>{type}</span>,
-    },
-    {
-      title: 'Số Tiền',
-      dataIndex: 'amount',
-      key: 'amount',
-      render: (amount) => <span>{amount.toLocaleString()} VND</span>,
-    },
-    {
-      title: 'Ngày',
-      dataIndex: 'date',
-      key: 'date',
-      render: (date) => <span>{moment(date).format('DD/MM/YYYY')}</span>,
-      sorter: (a, b) => (moment(a.date).isBefore(b.date) ? -1 : 1),
-      defaultSortOrder: 'descend',
-    },
-    {
-      title: 'Trạng Thái',
-      dataIndex: 'approvalStatus',
-      key: 'approvalStatus',
-      render: (status) => <span>{status}</span>,
-    },
-    {
-      title: 'Nhóm',
-      dataIndex: 'group',
-      key: 'group',
-      render: (group) => <span>{group}</span>,
-    },
-  ];
+  const transactionColumns = useMemo(
+    () => [
+      {
+        title: 'Mã Giao Dịch',
+        dataIndex: 'id',
+        key: 'id',
+        render: (id) => <span>{id}</span>,
+      },
+      {
+        title: 'Loại',
+        dataIndex: 'type',
+        key: 'type',
+        render: (type) => {
+          const colorClass =
+            type === 'Từ thiện'
+              ? 'text-green-500 font-medium'
+              : type === 'Chi phí'
+              ? 'text-red-500 font-medium'
+              : 'font-medium'; // Mặc định in đậm vừa phải
+          return <span className={colorClass}>{type}</span>;
+        },
+      },
+      {
+        title: 'Số Tiền',
+        dataIndex: 'amount',
+        key: 'amount',
+        render: (amount) => <span>{amount.toLocaleString()} VND</span>,
+      },
+      {
+        title: 'Ngày',
+        dataIndex: 'date',
+        key: 'date',
+        render: (date) => <span>{moment(date).format('DD/MM/YYYY')}</span>,
+        sorter: (a, b) => (moment(a.date).isBefore(b.date) ? -1 : 1),
+        defaultSortOrder: null, // Không sắp xếp mặc định
+      },
+      {
+        title: 'Trạng Thái',
+        dataIndex: 'approvalStatus',
+        key: 'approvalStatus',
+        render: (status) => {
+          const colorClass =
+            status === 'Đã duyệt'
+              ? 'text-green-500 font-medium'
+              : status === 'Chờ duyệt'
+              ? 'text-red-500 font-medium'
+              : 'font-medium'; // Mặc định in đậm vừa phải
+          return <span className={colorClass}>{status}</span>;
+        },
+      },
+      {
+        title: 'Nhóm',
+        dataIndex: 'group',
+        key: 'group',
+        render: (group) => <span>{group}</span>,
+      },
+      {
+        title: 'Hành động',
+        key: 'action',
+        render: (record) => {
+          if (record.approvalStatus === 'Chờ duyệt') {
+            return (
+              <Button type='primary' onClick={() => handleApproveClick(record)}>
+                Cấp Ngân Sách
+              </Button>
+            );
+          }
+          return null; // Không hiển thị nội dung gì
+        },
+      },
+    ],
+    []
+  );
 
   return (
     <div className='budget-history-page' style={{ padding: '20px' }}>
@@ -282,8 +323,8 @@ function BudgetHistory() {
               style={{ width: 150 }}
             >
               <Select.Option value=''>Tất cả</Select.Option>
-              <Select.Option value='Donation'>Quyên Góp</Select.Option>
-              <Select.Option value='Expense'>Chi Tiêu</Select.Option>
+              <Select.Option value='Từ thiện'>Từ thiện</Select.Option>
+              <Select.Option value='Chi phí'>Chi phí</Select.Option>
             </Select>
           </div>
 
@@ -303,13 +344,17 @@ function BudgetHistory() {
           dataSource={filteredTransactions}
           rowKey='id'
           pagination={{ pageSize: 10 }}
+          rowClassName={(record) =>
+            record.approvalStatus === 'Chờ duyệt'
+              ? 'bg-yellow-200 border border-yellow-300 hover:bg-yellow-300'
+              : ''
+          }
         />
       </Spin>
 
-      {/* Modal thêm ngân sách */}
       <Modal
         title='Thêm Ngân Sách'
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >
@@ -342,11 +387,32 @@ function BudgetHistory() {
           </Form.Item>
 
           <Form.Item>
-            <Button type='primary' htmlType='submit' block>
+            <Button type='primary' htmlType='submit' block loading={saving}>
               Lưu
             </Button>
           </Form.Item>
         </Form>
+      </Modal>
+      <Modal
+        title='Xác nhận Cấp Ngân Sách'
+        open={isApproveModalVisible}
+        onCancel={handleApproveCancel}
+        footer={[
+          <Button key='cancel' onClick={handleApproveCancel}>
+            Hủy bỏ
+          </Button>,
+          <Button key='confirm' type='primary' onClick={handleApproveConfirm}>
+            Đồng ý
+          </Button>,
+        ]}
+      >
+        {selectedTransaction && (
+          <p>
+            Bạn có đồng ý cấp số tiền{' '}
+            <b>{formatNumber(selectedTransaction.amount)} VND</b> cho nhóm{' '}
+            <b>{selectedTransaction.group}</b> không?
+          </p>
+        )}
       </Modal>
     </div>
   );

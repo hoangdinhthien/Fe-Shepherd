@@ -38,6 +38,10 @@ const AdminDashboard = () => {
   const [monthlyEventCounts, setMonthlyEventCounts] = useState([]);
   const [requestFirst, setRequestFirst] = useState(null);
   const [budget, setBudget] = useState(0);
+  const [contextMenu, setContextMenu] = useState(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
   const [transactionsData, setTransactionsData] = useState({
     labels: [],
     datasets: [],
@@ -514,22 +518,6 @@ const AdminDashboard = () => {
               }}
               options={chartOptions}
             />
-          </div>
-          <div className='mt-4'>
-            <h3 className='text-lg font-semibold mb-2'>Chi Tiết Hoạt Động</h3>
-            <ul className='space-y-2'>
-              {dashboardData.groupActivities.labels.map((label, index) => (
-                <li
-                  key={index}
-                  className='flex justify-between items-center border-b pb-2'
-                >
-                  <span className='font-medium'>{label}</span>
-                  <span>
-                    {dashboardData.groupActivities.data[index]} hoạt động
-                  </span>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
         <div className='bg-white rounded-xl shadow-lg p-6 md:col-span-3'>
