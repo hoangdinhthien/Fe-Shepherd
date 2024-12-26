@@ -126,7 +126,7 @@ export default function Group() {
   ];
 
   const transactionColumns = [
-    { title: 'Mã Giao Dịch', dataIndex: 'id', key: 'id' },
+    { title: 'Số Giao Dịch', dataIndex: 'id', key: 'id' },
     {
       title: 'Ngày',
       dataIndex: 'date',

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import AdminUserAPI from '../../apis/admin/admin_user_api';
 import RequestAPI from '../../apis/admin/request_api';
+import AdminGroupAPI from '../../apis/admin/admin_group_api';
 
 const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
   const [name, setName] = useState('');
@@ -13,43 +14,55 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
+  const [groups, setGroups] = useState([]); // Danh sách đoàn thể
+  const [selectedGroupId, setSelectedGroupId] = useState(''); // Đoàn thể được chọn
 
   const location = useLocation();
   const { requestId } = location.state || {}; // Lấy requestId từ state (nếu có)
 
+  // Lấy danh sách đoàn thể và thông tin yêu cầu (nếu có)
   useEffect(() => {
-    // Kiểm tra nếu có requestId (được điều hướng từ trang yêu cầu)
-    if (requestId) {
-      const fetchRequestDetails = async () => {
-        try {
-          console.log('Request ID:', requestId);
-          const response = await RequestAPI.getDetailRequests(requestId);
-          if (response.success) {
-            const { user } = response.data; // Lấy thông tin user từ response
-            if (user) {
-              setName(user.name || '');
-              setPhone(user.phone || '');
-              setEmail(user.email || '');
-              setPassword(user.password || '');
-              setRole(user.role || 'Thành viên');
-            }
-          } else {
-            console.error('Không thể lấy thông tin yêu cầu.');
-          }
-        } catch (error) {
-          console.error('Lỗi khi lấy chi tiết yêu cầu:', error);
-        }
-      };
+    const fetchGroups = async () => {
+      try {
+        const response = await AdminGroupAPI.getAllGroups();
+        const groupList = Array.isArray(response.result) ? response.result : [];
+        setGroups(groupList);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách đoàn thể:', error);
+        setGroups([]); // Đặt giá trị mặc định là mảng rỗng khi có lỗi
+      }
+    };
 
+    const fetchRequestDetails = async () => {
+      try {
+        const response = await RequestAPI.getDetailRequests(requestId);
+        if (response.success) {
+          const { user } = response.data;
+          if (user) {
+            setName(user.name || '');
+            setPhone(user.phone || '');
+            setEmail(user.email || '');
+            setPassword(user.password || '');
+            setRole(user.role || 'Thành viên');
+            setSelectedGroupId(user.groupId || ''); // Đặt giá trị mặc định của đoàn thể
+          }
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy chi tiết yêu cầu:', error);
+      }
+    };
+
+    fetchGroups();
+
+    if (requestId) {
       fetchRequestDetails();
     } else {
-      // Nếu không có requestId, đảm bảo để trống tất cả các trường
-      console.log('Không có requestId, để trống các trường');
       setName('');
       setPhone('');
       setEmail('');
       setPassword('');
       setRole('Thành viên');
+      setSelectedGroupId('');
     }
   }, [requestId]);
 
@@ -70,7 +83,6 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
     setFieldErrors({});
     setErrorMessage('');
 
-    // Kiểm tra lỗi form
     const errors = validateFields();
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -79,7 +91,6 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
     }
 
     try {
-      // Nếu có requestId, cập nhật trạng thái yêu cầu
       if (requestId) {
         const updateResponse = await RequestAPI.updateAcceptRequest(requestId);
         if (!updateResponse.success) {
@@ -89,14 +100,13 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
         }
       }
 
-      // Tiến hành tạo tài khoản
       const userData = {
         name,
         phone,
         email,
         password,
         role,
-        groupId: '3fa85f64-5717-4562-b3fc-2c963f66afa6', // Group ID hợp lệ
+        groupIds: [selectedGroupId], // Đúng định dạng groupIds là một mảng
       };
 
       const response = await AdminUserAPI.createUser(userData, {
@@ -115,9 +125,10 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
       }
     } catch (error) {
       console.error('Lỗi khi gọi API:', error);
-      setErrorMessage(
-        error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.'
-      );
+
+      const apiErrorMessage =
+        error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+      setErrorMessage(apiErrorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -216,6 +227,21 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
                     <option value='Cha xứ'>Cha xứ</option>
                     <option value='Thủ quỹ'>Thủ quỹ</option>
                     <option value='Admin'>Admin</option>
+                  </select>
+                </div>
+                <div className='mb-4'>
+                  <label>Đoàn thể</label>
+                  <select
+                    value={selectedGroupId}
+                    onChange={(e) => setSelectedGroupId(e.target.value)}
+                    className='w-full p-2 border rounded'
+                  >
+                    <option value=''>Chọn đoàn thể</option>
+                    {groups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.groupName}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

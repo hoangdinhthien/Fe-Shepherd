@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminGroupAPI from '../../apis/admin/admin_group_api';
 import UpdateGroupPopUp from '../../components/admin/UpdateGroupPopUp';
 import GroupCreatePopUp from '../../components/admin/GroupCreatePopUp'; // Import GroupCreatePopUp
-import { Button, Table, Spin, Input, Modal } from 'antd'; // Thêm Modal từ antd
+import { Button, Table, Spin, Input, Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
 const AdminGroup = () => {
@@ -12,9 +12,9 @@ const AdminGroup = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [editingGroup, setEditingGroup] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // Trạng thái popup tạo nhóm
-  const [groupToDelete, setGroupToDelete] = useState(null); // Trạng thái nhóm cần xóa
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Trạng thái modal xóa nhóm
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const fetchGroups = async () => {
@@ -61,26 +61,25 @@ const AdminGroup = () => {
     Modal.success({
       content: `Cập nhật nhóm thành công: ${groupName}`,
     });
-    fetchGroups(); // Cập nhật lại danh sách nhóm
+    fetchGroups();
     setIsEditModalOpen(false);
     setEditingGroup(null);
   };
 
   const handleOpenCreateModal = () => {
-    setIsCreateModalOpen(true); // Mở popup tạo nhóm
+    setIsCreateModalOpen(true);
   };
 
   const handleCloseCreateModal = () => {
-    setIsCreateModalOpen(false); // Đóng popup tạo nhóm
+    setIsCreateModalOpen(false);
   };
 
   const handleCreateGroup = async (newGroup) => {
     try {
-      // Gọi API tạo nhóm mới
       const response = await AdminGroupAPI.createGroup(newGroup);
       if (response.success) {
-        fetchGroups(); // Cập nhật lại danh sách nhóm
-        setIsCreateModalOpen(false); // Đóng popup
+        fetchGroups();
+        setIsCreateModalOpen(false);
       } else {
         console.error(response.message || 'Không thể tạo nhóm.');
       }
@@ -91,15 +90,15 @@ const AdminGroup = () => {
 
   const handleOpenDeleteModal = (group) => {
     setGroupToDelete(group);
-    setIsDeleteModalOpen(true); // Mở modal xác nhận xóa
+    setIsDeleteModalOpen(true);
   };
 
   const handleDeleteGroup = async () => {
     if (groupToDelete) {
       try {
-        const response = await AdminGroupAPI.deleteGroup(groupToDelete.id); // Gọi API xóa nhóm
+        const response = await AdminGroupAPI.deleteGroup(groupToDelete.id);
         if (response.success) {
-          fetchGroups(); // Cập nhật lại danh sách nhóm
+          fetchGroups();
           Modal.success({
             content: `Đã xóa nhóm: ${groupToDelete.groupName}`,
           });
@@ -115,13 +114,13 @@ const AdminGroup = () => {
         });
       }
     }
-    setIsDeleteModalOpen(false); // Đóng modal xác nhận xóa
-    setGroupToDelete(null); // Xóa nhóm cần xóa
+    setIsDeleteModalOpen(false);
+    setGroupToDelete(null);
   };
 
   const handleCancelDelete = () => {
-    setIsDeleteModalOpen(false); // Đóng modal xác nhận xóa
-    setGroupToDelete(null); // Xóa nhóm cần xóa
+    setIsDeleteModalOpen(false);
+    setGroupToDelete(null);
   };
 
   const groupColumns = [
@@ -146,12 +145,6 @@ const AdminGroup = () => {
       key: 'memberCount',
     },
     {
-      title: 'Ưu Tiên',
-      dataIndex: 'priority',
-      key: 'priority',
-      render: (priority) => (priority ? 'Có' : 'Không'),
-    },
-    {
       title: 'Hành Động',
       key: 'action',
       render: (text, group) => (
@@ -170,8 +163,6 @@ const AdminGroup = () => {
       ),
     },
   ];
-
-  if (loading) return <Spin spinning={loading} tip='Đang tải dữ liệu...' />;
 
   return (
     <div className='admin-group-page' style={{ padding: '20px' }}>
@@ -207,6 +198,9 @@ const AdminGroup = () => {
           pagination={{ pageSize: 5 }}
           bordered
           className='rounded-lg shadow-lg'
+          rowClassName={
+            (record) => (record.priority ? 'bg-green-100' : '') // Bôi màu xanh lá cây nếu nhóm ưu tiên
+          }
         />
       </Spin>
 
