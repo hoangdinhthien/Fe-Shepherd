@@ -136,7 +136,7 @@ export default function NotificationPopup({
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b last:border-b-0 hover:bg-gray-50 ${
+                  className={` cursor-pointer p-4 border-b last:border-b-0 hover:bg-gray-50 ${
                     !notification.isRead ? 'bg-gray-200 border-white' : ''
                   }`}
                   onClick={() => {

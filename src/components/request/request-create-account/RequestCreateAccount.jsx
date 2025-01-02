@@ -82,15 +82,15 @@ export default function RequestCreateAccount({
           />
         </div>
         <div className='flex flex-col'>
-          <label className='mb-1 text-gray-700'>Chọn chức vụ</label>
+          <label className='mb-1 text-gray-700'>Chức vụ</label>
           <Input
             type='text'
             name='role'
-            placeholder='Chọn vai chức vụ'
+            placeholder='Chức vụ'
             className='h-12'
             size='large'
-            value={accountData.role}
-            onChange={handleChange}
+            value='Thành viên'
+            disabled
           />
         </div>
         <div className='flex flex-col'>

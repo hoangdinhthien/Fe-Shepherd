@@ -173,12 +173,9 @@ export default function Task() {
 
   const handleGroupChange = (value) => {
     setSelectedGroup(value);
+    setSelectedActivity(null); // Reset selected activity
     setColumns({}); // Reset columns when changing groups
-    navigate(
-      `/user/task?groupId=${value}${
-        selectedActivity ? `&activityId=${selectedActivity}` : ''
-      }`
-    );
+    navigate(`/user/task?groupId=${value}`);
   };
 
   const handleActivityChange = (value) => {
@@ -436,7 +433,7 @@ export default function Task() {
           selectedTask={selectedTask}
           isModalVisible={isModalVisible}
           setIsModalVisible={handleModalClose}
-          isGroupLeader={isGroupLeader} // Pass isGroupLeader prop
+          isGroupLeader={isGroupLeader}
         />
       )}
     </div>
