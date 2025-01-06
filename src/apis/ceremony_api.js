@@ -1,5 +1,14 @@
 import BaseAPI from '../config/baseAPI';
 
-const CeremoniesAPI = new BaseAPI('ceremony');
+class CeremoniesAPI extends BaseAPI {
+  constructor() {
+    super('ceremony');
+  }
+
+  getCeremonies(params) {
+    const url = `${this.url}/calendar`;
+    return super.getCustom(url, { params });
+  }
+}
 
 export default new CeremoniesAPI();

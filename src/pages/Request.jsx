@@ -5,6 +5,7 @@ import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import moment from 'moment'; // Ensure moment is imported
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { IoArrowBack } from 'react-icons/io5';
 
 // Row selection object for checkboxes (optional)
 const rowSelection = {
@@ -27,6 +28,7 @@ const Request = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [groupFilters, setGroupFilters] = useState([]);
 
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.currentUser);
@@ -53,6 +55,14 @@ const Request = () => {
         PageSize: pageSize,
         // To: 'Council',
       });
+      const groups = res.result
+        .map((item) => item.group?.groupName)
+        .filter(Boolean);
+      const uniqueGroups = [...new Set(groups)];
+      setGroupFilters(
+        uniqueGroups.map((group) => ({ text: group, value: group }))
+      );
+
       setRows(
         res.result.map((item) => ({
           key: item.id,
@@ -157,6 +167,7 @@ const Request = () => {
     {
       title: 'Tiêu Đề',
       dataIndex: 'title',
+      sorter: (a, b) => a.title.localeCompare(b.title),
       render: (text, record) => (
         <a onClick={() => handleRowClick(record)}>{text}</a>
       ),
@@ -164,26 +175,49 @@ const Request = () => {
     {
       title: 'Đoàn Thể Yêu Cầu',
       dataIndex: 'from',
+      sorter: (a, b) => a.from.localeCompare(b.from),
+      filters: groupFilters,
+      onFilter: (value, record) => record.from.includes(value),
     },
     {
       title: 'Tới Đoàn Thể',
       dataIndex: 'to',
+      sorter: (a, b) => a.to.localeCompare(b.to),
+      filters: [
+        { text: 'Council', value: 'Council' },
+        { text: 'Admin', value: 'Admin' },
+        // Add more filters as needed
+      ],
+      onFilter: (value, record) => record.to.includes(value),
     },
     {
       title: 'Ngày Tạo',
       dataIndex: 'createdAt',
+      sorter: (a, b) =>
+        moment(a.createdAt, 'DD/MM/YYYY - HH:mm').unix() -
+        moment(b.createdAt, 'DD/MM/YYYY - HH:mm').unix(),
     },
     {
       title: 'Trạng Thái',
       dataIndex: 'status',
+      filters: [
+        { text: 'Accepted', value: 'Accepted' },
+        { text: 'Rejected', value: 'Rejected' },
+        { text: 'Pending', value: 'Pending' },
+      ],
+      onFilter: (value, record) => record.status.props.children === value,
     },
   ];
 
   return (
     <div className='flex flex-col'>
-      <h1 className='text-xl font-semibold mt-3 mb-6 ml-4'>
-        Danh Sách Các Yêu Cầu
-      </h1>
+      <div className='flex items-center mt-3 mb-6 ml-4'>
+        <IoArrowBack
+          className='cursor-pointer text-xl mr-2'
+          onClick={() => navigate(-1)}
+        />
+        <h1 className='text-xl font-semibold'>Danh Sách Các Yêu Cầu</h1>
+      </div>
       <Table
         loading={isLoading}
         columns={cols}

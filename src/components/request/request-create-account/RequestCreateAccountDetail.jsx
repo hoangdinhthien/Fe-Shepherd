@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { Tag, Divider, message } from 'antd';
+import { IoArrowBack } from 'react-icons/io5'; // Import IoArrowBack
 import moment from 'moment';
 import request_api from '../../../apis/request_api';
 import UserAPI from '../../../apis/user_api'; // Import UserAPI
 
 export default function RequestCreateAccountDetail() {
   const location = useLocation();
+  const navigate = useNavigate(); // Initialize navigate
   const { requestId, requestingGroup } = location.state.request;
   const [request, setRequest] = useState(null);
   const [createdByName, setCreatedByName] = useState(''); // Add state for createdByName
@@ -46,6 +48,12 @@ export default function RequestCreateAccountDetail() {
 
   return (
     <div className='p-6 bg-white rounded-md shadow-md'>
+      <button
+        className='flex items-center mb-4 text-black'
+        onClick={() => navigate(-1)} // Navigate back
+      >
+        <IoArrowBack className='mr-2' /> Quay lại
+      </button>
       {/* -----HEADER SECTION----- */}
       <div className='flex justify-between items-center mb-4'>
         <div className='flex space-x-2'>
