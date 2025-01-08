@@ -9,76 +9,10 @@ import EventAPI from '../../apis/event_api';
 import CustomAdminHeaderBar from '../../components/calendar/CustomAdminHeaderBar';
 import EditCeremonyPopUp from '../../components/admin/EditCeremonyPopUp';
 
-const { Title } = Typography;
-
-// Logger Utility
-const Logger = {
-  info: (message, data) => console.log(`[INFO] ${message}`, data || ''),
-  warn: (message, data) => console.warn(`[WARN] ${message}`, data || ''),
-  error: (message, data) => console.error(`[ERROR] ${message}`, data || ''),
-};
+const { Title, Text } = Typography;
 
 moment.locale('vi');
 const localizer = momentLocalizer(moment);
-
-// Default event configuration
-const DEFAULT_EVENT = {
-  title: 'Không có tiêu đề',
-  start: new Date(),
-  end: new Date(),
-  type: 'unknown',
-};
-
-// Event validation and transformation
-const validateAndTransformEvent = (event) => {
-  if (!event || typeof event !== 'object') {
-    Logger.warn('Invalid event object:', event);
-    return null;
-  }
-
-  try {
-    return {
-      id:
-        event.id || event.ceremonyId || `event-${Date.now()}-${Math.random()}`,
-      title: event.eventName || event.activityName || DEFAULT_EVENT.title,
-      start: moment(event.fromDate || event.startTime || event.start).toDate(),
-      end: moment(event.toDate || event.endTime || event.end).toDate(),
-      description: event.description || '',
-      type: event.type || DEFAULT_EVENT.type,
-      status: event.status || 'pending',
-      resourceId: event.resourceId || null,
-      allDay: event.allDay || false,
-    };
-  } catch (error) {
-    Logger.error('Error transforming event:', error, event);
-    return null;
-  }
-};
-
-// Helper function to generate weeks
-const generateWeeks = (startDate = moment(), numWeeks = 52) => {
-  const weeks = [];
-  const startOfYear = moment(startDate).startOf('year');
-
-  for (let i = 1; i <= numWeeks; i++) {
-    const weekStart = moment(startOfYear)
-      .add(i - 1, 'weeks')
-      .startOf('week');
-    const weekEnd = moment(weekStart).endOf('week');
-
-    weeks.push({
-      weekNumber: i,
-      year: weekStart.year(),
-      range: `${weekStart.format('DD/MM/YYYY')} - ${weekEnd.format(
-        'DD/MM/YYYY'
-      )}`,
-      startDate: weekStart.toDate(),
-      endDate: weekEnd.toDate(),
-    });
-  }
-
-  return weeks;
-};
 
 const AdminCalendar = () => {
   const [events, setEvents] = useState([]);
@@ -89,104 +23,118 @@ const AdminCalendar = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
 
-  // Week management state
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+    setSelectedEvent(null);
+  };
+
+  // Generate weeks for navigation
+  const generateWeeks = (startDate = moment(), numWeeks = 52) => {
+    const weeks = [];
+    const startOfYear = moment(startDate).startOf('year');
+    for (let i = 1; i <= numWeeks; i++) {
+      const weekStart = moment(startOfYear)
+        .add(i - 1, 'weeks')
+        .startOf('week');
+      const weekEnd = moment(weekStart).endOf('week');
+      weeks.push({
+        weekNumber: i,
+        year: weekStart.year(),
+        range: `${weekStart.format('DD/MM/YYYY')} - ${weekEnd.format(
+          'DD/MM/YYYY'
+        )}`,
+        startDate: weekStart.toDate(),
+        endDate: weekEnd.toDate(),
+      });
+    }
+    return weeks;
+  };
+
   const [weeks] = useState(() => generateWeeks());
   const [selectedWeek, setSelectedWeek] = useState({
     week: moment().week(),
     year: moment().year(),
   });
 
-  // Fetch data and process events
+  // Fetch ceremonies and events
   const fetchAndProcessEvents = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Fetch ceremonies
-      const ceremoniesResponse = await AdminCalendarAPI.getAllCeremonies();
-      Logger.info('Ceremonies raw data:', ceremoniesResponse?.data);
+      // Tính toán `fromDate` (ngày đầu tuần hiện tại)
+      const fromDate = moment(currentDate).startOf('week').toISOString();
 
-      // Fetch events
+      // Fetch ceremonies với `fromDate`
+      const ceremoniesResponse = await AdminCalendarAPI.getAllCeremonies(
+        fromDate
+      );
       const eventsResponse = await EventAPI.getEventsByGroup();
-      Logger.info('Events raw data:', eventsResponse?.data);
 
-      // Process ceremonies
+      // Xử lý dữ liệu ceremonies
       const ceremonies = (ceremoniesResponse?.data || [])
-        .map((ceremony) => {
-          const mainEvent = validateAndTransformEvent({
-            ...ceremony,
-            type: 'ceremony',
-          });
-
-          const activityEvents = (ceremony.activities || [])
-            .map((activity) =>
-              validateAndTransformEvent({
-                ...activity,
-                type: 'activity',
-              })
-            )
-            .filter(Boolean);
-
-          return [mainEvent, ...activityEvents];
-        })
-        .flat()
+        .map((ceremony) => ({
+          ...ceremony,
+          activities: ceremony.activities || [],
+          type: 'ceremony',
+        }))
+        .map(validateAndTransformEvent)
         .filter(Boolean);
 
-      // Process regular events
+      // Xử lý dữ liệu events
       const regularEvents = (eventsResponse?.data || [])
-        .map((event) =>
-          validateAndTransformEvent({
-            ...event,
-            type: 'event',
-          })
-        )
+        .map((event) => ({
+          ...event,
+          activities: event.activities || [],
+          type: 'event',
+        }))
+        .map(validateAndTransformEvent)
         .filter(Boolean);
 
-      // Combine all events and validate
-      const allEvents = [...ceremonies, ...regularEvents].filter((event) => {
-        const isValid =
-          event &&
-          event.title &&
-          moment(event.start).isValid() &&
-          moment(event.end).isValid();
-
-        if (!isValid) {
-          Logger.warn('Filtered out invalid event:', event);
-        }
-        return isValid;
-      });
-
-      Logger.info('Final processed events:', allEvents);
+      // Kết hợp tất cả events
+      const allEvents = [...ceremonies, ...regularEvents];
       setEvents(allEvents);
     } catch (error) {
-      Logger.error('Error fetching events:', error);
+      console.error('Error fetching events:', error);
       setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
-      message.error('Đã xảy ra lỗi khi tải dữ liệu');
+      message.error('Đã xảy ra lỗi khi tải dữ liệu.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentDate]);
 
   useEffect(() => {
     fetchAndProcessEvents();
   }, [fetchAndProcessEvents]);
 
-  const handleWeekChange = useCallback(
-    (weekNumber, year) => {
-      const selectedWeekData = weeks.find(
-        (week) => week.weekNumber === weekNumber && week.year === year
-      );
-
-      if (selectedWeekData) {
-        setCurrentDate(selectedWeekData.startDate);
-        setSelectedWeek({ week: weekNumber, year });
-      }
-    },
-    [weeks]
-  );
+  const validateAndTransformEvent = (event) => {
+    if (!event || typeof event !== 'object') {
+      console.warn('Invalid event object:', event);
+      return null;
+    }
+    try {
+      return {
+        id:
+          event.id ||
+          event.ceremonyId ||
+          `event-${Date.now()}-${Math.random()}`,
+        title: event.eventName || event.activityName || 'Không có tiêu đề',
+        start: moment(
+          event.fromDate || event.startTime || event.start
+        ).toDate(),
+        end: moment(event.toDate || event.endTime || event.end).toDate(),
+        description: event.description || '',
+        type: event.type || 'unknown',
+        status: event.status || 'pending',
+        activities: event.activities || [],
+      };
+    } catch (error) {
+      console.error('Error transforming event:', error, event);
+      return null;
+    }
+  };
 
   const handleEventSelect = useCallback((event) => {
-    Logger.info('Selected event:', event);
     setSelectedEvent(event);
     setIsModalVisible(true);
   }, []);
@@ -196,14 +144,13 @@ const AdminCalendar = () => {
   }, []);
 
   const eventPropGetter = useCallback((event) => {
-    if (!event?.type) return {};
-
     const baseStyle = {
-      className: '',
       style: {
         fontSize: '0.85rem',
         borderRadius: '3px',
         border: 'none',
+        display: 'block',
+        width: '100%',
       },
     };
 
@@ -217,16 +164,7 @@ const AdminCalendar = () => {
             color: '#1976d2',
           },
         };
-      case 'activity':
-        return {
-          ...baseStyle,
-          style: {
-            ...baseStyle.style,
-            backgroundColor: '#fff3e0',
-            color: '#f57c00',
-          },
-        };
-      default:
+      case 'event':
         return {
           ...baseStyle,
           style: {
@@ -235,13 +173,15 @@ const AdminCalendar = () => {
             color: '#616161',
           },
         };
+      default:
+        return baseStyle;
     }
   }, []);
 
   const calendarProps = useMemo(
     () => ({
       localizer,
-      events: events || [],
+      events,
       startAccessor: 'start',
       endAccessor: 'end',
       style: { height: 'calc(100vh - 100px)' },
@@ -252,7 +192,7 @@ const AdminCalendar = () => {
       onSelectEvent: handleEventSelect,
       eventPropGetter,
       onNavigate: (date) => {
-        setCurrentDate(date);
+        setCurrentDate(date); // Cập nhật currentDate khi thay đổi chế độ xem
         const newWeek = moment(date).week();
         const newYear = moment(date).year();
         setSelectedWeek({ week: newWeek, year: newYear });
@@ -264,29 +204,16 @@ const AdminCalendar = () => {
             currentWeek={selectedWeek.week}
             selectedWeek={selectedWeek}
             weeks={weeks}
-            handleWeekChange={handleWeekChange}
-            handleEditButtonClick={handleEditButtonClick}
-            onNavigate={(action) => {
-              let newDate;
-              switch (action) {
-                case 'PREV':
-                  newDate = moment(currentDate).subtract(1, 'week');
-                  break;
-                case 'NEXT':
-                  newDate = moment(currentDate).add(1, 'week');
-                  break;
-                case 'TODAY':
-                  newDate = moment();
-                  break;
-                default:
-                  return;
+            handleWeekChange={(weekNumber, year) => {
+              const selectedWeekData = weeks.find(
+                (week) => week.weekNumber === weekNumber && week.year === year
+              );
+              if (selectedWeekData) {
+                setCurrentDate(selectedWeekData.startDate);
+                setSelectedWeek({ week: weekNumber, year });
               }
-              setCurrentDate(newDate.toDate());
-              setSelectedWeek({
-                week: newDate.week(),
-                year: newDate.year(),
-              });
             }}
+            handleEditButtonClick={handleEditButtonClick}
           />
         ),
       },
@@ -298,7 +225,6 @@ const AdminCalendar = () => {
       eventPropGetter,
       selectedWeek,
       weeks,
-      handleWeekChange,
       handleEditButtonClick,
     ]
   );
@@ -314,25 +240,74 @@ const AdminCalendar = () => {
       </Spin>
 
       <Modal
-        title={selectedEvent?.title || 'Chi tiết sự kiện'}
+        title={
+          <Title level={3} className='text-center text-blue-600'>
+            {selectedEvent?.title || 'Chi tiết sự kiện'}
+          </Title>
+        }
         open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={handleModalClose}
         footer={null}
+        width={800}
+        centered
+        className='bg-gray-100 rounded-lg shadow-lg'
       >
         {selectedEvent && (
-          <div>
-            <p>
+          <div className='px-6 py-8 bg-white rounded-lg shadow-md'>
+            <Text className='block text-lg font-semibold mb-4 text-gray-800'>
+              {selectedEvent.description || 'Không có mô tả'}
+            </Text>
+            <Text className='block mb-4 text-gray-600'>
               <strong>Thời gian:</strong>{' '}
               {moment(selectedEvent.start).format('HH:mm DD/MM/YYYY')} -{' '}
               {moment(selectedEvent.end).format('HH:mm DD/MM/YYYY')}
-            </p>
-            <p>
-              <strong>Loại:</strong> {selectedEvent.type}
-            </p>
-            <p>
-              <strong>Mô tả:</strong>{' '}
-              {selectedEvent.description || 'Không có mô tả'}
-            </p>
+            </Text>
+            <Text className='block mb-4 text-gray-600'>
+              <strong>Trạng thái:</strong>{' '}
+              {selectedEvent.status || 'Đang xử lý'}
+            </Text>
+            {selectedEvent.activities && selectedEvent.activities.length > 0 ? (
+              <div className='mt-4'>
+                <Title
+                  level={4}
+                  className='text-lg font-semibold text-blue-500 mb-2'
+                >
+                  Danh sách hoạt động
+                </Title>
+                <ul className='space-y-3'>
+                  {selectedEvent.activities.map((activity) => (
+                    <li
+                      key={activity.id}
+                      className='p-3 bg-gray-50 border-l-4 border-blue-500 rounded-lg shadow-sm'
+                    >
+                      <Text className='font-semibold text-blue-700'>
+                        {activity.activityName ||
+                          'Tên hoạt động không xác định'}
+                      </Text>
+                      <div className='text-gray-600'>
+                        <p>
+                          <strong>Mô tả:</strong>{' '}
+                          {activity.description || 'Không có mô tả'}
+                        </p>
+                        <p>
+                          <strong>Thời gian:</strong>{' '}
+                          {moment(activity.startTime).format('HH:mm')} -{' '}
+                          {moment(activity.endTime).format('HH:mm')}
+                        </p>
+                        <p>
+                          <strong>Trạng thái:</strong>{' '}
+                          {activity.status || 'Đang xử lý'}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <Text className='block text-gray-600 mt-4'>
+                Không có hoạt động nào được liên kết với sự kiện này.
+              </Text>
+            )}
           </div>
         )}
       </Modal>

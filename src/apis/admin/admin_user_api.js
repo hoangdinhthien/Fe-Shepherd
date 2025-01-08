@@ -6,9 +6,9 @@ class AdminUserAPI extends BaseAPI {
   }
 
   // API lấy danh sách người dùng có phân trang
-  getAllUsers({ pageNumber = 1 }) {
-    const url = `${this.url}/GetAll?PageNumber=${pageNumber}`;
-    return super.getCustom(url); // Gọi hàm với URL đã có tham số
+  getAllUsers({ pageNumber = 1, pageSize = 15 }) {
+    const url = `${this.url}/GetAll?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+    return super.getCustom(url);
   }
 
   // Phương thức tạo người dùng mới

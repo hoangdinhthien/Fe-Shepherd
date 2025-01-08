@@ -162,8 +162,8 @@ const AdminBudget = () => {
             }}
           >
             <option value='all'>Tất cả</option>
-            <option value='approved'>Đã xong</option>
-            <option value='pending'>Đang xử lý</option>
+            <option value='Đã duyệt'>Đã Duyệt</option>
+            <option value='Chờ duyệt'>Đang xử lý</option>
           </select>
         </div>
       </div>

@@ -1,8 +1,10 @@
 import BaseAPI from '../../config/baseAPI';
 
 class AdminCalendarAPI extends BaseAPI {
-  getAllCeremonies() {
-    const url = '/ceremony/calendar';
+  getAllCeremonies(fromDate) {
+    const url = `/ceremony/calendar?ChosenDate=${encodeURIComponent(
+      fromDate
+    )}&CalendarTypeEnum=1&IncludePreset=true`;
     return this.getCustom(url);
   }
 
