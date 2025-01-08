@@ -7,6 +7,7 @@ import '../../pages/calendar/calendar.css';
 import useFetchGroups from '../../hooks/useFetchGroups';
 import EventAPI from '../../apis/event_api';
 import CustomToolbar from '../../components/calendar/CustomToolBar';
+import PropTypes from 'prop-types';
 
 const { Title, Text } = Typography;
 const localizer = momentLocalizer(moment);
@@ -199,6 +200,15 @@ const MyCalendar = () => {
       </Modal>
     </div>
   );
+};
+
+CustomToolbar.propTypes = {
+  currentWeek: PropTypes.number.isRequired,
+  handleWeekChange: PropTypes.func.isRequired,
+  selectedGroup: PropTypes.string.isRequired,
+  handleGroupChange: PropTypes.func.isRequired,
+  groups: PropTypes.array.isRequired,
+  onNavigate: PropTypes.func.isRequired,
 };
 
 export default MyCalendar;

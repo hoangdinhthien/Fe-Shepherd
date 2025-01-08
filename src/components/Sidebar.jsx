@@ -1,18 +1,13 @@
 import { useEffect, useState } from 'react';
-import { FaCalendarAlt, FaClipboardList, FaComments } from 'react-icons/fa';
-import {
-  MdKeyboardArrowLeft,
-  MdDashboard,
-  MdGroup,
-  MdRequestPage,
-  MdCelebration,
-} from 'react-icons/md';
+import { FaCalendarAlt, FaClipboardList } from 'react-icons/fa';
+import { MdDashboard, MdGroup, MdCelebration } from 'react-icons/md';
 import { RxActivityLog } from 'react-icons/rx';
 import { useSelector } from 'react-redux';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import HeaderLogo from '../assets/header-logo-img.png';
 import { FaUserAlt, FaMoneyBillWave } from 'react-icons/fa';
 import { FaUserGroup } from 'react-icons/fa6';
+import PropTypes from 'prop-types';
 
 const userMenuItems = [
   { icon: MdDashboard, title: 'Bảng Điều Khiển', path: '/user/dashboard' },
@@ -21,7 +16,6 @@ const userMenuItems = [
   { icon: FaClipboardList, title: 'Yêu Cầu', path: '/user/request' },
   { icon: FaCalendarAlt, title: 'Lịch', path: '/user/calendar' },
   { icon: MdGroup, title: 'Đoàn Thể', path: '/user/group' },
-  // { icon: FaComments, title: 'Chat', path: '/user/chat' },
 ];
 
 const adminMenuItems = [
@@ -32,6 +26,13 @@ const adminMenuItems = [
   { icon: FaUserAlt, title: 'Người Dùng', path: '/admin/user' },
   { icon: FaMoneyBillWave, title: 'Giao Dịch', path: '/admin/budget' },
   { icon: FaUserGroup, title: 'Đoàn Thể', path: '/admin/group' },
+];
+
+const memberMenuItems = [
+  { icon: RxActivityLog, title: 'Công Việc', path: '/member/task' },
+  { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/member/event' },
+  { icon: FaCalendarAlt, title: 'Lịch', path: '/member/calendar' },
+  { icon: MdGroup, title: 'Đoàn Thể', path: '/member/group' },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
@@ -47,8 +48,18 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   // const ADMIN = import.meta.env.VITE_ROLE_ADMIN;
   const ADMIN = 'Admin';
 
+  const isGroupLeader = currentUser.listGroupRole?.some(
+    (role) => role.roleName === 'Trưởng nhóm'
+  );
+
   const navItems =
-    currentUser.user.role !== ADMIN ? userMenuItems : adminMenuItems;
+    currentUser.user.role === ADMIN
+      ? adminMenuItems
+      : !isGroupLeader
+      ? memberMenuItems
+      : userMenuItems;
+
+  console.log('isGroupLeader', isGroupLeader);
 
   return (
     <div
@@ -108,3 +119,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     </div>
   );
 }
+
+Sidebar.propTypes = {
+  sidebarOpen: PropTypes.bool.isRequired,
+  setSidebarOpen: PropTypes.func.isRequired,
+};
