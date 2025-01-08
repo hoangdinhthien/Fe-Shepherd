@@ -271,7 +271,6 @@ export default function CreateRequest() {
         !accountData.name ||
         !accountData.phone ||
         !accountData.email ||
-        !accountData.role ||
         !accountData.password
       ) {
         message.error('Please fill all the fields.');
@@ -291,7 +290,7 @@ export default function CreateRequest() {
           name: accountData.name,
           phone: accountData.phone,
           email: accountData.email,
-          role: accountData.role,
+          role: 'Thành viên', // Ensure role is set to 'Thành viên'
           password: accountData.password,
           groupId: currentUserGroup.id,
         };

@@ -4,9 +4,16 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 
 RequestCreateAccount.propTypes = {
-  rolesOptions: PropTypes.array.isRequired,
-  currentUserGroup: PropTypes.object.isRequired,
-  accountData: PropTypes.object.isRequired,
+  currentUserGroup: PropTypes.shape({
+    groupName: PropTypes.string.isRequired,
+  }).isRequired,
+  accountData: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    password: PropTypes.string.isRequired,
+    email: PropTypes.string.isRequired,
+    phone: PropTypes.string.isRequired,
+    // description: PropTypes.string,
+  }).isRequired,
   setAccountData: PropTypes.func.isRequired,
 };
 
