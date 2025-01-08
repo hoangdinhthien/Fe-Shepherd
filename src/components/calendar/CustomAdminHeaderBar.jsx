@@ -1,3 +1,4 @@
+import React from 'react';
 import PropTypes from 'prop-types';
 import { Select, Button } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
@@ -14,23 +15,11 @@ const CustomAdminHeaderBar = ({
   selectedWeek,
   handleWeekChange,
   handleEditButtonClick,
+  weeks = [],
 }) => {
-  const startDate = moment().subtract(6, 'months').startOf('week');
-  const endDate = moment().add(6, 'months').endOf('week');
-
-  const weeksInRange = [];
-  let week = startDate.clone();
-
-  while (week.isSameOrBefore(endDate)) {
-    weeksInRange.push({
-      weekNumber: week.week(),
-      year: week.year(),
-      range: `${week.startOf('week').format('DD/MM/YYYY')} - ${week
-        .endOf('week')
-        .format('DD/MM/YYYY')}`,
-    });
-    week.add(1, 'weeks');
-  }
+  const currentMoment = moment();
+  const currentWeekNumber = currentMoment.week();
+  const currentYear = currentMoment.year();
 
   return (
     <div
@@ -56,12 +45,21 @@ const CustomAdminHeaderBar = ({
       </div>
 
       <Select
-        value={`${currentWeek}-${selectedWeek.year}`}
+        value={
+          weeks.find(
+            (w) =>
+              w.weekNumber === selectedWeek.week && w.year === selectedWeek.year
+          )?.range || 'Không tìm thấy tuần'
+        }
         onChange={(value) => {
-          const [weekNumber, year] = value.split('-').map(Number);
-          handleWeekChange(weekNumber, year);
+          const selectedWeekData = weeks.find((week) => week.range === value);
+          if (selectedWeekData) {
+            handleWeekChange(
+              selectedWeekData.weekNumber,
+              selectedWeekData.year
+            );
+          }
         }}
-        popupMatchSelectWidth={false}
         style={{
           width: 'auto',
           minWidth: 350,
@@ -70,9 +68,32 @@ const CustomAdminHeaderBar = ({
           textAlign: 'center',
         }}
       >
-        {weeksInRange.map(({ weekNumber, year, range }) => (
-          <Option key={`${year}-${weekNumber}`} value={`${weekNumber}-${year}`}>
-            {range}
+        {weeks.map((week) => (
+          <Option
+            key={`${week.year}-${week.weekNumber}`}
+            value={week.range}
+            style={{
+              backgroundColor:
+                week.weekNumber === selectedWeek.week &&
+                week.year === selectedWeek.year
+                  ? '#e3f2fd' // Light blue for selected week
+                  : week.weekNumber === currentWeekNumber &&
+                    week.year === currentYear
+                  ? '#f5f5f5' // Light gray for current week
+                  : 'transparent',
+              fontWeight:
+                (week.weekNumber === currentWeekNumber &&
+                  week.year === currentYear) ||
+                (week.weekNumber === selectedWeek.week &&
+                  week.year === selectedWeek.year)
+                  ? 'bold'
+                  : 'normal',
+            }}
+          >
+            {week.range}
+            {week.weekNumber === currentWeekNumber && week.year === currentYear
+              ? ''
+              : ''}
           </Option>
         ))}
       </Select>
@@ -94,17 +115,22 @@ const CustomAdminHeaderBar = ({
   );
 };
 
-// Định nghĩa PropTypes
 CustomAdminHeaderBar.propTypes = {
   onNavigate: PropTypes.func.isRequired,
-  currentWeek: PropTypes.number.isRequired,
+  currentWeek: PropTypes.number,
   selectedWeek: PropTypes.shape({
-    week: PropTypes.number.isRequired,
-    year: PropTypes.number.isRequired,
-  }).isRequired,
+    week: PropTypes.number,
+    year: PropTypes.number,
+  }),
   handleWeekChange: PropTypes.func.isRequired,
   handleEditButtonClick: PropTypes.func.isRequired,
+  weeks: PropTypes.arrayOf(
+    PropTypes.shape({
+      weekNumber: PropTypes.number.isRequired,
+      year: PropTypes.number.isRequired,
+      range: PropTypes.string.isRequired,
+    })
+  ),
 };
 
-// Export component
 export default CustomAdminHeaderBar;

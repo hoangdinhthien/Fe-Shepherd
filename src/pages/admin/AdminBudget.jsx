@@ -12,6 +12,8 @@ const AdminBudget = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortValue, setSortValue] = useState('all'); // State để lưu giá trị sort
+  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
+  const itemsPerPage = 10; // Số lượng mục trên mỗi trang
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -37,9 +39,9 @@ const AdminBudget = () => {
     .filter((transaction) => {
       if (sortValue === 'all') return true;
       if (sortValue === 'Đã duyệt')
-        return transaction.approvalStatus.toLowerCase() === 'Đã duyệt';
+        return transaction.approvalStatus.toLowerCase() === 'đã duyệt';
       if (sortValue === 'Chờ duyệt')
-        return transaction.approvalStatus.toLowerCase() === 'Chờ duyệt';
+        return transaction.approvalStatus.toLowerCase() === 'chờ duyệt';
       return true;
     });
 
@@ -72,6 +74,18 @@ const AdminBudget = () => {
       },
     },
     responsive: true,
+  };
+
+  // Xác định giao dịch cho trang hiện tại
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+  // Tổng số trang
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   if (loading) return <p>Loading...</p>;
@@ -179,7 +193,7 @@ const AdminBudget = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredTransactions.map((transaction) => (
+          {currentTransactions.map((transaction) => (
             <tr key={transaction.id}>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                 {transaction.id}
@@ -221,6 +235,29 @@ const AdminBudget = () => {
           ))}
         </tbody>
       </table>
+
+      {/* Phân trang */}
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+          (page) => (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              style={{
+                padding: '10px 15px',
+                margin: '0 5px',
+                border: '1px solid #ccc',
+                borderRadius: '5px',
+                backgroundColor: currentPage === page ? '#4caf50' : '#fff',
+                color: currentPage === page ? '#fff' : '#000',
+                cursor: 'pointer',
+              }}
+            >
+              {page}
+            </button>
+          )
+        )}
+      </div>
     </div>
   );
 };

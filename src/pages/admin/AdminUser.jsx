@@ -7,11 +7,24 @@ import { FaTimes } from 'react-icons/fa';
 const AdminUser = () => {
   const location = useLocation(); // Lấy trạng thái từ điều hướng
   const [users, setUsers] = useState([]); // Danh sách người dùng
-  const [filteredUsers, setFilteredUsers] = useState([]); // Người dùng đã lọc
   const [loading, setLoading] = useState(true); // Trạng thái tải
   const [searchKeyword, setSearchKeyword] = useState(''); // Từ khóa tìm kiếm
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // Quản lý trạng thái mở popup
   const [showSuccessPopup, setShowSuccessPopup] = useState(false); // Hiển thị popup thành công
+
+  // Phân trang
+  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
+  const [totalPages, setTotalPages] = useState(0); // Tổng số trang
+  const itemsPerPage = 15; // Số lượng mục trên mỗi trang
+
+  // Bản đồ vai trò (Tiếng Anh → Tiếng Việt)
+  const roleMapping = {
+    Admin: 'Quản trị viên',
+    Member: 'Thành viên',
+    ParishPriest: 'Cha xứ',
+    Accountant: 'Thủ quỹ',
+    Council: 'Hội đồng mục vụ',
+  };
 
   // Mở popup nếu được điều hướng từ AdminRequest
   useEffect(() => {
@@ -20,39 +33,44 @@ const AdminUser = () => {
     }
   }, [location.state]);
 
-  // Lấy danh sách người dùng
-  const fetchUsers = async () => {
+  // Lấy danh sách người dùng từ API
+  const fetchUsers = async (pageNumber = 1) => {
     try {
-      const data = await AdminUserAPI.getAllUsers();
+      setLoading(true); // Hiển thị trạng thái đang tải
+      const params = { pageNumber, pageSize: itemsPerPage }; // Truyền tham số pageNumber và pageSize vào API
+      const data = await AdminUserAPI.getAllUsers(params);
+
       const userList = Array.isArray(data.result) ? data.result : [];
       setUsers(userList);
-      setFilteredUsers(userList);
+
+      const totalCount = data.pagination?.totalCount || 0; // Tổng số người dùng
+      setTotalPages(Math.ceil(totalCount / itemsPerPage)); // Tính tổng số trang
     } catch (error) {
       console.error('Không thể lấy danh sách người dùng:', error.message);
     } finally {
-      setLoading(false);
+      setLoading(false); // Kết thúc trạng thái tải
     }
   };
 
+  // Gọi API khi component được tải hoặc khi `currentPage` thay đổi
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers(currentPage);
+  }, [currentPage]);
 
   const handleSearchChange = (e) => {
     const keyword = e.target.value.toLowerCase();
     setSearchKeyword(keyword);
-
     const filtered = users.filter(
       (user) =>
         user.name.toLowerCase().includes(keyword) ||
         (user.email && user.email.toLowerCase().includes(keyword)) ||
         (user.phone && user.phone.includes(keyword))
     );
-    setFilteredUsers(filtered);
+    setUsers(filtered); // Cập nhật danh sách người dùng sau khi tìm kiếm
   };
 
   const handleUserCreated = () => {
-    fetchUsers(); // Lấy lại danh sách người dùng
+    fetchUsers(currentPage); // Lấy lại dữ liệu trang hiện tại
     setShowSuccessPopup(true);
     setIsCreateModalOpen(false);
 
@@ -67,6 +85,10 @@ const AdminUser = () => {
 
   const handleOpenCreateModal = () => {
     setIsCreateModalOpen(true);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page); // Cập nhật trang hiện tại
   };
 
   if (loading) return <p>Đang tải danh sách người dùng...</p>;
@@ -177,7 +199,7 @@ const AdminUser = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredUsers.map((user) => (
+          {users.map((user) => (
             <tr key={user.id}>
               <td
                 style={{
@@ -213,7 +235,7 @@ const AdminUser = () => {
                   textAlign: 'center',
                 }}
               >
-                {user.role}
+                {roleMapping[user.role] || 'Không xác định'}
               </td>
               <td
                 style={{
@@ -230,6 +252,29 @@ const AdminUser = () => {
           ))}
         </tbody>
       </table>
+
+      {/* Phân trang */}
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+          (page) => (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              style={{
+                padding: '10px 15px',
+                margin: '0 5px',
+                border: '1px solid #ccc',
+                borderRadius: '5px',
+                backgroundColor: currentPage === page ? '#4caf50' : '#fff',
+                color: currentPage === page ? '#fff' : '#000',
+                cursor: 'pointer',
+              }}
+            >
+              {page}
+            </button>
+          )
+        )}
+      </div>
 
       {isCreateModalOpen && (
         <UserCreatePopUp
