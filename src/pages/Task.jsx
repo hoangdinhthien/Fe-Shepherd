@@ -4,6 +4,7 @@ import { FaCalendarAlt, FaUser } from 'react-icons/fa';
 import TaskAPI from '../apis/task_api';
 import ActivityAPI from '../apis/activity/activity_api';
 import GroupAPI from '../apis/group_api';
+import EventAPI from '../apis/event_api'; // Import EventAPI
 import { useSelector } from 'react-redux';
 import { Select, Spin, message } from 'antd';
 import TaskCreateButton from '../components/task/TaskCreateButton';
@@ -16,8 +17,10 @@ export default function Task() {
   // ------STATES------
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null); // Add state for selected event
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [activities, setActivities] = useState([]);
+  const [events, setEvents] = useState([]); // Add state for events
   const [loading, setLoading] = useState(false);
   const [columns, setColumns] = useState({}); // Initialize as an empty object
   const [isGroupLeader, setIsGroupLeader] = useState(false);
@@ -55,13 +58,29 @@ export default function Task() {
   };
 
   // -----FETCH ACTIVITIES FUNCTION-----
-  const fetchActivities = async (groupId) => {
+  const fetchActivities = async (groupId, eventId) => {
     try {
       setLoading(true);
-      const response = await ActivityAPI.getActivitiesByGroup(groupId);
+      const response = await ActivityAPI.getActivitiesByGroupAndEvent(
+        groupId,
+        eventId
+      );
       setActivities(response.result || []);
     } catch (error) {
       console.error('Error fetching activities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // -----FETCH EVENTS FUNCTION-----
+  const fetchEvents = async (groupId) => {
+    try {
+      setLoading(true);
+      const response = await EventAPI.getEventsByGroupForTask(groupId);
+      setEvents(response.result || []);
+    } catch (error) {
+      console.error('Error fetching events:', error);
     } finally {
       setLoading(false);
     }
@@ -161,27 +180,43 @@ export default function Task() {
   useEffect(() => {
     if (selectedGroup) {
       fetchUserRole(selectedGroup);
-      fetchActivities(selectedGroup);
+      fetchEvents(selectedGroup); // Fetch events when a group is selected
     }
   }, [selectedGroup]);
 
   useEffect(() => {
-    if (selectedGroup && selectedActivity !== null) {
+    if (selectedGroup && selectedEvent) {
+      fetchActivities(selectedGroup, selectedEvent); // Fetch activities when an event is selected
+    }
+  }, [selectedGroup, selectedEvent]);
+
+  useEffect(() => {
+    if (selectedGroup && selectedEvent && selectedActivity !== null) {
       fetchTasks();
     }
-  }, [fetchTasks, selectedGroup, selectedActivity]);
+  }, [fetchTasks, selectedGroup, selectedEvent, selectedActivity]);
 
   const handleGroupChange = (value) => {
     setSelectedGroup(value);
+    setSelectedEvent(null); // Reset selected event
     setSelectedActivity(null); // Reset selected activity
     setColumns({}); // Reset columns when changing groups
     navigate(`/user/task?groupId=${value}`);
   };
 
+  const handleEventChange = (value) => {
+    setSelectedEvent(value);
+    setSelectedActivity(null); // Reset selected activity
+    setColumns({});
+    navigate(`/user/task?groupId=${selectedGroup}&eventId=${value}`);
+  };
+
   const handleActivityChange = (value) => {
     setSelectedActivity(value);
     setColumns({});
-    navigate(`/user/task?groupId=${selectedGroup}&activityId=${value}`);
+    navigate(
+      `/user/task?groupId=${selectedGroup}&eventId=${selectedEvent}&activityId=${value}`
+    );
   };
 
   const onDragEnd = async (result) => {
@@ -314,6 +349,26 @@ export default function Task() {
           </div>
           <div>
             <label className='mr-2 text-gray-700 font-semibold'>
+              Chọn Sự Kiện:
+            </label>
+            <Select
+              value={selectedEvent}
+              onChange={handleEventChange}
+              className='h-12 w-64'
+              placeholder='Chọn Sự Kiện'
+            >
+              {events.map((event) => (
+                <Option
+                  key={event.id}
+                  value={event.id}
+                >
+                  {event.eventName}
+                </Option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <label className='mr-2 text-gray-700 font-semibold'>
               Chọn Hoạt Động:
             </label>
             <Select
@@ -356,12 +411,17 @@ export default function Task() {
             Vui lòng chọn nhóm để xem công việc.
           </div>
         )}
-        {selectedGroup && !selectedActivity && (
+        {selectedGroup && !selectedEvent && (
+          <div className='text-center text-gray-500'>
+            Vui lòng chọn sự kiện để xem công việc.
+          </div>
+        )}
+        {selectedGroup && selectedEvent && !selectedActivity && (
           <div className='text-center text-gray-500'>
             Vui lòng chọn hoạt động để xem công việc.
           </div>
         )}
-        {selectedGroup && selectedActivity && (
+        {selectedGroup && selectedEvent && selectedActivity && (
           <DragDropContext onDragEnd={onDragEnd}>
             <div className='flex flex-row overflow-x-auto gap-4 mt-4'>
               {columnOrder
@@ -423,6 +483,11 @@ export default function Task() {
                   </div>
                 ))}
             </div>
+            {Object.values(columns).every((tasks) => tasks.length === 0) && (
+              <p className='text-center text-gray-500 mt-4'>
+                Không có công việc
+              </p>
+            )}
           </DragDropContext>
         )}
       </Spin>
