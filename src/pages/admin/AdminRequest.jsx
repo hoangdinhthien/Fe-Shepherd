@@ -11,6 +11,8 @@ const AdminRequest = () => {
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [sortOption, setSortOption] = useState('Tất cả');
+  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
+  const itemsPerPage = 10; // Số lượng mục trên mỗi trang
 
   // Lấy dữ liệu từ API
   useEffect(() => {
@@ -39,6 +41,7 @@ const AdminRequest = () => {
       request.title.toLowerCase().includes(keyword)
     );
     setFilteredRequests(filtered);
+    setCurrentPage(1); // Đặt lại trang hiện tại khi tìm kiếm
   };
 
   // Sắp xếp
@@ -56,6 +59,7 @@ const AdminRequest = () => {
     }
 
     setFilteredRequests(sortedRequests);
+    setCurrentPage(1); // Đặt lại trang hiện tại khi sắp xếp
   };
 
   // Điều hướng tạo tài khoản
@@ -64,8 +68,6 @@ const AdminRequest = () => {
       state: { popup: 'UserCreatePopUp', requestId: request.id },
     });
   };
-
-  if (loading) return <p>Đang tải...</p>;
 
   // Thống kê trạng thái
   const statusCounts = requests.reduce(
@@ -100,6 +102,20 @@ const AdminRequest = () => {
     },
     responsive: true,
   };
+
+  // Xác định dữ liệu hiển thị trên trang hiện tại
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentRequests = filteredRequests.slice(startIndex, endIndex);
+
+  // Tổng số trang
+  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  if (loading) return <p>Đang tải...</p>;
 
   return (
     <div style={{ width: '80%', margin: 'auto', paddingTop: '20px' }}>
@@ -208,7 +224,7 @@ const AdminRequest = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredRequests.map((request) => (
+          {currentRequests.map((request) => (
             <tr key={request.id}>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                 {request.title}
@@ -243,7 +259,7 @@ const AdminRequest = () => {
               </td>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                 {request.isAccepted === null &&
-                  request.type === 'Tạo tài khoản' && ( // Chỉ hiển thị nếu trạng thái là Pending và loại là "Tạo tài khoản"
+                  request.type === 'Tạo tài khoản' && (
                     <button
                       style={{
                         backgroundColor: '#4caf50',
@@ -263,6 +279,29 @@ const AdminRequest = () => {
           ))}
         </tbody>
       </table>
+
+      {/* Phân trang */}
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+          (page) => (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              style={{
+                padding: '10px 15px',
+                margin: '0 5px',
+                border: '1px solid #ccc',
+                borderRadius: '5px',
+                backgroundColor: currentPage === page ? '#4caf50' : '#fff',
+                color: currentPage === page ? '#fff' : '#000',
+                cursor: 'pointer',
+              }}
+            >
+              {page}
+            </button>
+          )
+        )}
+      </div>
     </div>
   );
 };

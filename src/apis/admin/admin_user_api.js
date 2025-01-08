@@ -4,10 +4,11 @@ class AdminUserAPI extends BaseAPI {
   constructor() {
     super(`user`);
   }
-  // Nếu muốn lấy tất cả người dùng, có thể gọi trực tiếp `getAll`
-  getAllUsers(params) {
-    const url = `${this.url}/GetAll`;
-    return super.getCustom(url, params);
+
+  // API lấy danh sách người dùng có phân trang
+  getAllUsers({ pageNumber = 1 }) {
+    const url = `${this.url}/GetAll?PageNumber=${pageNumber}`;
+    return super.getCustom(url); // Gọi hàm với URL đã có tham số
   }
 
   // Phương thức tạo người dùng mới
