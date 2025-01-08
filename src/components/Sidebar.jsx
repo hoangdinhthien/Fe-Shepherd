@@ -29,10 +29,10 @@ const adminMenuItems = [
 ];
 
 const memberMenuItems = [
-  { icon: RxActivityLog, title: 'Công Việc', path: '/member/task' },
-  { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/member/event' },
-  { icon: FaCalendarAlt, title: 'Lịch', path: '/member/calendar' },
-  { icon: MdGroup, title: 'Đoàn Thể', path: '/member/group' },
+  { icon: RxActivityLog, title: 'Công Việc', path: '/user/task' },
+  { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/user/event' },
+  { icon: FaCalendarAlt, title: 'Lịch', path: '/user/calendar' },
+  { icon: MdGroup, title: 'Đoàn Thể', path: '/user/group' },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
