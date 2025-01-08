@@ -55,7 +55,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const navItems =
     currentUser.user.role === ADMIN
       ? adminMenuItems
-      : !isGroupLeader
+      : !isGroupLeader && currentUser.user.role !== 'Council'
       ? memberMenuItems
       : userMenuItems;
 

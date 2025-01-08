@@ -34,7 +34,7 @@ class RequestAPI extends BaseAPI {
   }
 
   updateRequestStatus(requestId, data) {
-    const url = `${this.url}/ApproveRequest`;
+    const url = `${this.url}/ApproveEventRequest?requestId=${requestId}`;
     return super.putCustom(url, data);
   }
 }

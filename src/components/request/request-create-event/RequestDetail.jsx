@@ -213,8 +213,10 @@ export default function RequestDetail() {
         })),
       },
     };
+    console.log('Data sent:', body); // Log the data sent
     try {
       const response = await request_api.updateRequestStatus(requestId, body);
+      console.log('API Response:', response); // Log the API response
       if (response.success) {
         message.success('Request accepted successfully');
         navigate('/user/request');
@@ -223,7 +225,7 @@ export default function RequestDetail() {
       }
     } catch (error) {
       message.error('An error occurred while updating request status.');
-      console.log(error);
+      console.log('API Error:', error.response ? error.response.data : error); // Log detailed error
     }
   };
 
@@ -307,7 +309,7 @@ export default function RequestDetail() {
       </div>
 
       {/* -----EVENT COMMENT INPUT----- */}
-      {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
+      {userRole === 'Council' && (
         <div className='p-3 bg-gray-50'>
           <h3
             htmlFor='eventComment'
@@ -341,7 +343,7 @@ export default function RequestDetail() {
             <h3 className='text-xl font-semibold text-gray-800 mb-2'>
               {activity.activityName}
               {/* -----CHECKBOX------ */}
-              {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
+              {userRole === 'Council' && (
                 <Checkbox
                   className='ml-2'
                   onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -357,7 +359,7 @@ export default function RequestDetail() {
                   </p>
                   <p className='text-gray-600'>
                     {activity.description}
-                    {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
+                    {userRole === 'Council' && (
                       <Checkbox
                         className='ml-2'
                         onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -375,7 +377,7 @@ export default function RequestDetail() {
                   <p className='font-semibold text-gray-700'>Thời gian:</p>
                   <p className='text-gray-600'>
                     {activity.startTime} - {activity.endTime}
-                    {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
+                    {userRole === 'Council' && (
                       <Checkbox
                         className='ml-2'
                         onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -424,7 +426,7 @@ export default function RequestDetail() {
                       {groupNames[group.groupID] || 'Unknown'}
                     </span>{' '}
                     - Chi Phí: {formatCost(group.cost)}
-                    {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
+                    {userRole === 'Council' && (
                       <Checkbox
                         className='ml-2'
                         onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
@@ -449,7 +451,7 @@ export default function RequestDetail() {
                 ))}
               </ul>
               {/* -----ACTIVITY COMMENT INPUT----- */}
-              {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
+              {userRole === 'Council' && (
                 <div className='mt-4'>
                   <p
                     htmlFor='rejectionComment'
@@ -483,7 +485,7 @@ export default function RequestDetail() {
       )}
 
       {/* -----BUTTONS----- */}
-      {isAccepted === null && userRole === 'Council' && (
+      {userRole === 'Council' && (
         <div className='flex justify-center space-x-4 mt-8'>
           <Button
             type='primary'
