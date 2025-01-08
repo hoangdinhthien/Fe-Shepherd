@@ -6,9 +6,15 @@ class ActivityAPI extends BaseAPI {
   }
 
   getActivitiesByGroup(groupId) {
-    const url = `${this.url}`;
-    return this.getCustom(url, { groupId });
+    const url = `${this.url}/group/${groupId}`;
+    return super.getCustom(url);
   }
+
+  getActivitiesByGroupAndEvent(groupId, eventId) {
+    const url = `${this.url}?EventID=${eventId}&GroupID=${groupId}`;
+    return super.getCustom(url);
+  }
+
   getAllActivities() {
     const url = `${this.url}`;
     return this.getCustom(url);
