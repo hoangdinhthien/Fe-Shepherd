@@ -5,19 +5,17 @@ import UserCreatePopUp from '../../components/admin/UserCreatePopUp';
 import { FaTimes } from 'react-icons/fa';
 
 const AdminUser = () => {
-  const location = useLocation(); // Lấy trạng thái từ điều hướng
-  const [users, setUsers] = useState([]); // Danh sách người dùng
-  const [loading, setLoading] = useState(true); // Trạng thái tải
-  const [searchKeyword, setSearchKeyword] = useState(''); // Từ khóa tìm kiếm
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // Quản lý trạng thái mở popup
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false); // Hiển thị popup thành công
+  const location = useLocation();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
-  // Phân trang
-  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
-  const [totalPages, setTotalPages] = useState(0); // Tổng số trang
-  const itemsPerPage = 15; // Số lượng mục trên mỗi trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const itemsPerPage = 15;
 
-  // Bản đồ vai trò (Tiếng Anh → Tiếng Việt)
   const roleMapping = {
     Admin: 'Quản trị viên',
     Member: 'Thành viên',
@@ -26,51 +24,57 @@ const AdminUser = () => {
     Council: 'Hội đồng mục vụ',
   };
 
-  // Mở popup nếu được điều hướng từ AdminRequest
   useEffect(() => {
     if (location.state?.popup === 'UserCreatePopUp') {
-      setIsCreateModalOpen(true); // Mở popup
+      setIsCreateModalOpen(true);
     }
   }, [location.state]);
 
-  // Lấy danh sách người dùng từ API
+  // Fetch users from API
   const fetchUsers = async (pageNumber = 1) => {
     try {
-      setLoading(true); // Hiển thị trạng thái đang tải
-      const params = { pageNumber, pageSize: itemsPerPage }; // Truyền tham số pageNumber và pageSize vào API
-      const data = await AdminUserAPI.getAllUsers(params);
-
-      const userList = Array.isArray(data.result) ? data.result : [];
-      setUsers(userList);
-
-      const totalCount = data.pagination?.totalCount || 0; // Tổng số người dùng
-      setTotalPages(Math.ceil(totalCount / itemsPerPage)); // Tính tổng số trang
+      setLoading(true);
+      const response = await AdminUserAPI.getAllUsers({
+        pageNumber,
+        pageSize: itemsPerPage,
+      });
+      if (response && Array.isArray(response.result)) {
+        const { result: userList, pagination } = response;
+        setUsers(userList);
+        setTotalPages(Math.ceil((pagination?.totalCount || 0) / itemsPerPage));
+      } else {
+        console.error('API response format is invalid or no data returned.');
+        setUsers([]);
+      }
     } catch (error) {
-      console.error('Không thể lấy danh sách người dùng:', error.message);
+      console.error(
+        'Không thể lấy danh sách người dùng:',
+        error.message || error
+      );
+      setUsers([]);
     } finally {
-      setLoading(false); // Kết thúc trạng thái tải
+      setLoading(false);
     }
   };
 
-  // Gọi API khi component được tải hoặc khi `currentPage` thay đổi
+  // Initial fetch
   useEffect(() => {
-    fetchUsers(currentPage);
-  }, [currentPage]);
+    fetchUsers();
+  }, []);
 
   const handleSearchChange = (e) => {
     const keyword = e.target.value.toLowerCase();
     setSearchKeyword(keyword);
-    const filtered = users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(keyword) ||
-        (user.email && user.email.toLowerCase().includes(keyword)) ||
-        (user.phone && user.phone.includes(keyword))
-    );
-    setUsers(filtered); // Cập nhật danh sách người dùng sau khi tìm kiếm
   };
 
+  const filteredUsers = users.filter((user) =>
+    [user.name, user.email, user.phone]
+      .map((value) => (value || '').toLowerCase())
+      .some((value) => value.includes(searchKeyword))
+  );
+
   const handleUserCreated = () => {
-    fetchUsers(currentPage); // Lấy lại dữ liệu trang hiện tại
+    fetchUsers();
     setShowSuccessPopup(true);
     setIsCreateModalOpen(false);
 
@@ -79,19 +83,10 @@ const AdminUser = () => {
     }, 4000);
   };
 
-  const handleCloseCreateModal = () => {
-    setIsCreateModalOpen(false);
-  };
-
-  const handleOpenCreateModal = () => {
-    setIsCreateModalOpen(true);
-  };
-
   const handlePageChange = (page) => {
-    setCurrentPage(page); // Cập nhật trang hiện tại
+    setCurrentPage(page);
+    fetchUsers(page);
   };
-
-  if (loading) return <p>Đang tải danh sách người dùng...</p>;
 
   return (
     <div
@@ -102,6 +97,7 @@ const AdminUser = () => {
         position: 'relative',
       }}
     >
+      {/* Success Popup */}
       {showSuccessPopup && (
         <div
           style={{
@@ -135,6 +131,7 @@ const AdminUser = () => {
         </div>
       )}
 
+      {/* Header */}
       <div
         style={{
           display: 'flex',
@@ -145,7 +142,7 @@ const AdminUser = () => {
       >
         <span className='text-2xl'>Danh sách tài khoản người dùng</span>
         <button
-          onClick={handleOpenCreateModal}
+          onClick={() => setIsCreateModalOpen(true)}
           style={{
             padding: '10px 20px',
             backgroundColor: '#4caf50',
@@ -159,6 +156,7 @@ const AdminUser = () => {
         </button>
       </div>
 
+      {/* Search Input */}
       <div
         style={{
           display: 'flex',
@@ -182,6 +180,7 @@ const AdminUser = () => {
         />
       </div>
 
+      {/* Users Table */}
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ backgroundColor: '#f0f0f0' }}>
@@ -199,7 +198,7 @@ const AdminUser = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
+          {filteredUsers.map((user) => (
             <tr key={user.id}>
               <td
                 style={{
@@ -208,7 +207,7 @@ const AdminUser = () => {
                   textAlign: 'center',
                 }}
               >
-                {user.name}
+                {user.name || 'Không có tên'}
               </td>
               <td
                 style={{
@@ -217,7 +216,7 @@ const AdminUser = () => {
                   textAlign: 'center',
                 }}
               >
-                {user.phone}
+                {user.phone || 'Không có số điện thoại'}
               </td>
               <td
                 style={{
@@ -226,7 +225,7 @@ const AdminUser = () => {
                   textAlign: 'center',
                 }}
               >
-                {user.email}
+                {user.email || 'Không có email'}
               </td>
               <td
                 style={{
@@ -253,7 +252,7 @@ const AdminUser = () => {
         </tbody>
       </table>
 
-      {/* Phân trang */}
+      {/* Pagination */}
       <div style={{ marginTop: '20px', textAlign: 'center' }}>
         {Array.from({ length: totalPages }, (_, index) => index + 1).map(
           (page) => (
@@ -276,10 +275,11 @@ const AdminUser = () => {
         )}
       </div>
 
+      {/* Create User Modal */}
       {isCreateModalOpen && (
         <UserCreatePopUp
           isOpen={isCreateModalOpen}
-          onClose={handleCloseCreateModal}
+          onClose={() => setIsCreateModalOpen(false)}
           onUserCreated={handleUserCreated}
         />
       )}

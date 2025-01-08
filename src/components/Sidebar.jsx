@@ -30,7 +30,7 @@ const adminMenuItems = [
   { icon: FaCalendarAlt, title: 'Lịch', path: '/admin/calendar' },
   { icon: MdCelebration, title: 'Sự Kiện và Hoạt Động', path: '/admin/event' },
   { icon: FaUserAlt, title: 'Người Dùng', path: '/admin/user' },
-  { icon: FaMoneyBillWave, title: 'Ngân Sách', path: '/admin/budget' },
+  { icon: FaMoneyBillWave, title: 'Giao Dịch', path: '/admin/budget' },
   { icon: FaUserGroup, title: 'Đoàn Thể', path: '/admin/group' },
 ];
 
