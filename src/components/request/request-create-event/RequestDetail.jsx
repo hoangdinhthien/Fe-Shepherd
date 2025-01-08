@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import UserAPI from '../../../apis/user_api';
 import GroupAPI from '../../../apis/group_api';
 import { message, Tag, Divider, Button, Checkbox } from 'antd';
+import { IoArrowBack } from 'react-icons/io5'; // Import IoArrowBack
 import moment from 'moment';
 import request_api from '../../../apis/request_api';
 
@@ -19,7 +20,7 @@ export default function RequestDetail() {
 
   // -----LOCATION-----
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Initialize navigate
   const { requestId, isAccepted, requestingGroup } = location.state.request;
   const currentUser = location.state.currentUser; // Get the current user
   console.log(`isAccepted:`, isAccepted);
@@ -229,6 +230,12 @@ export default function RequestDetail() {
   // -----RENDER-----
   return (
     <div className='p-6 bg-white rounded-md shadow-md'>
+      <button
+        className='flex items-center mb-4 text-black'
+        onClick={() => navigate(-1)} // Navigate back
+      >
+        <IoArrowBack className='mr-2' /> Quay lại
+      </button>
       {/* -----HEADER SECTION----- */}
       <div className='flex justify-between items-center mb-4'>
         <div className='flex space-x-2'>
@@ -476,7 +483,7 @@ export default function RequestDetail() {
       )}
 
       {/* -----BUTTONS----- */}
-      {isAccepted === null && userRole === 'Hội đồng mục vụ' && (
+      {isAccepted === null && userRole === 'Council' && (
         <div className='flex justify-center space-x-4 mt-8'>
           <Button
             type='primary'

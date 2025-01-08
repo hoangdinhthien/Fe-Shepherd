@@ -20,6 +20,15 @@ const getWeekRange = (weekNumber) => {
   return { start: startOfWeek, end: endOfWeek };
 };
 
+const eventPropGetter = (event) => {
+  return {
+    style: {
+      backgroundColor: '#FAD7A0',
+      color: 'black',
+    },
+  };
+};
+
 const MyCalendar = () => {
   const { groups, loading: loadingGroups } = useFetchGroups();
   const [myEvents, setMyEvents] = useState([]);
@@ -40,6 +49,7 @@ const MyCalendar = () => {
         CalendarTypeEnum: 1,
         UserOnly: false,
         GetUpcoming: true,
+        isPreset: true,
       });
 
       setMyEvents(
@@ -115,6 +125,7 @@ const MyCalendar = () => {
         showMultiDayTimes
         date={currentDate}
         onSelectEvent={handleEventSelect}
+        eventPropGetter={eventPropGetter}
         components={{
           toolbar: (props) => (
             <CustomToolbar
@@ -134,7 +145,10 @@ const MyCalendar = () => {
       {/* Event Details Modal */}
       <Modal
         title={
-          <Title level={3} className='text-center text-blue-600'>
+          <Title
+            level={3}
+            className='text-center text-blue-600'
+          >
             {selectedEvent?.eventName}
           </Title>
         }

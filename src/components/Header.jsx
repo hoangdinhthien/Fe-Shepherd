@@ -30,8 +30,8 @@ export default function Header({
   console.log(isFixed);
   // const ADMIN = import.meta.env.VITE_ROLE_ADMIN;
   // const LEADER = import.meta.env.VITE_ROLE_GROUP_LEADER;
-  // const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
-  const COUNCIL = 'Hội đồng mục vụ';
+  const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
+  // const COUNCIL = 'Hội đồng mục vụ';
   const ADMIN = 'Admin';
   const LEADER = 'Trưởng nhóm';
   console.log(COUNCIL);
@@ -126,19 +126,6 @@ export default function Header({
           onClick={() => setSidebarOpen(!sidebarOpen)}
         />
         <div className='flex justify-between items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8'>
-          {/* CREATE ACTIVITY */}
-          {currentUser.user.role === COUNCIL && (
-            <Tooltip
-              content='Create an activity'
-              placement='bottom'
-            >
-              <Link to='/user/create-activity'>
-                <MdOutlineLocalActivity className='h-8 w-8 text-slate-700 duration-300 hover:scale-125' />
-              </Link>
-            </Tooltip>
-          )}
-          {/* CREATE ACTIVITY */}
-          {/*  */}
           {/* CREATE REQUEST */}
           {(currentUser.listGroupRole.find(
             ({ roleName }) => roleName === LEADER
@@ -181,7 +168,6 @@ export default function Header({
           {/* NOTIFICATION */}
 
           {/* PROFILE */}
-          {/* {currentUser ? ( */}
           <Tooltip
             content='User Profile'
             placement='bottom'
@@ -196,14 +182,6 @@ export default function Header({
               <FaRegCircleUser className='rounded-full h-8 w-8 object-cover duration-300 hover:scale-125' />
             </Link>
           </Tooltip>
-          {/* ) : (
-            <Link
-              to='/sign-in'
-              className='duration-300 hover:scale-90 text-white bg-blue-600 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1.5 focus:outline-none'
-            >
-              Sign In
-            </Link>
-          )} */}
           {/* PROFILE */}
         </div>
         {/* NAVIGATE */}
