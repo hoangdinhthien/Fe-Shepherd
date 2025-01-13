@@ -54,7 +54,7 @@ export default function LayoutMain() {
         console.log('Read All noti.');
         await notification_api.readAllNotifications();
       }
-    };
+    }
   };
 
   const handleAccept = (id) => {
@@ -84,8 +84,9 @@ export default function LayoutMain() {
         className='w-64'
       />
       <div
-        className={`${isFixedHeader ? 'flex-1' : 'flex flex-col h-screen w-full'
-          }`}
+        className={`${
+          isFixedHeader ? 'flex-1' : 'flex flex-col h-screen w-full'
+        }`}
       >
         <Header
           onNotificationClick={toggleModal}
@@ -106,10 +107,11 @@ export default function LayoutMain() {
           setReadNotiIds={setReadNotiIds}
         />
         <div
-          className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${isFixedHeader
-            ? 'mt-20 px-4 py-2'
-            : 'h-full overflow-auto flex justify-center items-center'
-            } duration-300`}
+          className={`${sidebarOpen ? 'ml-52' : 'ml-24'} z-0 ${
+            isFixedHeader
+              ? 'mt-20 px-4 py-2'
+              : 'h-full overflow-auto flex justify-center items-center'
+          } duration-300`}
         >
           <Outlet />
         </div>

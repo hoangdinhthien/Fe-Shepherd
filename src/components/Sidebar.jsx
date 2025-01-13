@@ -59,7 +59,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
       ? memberMenuItems
       : userMenuItems;
 
-  console.log('isGroupLeader', isGroupLeader);
+  // console.log('isGroupLeader', isGroupLeader);
 
   return (
     <div

@@ -385,7 +385,10 @@ export default function Dashboard() {
         {/* THÔNG BÁO - Chiếm 1 phần */}
         <div className='bg-white p-4 rounded-lg shadow-md'>
           <h2 className='text-xl font-semibold mb-4'>Thông báo</h2>
-          <ul className='space-y-2'>
+          <ul
+            className='space-y-2'
+            style={{ maxHeight: '450px', overflowY: 'auto' }}
+          >
             {notifications.length > 0 ? (
               notifications.map((notification) => (
                 <li

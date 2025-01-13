@@ -8,6 +8,7 @@ import { useDispatch } from 'react-redux';
 import { logIn } from '../redux/user/userSlice';
 import { jwtDecode } from 'jwt-decode';
 import HeaderLogo from '../assets/header-logo-img.png';
+import welcomeImg from '../assets/welcome-img.png';
 
 export default function SignIn() {
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -36,20 +37,27 @@ export default function SignIn() {
         username: formData.username.trim(),
         password: formData.password.trim(),
       });
-      // // logic successful
-      // console.log(res);
-      // storageService.setAccessToken(res.data.token);
 
-      // Extract and decode token if necessary
       const token = res.data.token;
       storageService.setAccessToken(token);
 
-      // Decode the token to extract user data
       const decodedUser = jwtDecode(token);
       console.log('Decoded User:', decodedUser);
 
       dispatch(logIn(res.data));
-      navigate('/');
+
+      const isGroupLeader = res.data.listGroupRole.some(
+        (role) => role.roleName === 'Trưởng nhóm'
+      );
+
+      console.log(`res.data`, res.data);
+      console.log(`isGroupLeader`, isGroupLeader);
+
+      if (isGroupLeader) {
+        navigate('/user/dashboard');
+      } else {
+        navigate('/user/home', { state: { welcomeImg } });
+      }
     } catch (err) {
       setError(err.message);
     } finally {
