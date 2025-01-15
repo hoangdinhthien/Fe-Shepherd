@@ -76,6 +76,7 @@ const Request = () => {
           event: item.event,
           group: item.group,
           createdUser: item.createdUser,
+          type: item.type,
         }))
       );
 
@@ -104,7 +105,7 @@ const Request = () => {
 
     console.log('Navigating with isAccepted:', isAccepted);
 
-    if (record.event === null) {
+    if (record.type === 'Tạo tài khoản') {
       navigate(`/user/requestCreateAccountDetails`, {
         state: {
           request: {
@@ -121,7 +122,7 @@ const Request = () => {
         },
       });
       console.log('Record:', record);
-    } else {
+    } else if (record.type === 'Tạo sự kiện') {
       navigate(`/user/requestDetails`, {
         state: {
           request: {
@@ -132,6 +133,8 @@ const Request = () => {
           currentUser: user, // Pass the current user
         },
       });
+    } else if (record.type === 'Khác') {
+      navigate(`/user/otherRequestDetails`, {});
     }
   };
 

@@ -39,6 +39,8 @@ import RequestCreateAccountDetail from './components/request/request-create-acco
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UserHome from './pages/UserHome';
+import OtherRequest from './components/request/other-request/OtherRequest';
+import OtherRequestDetail from './components/request/other-request/OtherRequestDetail';
 
 const AppRoutes = () => {
   const roles = [
@@ -193,6 +195,14 @@ const AppRoutes = () => {
         <Route
           path='requestCreateAccountDetails'
           element={<RequestCreateAccountDetail />}
+        />
+        <Route
+          path='otherRequest'
+          element={<OtherRequest />}
+        />
+        <Route
+          path='otherRequestDetails'
+          element={<OtherRequestDetail />}
         />
         <Route
           path='dashboard'
