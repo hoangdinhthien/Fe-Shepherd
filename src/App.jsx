@@ -40,7 +40,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UserHome from './pages/UserHome';
 import OtherRequest from './components/request/other-request/OtherRequest';
-import OtherRequestDetail from './components/request/other-request/otherRequestDetail';
+import OtherRequestDetail from './components/request/other-request/OtherRequestDetail';
 
 const AppRoutes = () => {
   const roles = [
