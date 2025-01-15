@@ -17,6 +17,12 @@ class RequestAPI extends BaseAPI {
     return super.postCustom(url, data);
   }
 
+  // create other request
+  createOtherRequest(id, data) {
+    const url = `${this.url}/Other?groupId=${id}`;
+    return super.postCustom(url, data);
+  }
+
   getRequests(params) {
     const url = `${this.url}/GetRequests`;
     return super.getCustom(url, params);

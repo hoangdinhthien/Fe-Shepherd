@@ -10,6 +10,7 @@ import moment from 'moment';
 import RequestCreateEvent from '../components/request/request-create-event/RequestCreateEvent';
 import RequestCreateAccount from '../components/request/request-create-account/RequestCreateAccount';
 import EventAPI from '../apis/event_api';
+import OtherRequest from '../components/request/other-request/OtherRequest';
 
 const { Option } = Select;
 
@@ -38,6 +39,10 @@ export default function CreateRequest() {
     email: '',
     role: '',
     password: '',
+  });
+  const [otherRequestData, setOtherRequestData] = useState({
+    title: '',
+    content: '',
   });
 
   // Select `currentUser` and rehydration state separately
@@ -314,6 +319,51 @@ export default function CreateRequest() {
       } finally {
         setLoading(false);
       }
+    } else if (selectedRequestType === 'Khác') {
+      if (
+        !otherRequestData.title ||
+        !otherRequestData.content ||
+        !currentUserGroup.id
+      ) {
+        message.error(
+          'Please fill all the fields and ensure a group is selected.'
+        );
+        return;
+      }
+
+      const loadingKey = 'loading';
+      try {
+        setLoading(true);
+        message.loading({
+          content: 'Submitting request...',
+          key: loadingKey,
+          duration: 0,
+        });
+
+        const data = {
+          title: otherRequestData.title,
+          content: otherRequestData.content,
+        };
+
+        console.log('Data being sent to API:', JSON.stringify(data));
+        await RequestAPI.createOtherRequest(currentUserGroup.id, data);
+
+        message.success({
+          content: 'Other request submitted successfully!',
+          key: loadingKey,
+        });
+        console.log('Other request submitted:', data);
+
+        navigate('/user/request');
+      } catch (error) {
+        message.error({
+          content: `Error submitting request: ${error.message}`,
+          key: loadingKey,
+        });
+        console.error('Error details:', error.response?.data?.errors || error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -399,6 +449,14 @@ export default function CreateRequest() {
           currentUserGroup={currentUserGroup}
           accountData={accountData}
           setAccountData={setAccountData}
+        />
+      )}
+
+      {selectedRequestType === 'Khác' && (
+        <OtherRequest
+          selectedGroup={selectedGroup}
+          otherRequestData={otherRequestData}
+          setOtherRequestData={setOtherRequestData}
         />
       )}
 
