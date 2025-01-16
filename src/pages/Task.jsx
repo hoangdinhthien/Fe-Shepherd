@@ -78,7 +78,9 @@ export default function Task() {
     try {
       setLoading(true);
       const response = await EventAPI.getEventsByGroupForTask(groupId);
-      setEvents(response.result || []);
+      console.log('response:', response.data);
+
+      setEvents(response.data || []);
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
@@ -167,9 +169,14 @@ export default function Task() {
     const params = new URLSearchParams(location.search);
     const activityId = params.get('activityId');
     const groupId = params.get('groupId');
+    const eventId = params.get('eventId'); // Extract eventId
 
     if (groupId) {
       setSelectedGroup(groupId);
+    }
+
+    if (eventId) {
+      setSelectedEvent(eventId); // Set selectedEvent
     }
 
     if (activityId) {
@@ -313,18 +320,20 @@ export default function Task() {
 
   return (
     <div className='mx-auto p-4'>
-      <h1 className='text-xl mb-3 font-semibold'>Công Việc</h1>
+      <h1 className='text-xl mb-3 font-semibold'>Công Việc Trong Tháng Này</h1>
       {/* -----TOP SECTION----- */}
       <div className='flex justify-between items-center mb-4'>
-        {isGroupLeader && activities.length > 0 && (
-          <TaskCreateButton
-            selectedGroup={selectedGroup}
-            selectedActivity={selectedActivity}
-            activityName={
-              activities.find((activity) => activity.id === selectedActivity)
-                ?.activityName || ''
-            }
-          />
+        {isGroupLeader && (
+          <div className='mr-4'>
+            <TaskCreateButton
+              selectedGroup={selectedGroup}
+              selectedActivity={selectedActivity}
+              activityName={
+                activities.find((activity) => activity.id === selectedActivity)
+                  ?.activityName || ''
+              }
+            />
+          </div>
         )}
         <div className='flex items-center ml-auto space-x-4'>
           <div>
@@ -387,7 +396,7 @@ export default function Task() {
               ))}
             </Select>
           </div>
-          {selectedActivity && (
+          {/* {selectedActivity && (
             <div className='ml-5'>
               <p className='text-gray-700 font-semibold'>
                 Hoạt động này thuộc Sự Kiện:
@@ -397,7 +406,7 @@ export default function Task() {
                   ?.event.eventName || 'Không có sự kiện'}
               </span>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

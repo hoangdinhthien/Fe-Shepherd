@@ -2,7 +2,7 @@ import { Divider, Pagination, Select, Tabs } from 'antd';
 import PropTypes from 'prop-types';
 
 const { Option } = Select;
-const filters = ['Tất Cả', 'Tháng này', 'Tháng sau'];
+const filters = ['Tháng trước', 'Tháng này', 'Tháng sau'];
 
 const EventHeader = ({
   setActiveTab,
@@ -39,6 +39,8 @@ const EventHeader = ({
       label: <span className='font-bold'>Hoạt Động</span>,
     },
   ];
+  console.log('event:', events);
+  console.log('selectedItem:', selectedItem);
 
   return (
     <div className='relative flex justify-between w-full items-center mb-0 mx-4'>
@@ -56,14 +58,11 @@ const EventHeader = ({
         {/* Show event dropdown only when in activities tab */}
         {activeTab === 'activities' && showEventDropdown && (
           <Select
-            value={
-              events.find((event) => event.id === selectedItem?.id)
-                ?.eventName || 'Chọn Sự Kiện'
-            }
+            value={selectedItem?.eventName}
             onChange={handleEventChange}
             size='large'
             className='w-[fit] bg-transparent font-bold'
-            // placeholder='Chọn sự kiện'
+            placeholder='Chọn sự kiện'
             variant='filled'
           >
             {events.length > 0 ? (
@@ -91,7 +90,7 @@ const EventHeader = ({
           size='large'
           className='w-[fit] bg-transparent font-bold'
         >
-          <Option value={filters[0]}>Tất cả</Option>
+          <Option value={filters[0]}>Tháng trước</Option>
           <Option value={filters[1]}>Tháng này</Option>
           <Option value={filters[2]}>Tháng sau</Option>
         </Select>

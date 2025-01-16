@@ -9,6 +9,10 @@ import EventAPI from '../apis/event_api';
 import ALT from '../assets/welcome-img.png';
 import CreateActivityModal from '../components/event/CreateActivityModal';
 import EventHeader from '../components/event/EventHeader';
+import EventCards from '../components/event/EventCards';
+import ActivityCards from '../components/event/ActivityCards';
+import EventModal from '../components/event/EventModal';
+import ActivityModal from '../components/event/ActivityModal';
 
 const { Title, Paragraph } = Typography;
 
@@ -19,7 +23,7 @@ export default function EventActivityPage() {
   const [filteredActivities, setFilteredActivities] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [filter, setFilter] = useState(0);
+  const [filter, setFilter] = useState(1);
   const [activeTab, setActiveTab] = useState('events');
   const [showCreateActivity, setShowCreateActivity] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,12 +40,12 @@ export default function EventActivityPage() {
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
   const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
-  // const COUNCIL = 'Hội đồng mục vụ';
 
-  // New function to handle event selection
+  const filters = ['Tháng trước', 'Tháng này', 'Tháng sau']; // Update filter options
+
   const handleEventChange = (eventId) => {
-    setSelectedItem(null); // Reset the selected item
-    fetchActivities(eventId); // Fetch activities for the selected event
+    setSelectedItem(null);
+    fetchActivities(eventId);
   };
 
   const handleChange = (e) => {
@@ -94,10 +98,11 @@ export default function EventActivityPage() {
   useEffect(() => {
     if (activeTab === 'events') {
       fetchEvents();
-    } else if (activeTab === 'activities') {
-      fetchActivities(selectedItem?.id);
+    } else if (activeTab === 'activities' && !isModalVisible) {
+      // fetchActivities(selectedItem?.id);
+      fetchActivities();
     }
-  }, [activeTab, currentPage, filter, selectedItem?.id]);
+  }, [activeTab, currentPage, filter, selectedItem?.id, isModalVisible]);
 
   const fetchEvents = async () => {
     try {
@@ -166,10 +171,6 @@ export default function EventActivityPage() {
     }
     setSelectedItem(item);
     setIsModalVisible(true);
-
-    if (activeTab === 'activities') {
-      setFilteredActivities(activities);
-    }
   };
 
   const handleModalClose = () => {
@@ -177,8 +178,9 @@ export default function EventActivityPage() {
     if (activeTab === 'events') {
       setSelectedItem(null);
     }
+    // Remove the fetchActivities call to prevent API call on modal close
     if (activeTab === 'activities') {
-      setFilteredActivities(activities);
+      fetchActivities(null);
     }
   };
 
@@ -219,103 +221,52 @@ export default function EventActivityPage() {
           <div
             className={`grid w-full h-full grid-cols-4 grid-rows-2 px-4 gap-4`}
           >
-            {(activeTab === 'events'
-              ? filteredEvents
-              : filteredActivities
-            )?.map((item) =>
-              item.id === 'no-activities' ? (
-                <p
-                  key={item.id}
-                  className='col-span-4 text-center text-gray-500'
-                >
-                  {item.eventName}
-                </p>
-              ) : (
-                <Card
-                  key={item.id}
-                  hoverable
-                  className='rounded-2xl overflow-hidden shadow-md transition-transform transform hover:scale-105'
-                  onClick={() => {
-                    showModal(item);
-                    setShowCreateActivity(false);
-                  }}
-                  cover={
-                    <div
-                      className={`${activeTab === 'activities' && 'relative'}`}
-                    >
-                      <img
-                        alt={item.eventName || item.activityName}
-                        src={ALT}
-                        className='w-full h-48 object-cover'
-                      />
-                      {activeTab === 'activities' && (
-                        <div className='absolute bottom-2 left-2 rounded-xl bg-[#71BE63] max-w-[300px] shadow-lg overflow-ellipsis text-white font-bold p-2 px-3 text-sm'>
-                          {item.event.eventName}
-                        </div>
-                      )}
-                    </div>
-                  }
-                >
-                  <Title
-                    ellipsis={{ rows: 1 }}
-                    level={4}
-                    className='text-lg font-semibold text-gray-800'
-                  >
-                    {item.eventName || item.activityName}
-                  </Title>
-                  <div className='flex items-center w-full text-gray-500 mb-1'>
-                    <CalendarFilled className='mr-2' />
-                    <span>
-                      {moment(item.fromDate || item.startDate).format(
-                        'DD/MM/YYYY'
-                      )}
-                    </span>
-                    <span className='mx-5'>to</span>
-                    <span>
-                      {moment(item.toDate || item.endDate).format('DD/MM/YYYY')}
-                    </span>
-                  </div>
-                  <div className='flex items-start justify-start w-full text-gray-500'>
-                    <FileTextFilled className='mr-2 mt-1' />
-                    <Paragraph ellipsis={{ rows: 1 }}>
-                      {item.description ?? 'N/A'}
-                    </Paragraph>
-                  </div>
-                  {activeTab === 'events' && (
-                    <Button
-                      type='link'
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleGoToActivities(item.id);
-                      }}
-                      className='text-blue-500 mt-2 p-0'
-                    >
-                      Đi đến những hoạt động của sự kiện này
-                    </Button>
-                  )}
-                </Card>
-              )
+            {activeTab === 'events' ? (
+              <EventCards
+                events={filteredEvents}
+                showModal={showModal}
+                handleGoToActivities={handleGoToActivities}
+              />
+            ) : (
+              <ActivityCards
+                activities={filteredActivities}
+                showModal={showModal}
+              />
             )}
           </div>
         )}
 
-        <CreateActivityModal
-          isUpdate={isUpdate}
-          setIsUpdate={setIsUpdate}
-          image={ALT}
-          loading={loading}
-          isModalVisible={isModalVisible}
-          handleModalClose={handleModalClose}
-          selectedItem={selectedItem}
-          showCreateActivity={showCreateActivity}
-          setShowCreateActivity={setShowCreateActivity}
-          activeTab={activeTab}
-          formData={formData}
-          setFormData={setFormData}
-          handleChange={handleChange}
-          onSubmit={onSubmit}
-          handleGoToActivities={handleGoToActivities}
-        />
+        {activeTab === 'events' ? (
+          <EventModal
+            isUpdate={isUpdate}
+            setIsUpdate={setIsUpdate}
+            image={ALT}
+            loading={loading}
+            isModalVisible={isModalVisible}
+            handleModalClose={handleModalClose}
+            selectedItem={selectedItem}
+            showCreateActivity={showCreateActivity}
+            setShowCreateActivity={setShowCreateActivity}
+            formData={formData}
+            setFormData={setFormData}
+            handleChange={handleChange}
+            onSubmit={onSubmit}
+          />
+        ) : (
+          <ActivityModal
+            isUpdate={isUpdate}
+            setIsUpdate={setIsUpdate}
+            image={ALT}
+            loading={loading}
+            isModalVisible={isModalVisible}
+            handleModalClose={handleModalClose}
+            selectedItem={selectedItem}
+            formData={formData}
+            setFormData={setFormData}
+            handleChange={handleChange}
+            onSubmit={onSubmit}
+          />
+        )}
       </div>
     </div>
   );

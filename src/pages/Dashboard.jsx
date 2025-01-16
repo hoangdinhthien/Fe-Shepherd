@@ -81,9 +81,16 @@ export default function Dashboard() {
   // Chọn nhóm mặc định khi nhóm được tải về
   useEffect(() => {
     if (groups.length > 0 && !selectedGroup) {
-      setSelectedGroup(groups[0].id);
+      const leaderGroups = groups.filter((group) =>
+        user.listGroupRole.some(
+          (role) => role.groupId === group.id && role.roleName === 'Trưởng nhóm'
+        )
+      );
+      if (leaderGroups.length > 0) {
+        setSelectedGroup(leaderGroups[0].id);
+      }
     }
-  }, [groups, selectedGroup]);
+  }, [groups, selectedGroup, user.listGroupRole]);
 
   // Lấy sự kiện cho nhóm đã chọn
   useEffect(() => {
@@ -270,14 +277,21 @@ export default function Dashboard() {
           onChange={(value) => setSelectedGroup(value)}
           placeholder='---Chọn tổ chức---'
         >
-          {groups.map((group) => (
-            <Option
-              key={group.id}
-              value={group.id}
-            >
-              {group.groupName}
-            </Option>
-          ))}
+          {groups
+            .filter((group) =>
+              user.listGroupRole.some(
+                (role) =>
+                  role.groupId === group.id && role.roleName === 'Trưởng nhóm'
+              )
+            )
+            .map((group) => (
+              <Option
+                key={group.id}
+                value={group.id}
+              >
+                {group.groupName}
+              </Option>
+            ))}
         </Select>
       </div>
 

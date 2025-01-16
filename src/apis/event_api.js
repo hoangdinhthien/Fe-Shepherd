@@ -14,9 +14,13 @@ class EventAPI extends BaseAPI {
     return super.getAll(params);
   }
 
-  // task
+  // task (chưa bắt đầu & đang diễn ra)
+  // getEventsByGroupForTask(groupId) {
+  //   const url = `${this.url}?GroupId=${groupId}`;
+  //   return super.getCustom(url);
+  // }
   getEventsByGroupForTask(groupId) {
-    const url = `${this.url}?GroupId=${groupId}`;
+    const url = `${this.url}/calendar?GroupId=${groupId}&CalendarTypeEnum=1`;
     return super.getCustom(url);
   }
 

@@ -90,7 +90,7 @@ export default function RequestDetail() {
 
   // -----FORMAT DATE TIME FUNCTION-----
   const formatDateTime = (date) => {
-    return date ? moment(date).format('DD/MM/YYYY - HH:mm') : 'N/A';
+    return date ? moment(date).format('DD/MM/YYYY [lúc] HH:mm') : 'N/A';
   };
 
   // -----FORMAT COST FUNCTION-----
@@ -228,6 +228,8 @@ export default function RequestDetail() {
       console.log('API Error:', error.response ? error.response.data : error); // Log detailed error
     }
   };
+
+  console.log(`group names:`, groupNames);
 
   // -----RENDER-----
   return (
@@ -376,7 +378,8 @@ export default function RequestDetail() {
                 <div>
                   <p className='font-semibold text-gray-700'>Thời gian:</p>
                   <p className='text-gray-600'>
-                    {activity.startTime} - {activity.endTime}
+                    {formatDateTime(activity.startTime)} -{' '}
+                    {formatDateTime(activity.endTime)}
                     {userRole === 'Council' && (
                       <Checkbox
                         className='ml-2'
@@ -437,16 +440,18 @@ export default function RequestDetail() {
                       (userGroup) =>
                         userGroup.groupId === group.groupID &&
                         userGroup.roleName === 'Trưởng nhóm'
-                    ) && (
-                      <div className='mb-3 ml-3'>
-                        <Link
-                          to={`/user/task?groupId=${group.groupID}&activityId=${activity.id}`}
-                          className='text-blue-500 hover:underline'
-                        >
-                          Tạo công việc và bàn giao thành viên cho hoạt động này
-                        </Link>
-                      </div>
-                    )}
+                    ) &&
+                      isAccepted && ( // Check if the request is accepted
+                        <div className='mb-3 ml-3'>
+                          <Link
+                            to={`/user/task?groupId=${group.groupID}&eventId=${requestDetails.id}&activityId=${activity.id}`}
+                            className='text-blue-500 hover:underline'
+                          >
+                            Tạo công việc và bàn giao thành viên cho hoạt động
+                            này
+                          </Link>
+                        </div>
+                      )}
                   </li>
                 ))}
               </ul>
