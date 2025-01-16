@@ -6,6 +6,7 @@ import useFetchGroups from '../hooks/useFetchGroups'; // Import custom hook for 
 import EventAPI from '../apis/event_api';
 import TransactionAPI from '../apis/transaction_api';
 import NotificationAPI from '../apis/notification_api';
+import CeremoniesAPI from '../apis/ceremony_api';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -18,6 +19,7 @@ import {
   Title,
 } from 'chart.js';
 import { useSelector } from 'react-redux';
+import { color } from 'framer-motion';
 
 ChartJS.register(
   ArcElement,
@@ -43,6 +45,19 @@ export default function Dashboard() {
   const [lineChartData, setLineChartData] = useState({
     labels: [],
     datasets: [],
+  });
+  const [ceremonies, setCeremonies] = useState([]);
+  const firstDayOfMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth(),
+    1
+  );
+
+  // Sử dụng toLocaleDateString để có định dạng mm/dd/yyyy
+  const formattedDate = firstDayOfMonth.toLocaleDateString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
   });
   // Dữ liệu Biểu đồ
   const pieChartData = {
@@ -85,20 +100,37 @@ export default function Dashboard() {
     }
   }, [groups, selectedGroup]);
 
+  useEffect(() => {
+    const fetchCeremonies = async () => {
+      if (!selectedGroup) return;
+
+      try {
+        console.log('formattedDate of ceremony:', formattedDate);
+        const response = await CeremoniesAPI.getAllCeremonies(formattedDate);
+
+        if (response && response.data && Array.isArray(response.data)) {
+          setCeremonies(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching ceremonies:', error);
+        setCeremonies([]);
+      }
+    };
+
+    fetchCeremonies();
+  }, [selectedGroup, currentMonth]);
+
   // Lấy sự kiện cho nhóm đã chọn
   useEffect(() => {
     const fetchEvents = async () => {
-      if (!selectedGroup) {
-        console.warn('No group selected!');
-        return;
-      }
-
       try {
-        console.log('Fetching events for group ID:', selectedGroup);
+        console.log('formattedDate of Event:', formattedDate);
         const response = await EventAPI.getEventsByGroup({
           groupId: selectedGroup,
+          chosenDate: formattedDate,
         });
-        console.log('Full API Response:', response);
+
+        console.log('Full API Event Response:', response);
 
         const eventsArray = response.data ? Object.values(response.data) : [];
         console.log('Converted Events Array:', eventsArray);
@@ -110,7 +142,7 @@ export default function Dashboard() {
     };
 
     fetchEvents();
-  }, [selectedGroup]);
+  }, [selectedGroup, currentMonth]);
 
   useEffect(() => {
     const fetchTransactionOverview = async () => {
@@ -177,7 +209,7 @@ export default function Dashboard() {
     fetchNotifications();
   }, [selectedGroup]);
 
-  const daysOfWeek = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  const daysOfWeek = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
   const getDaysInMonth = (year, month) =>
     new Date(year, month + 1, 0).getDate();
@@ -185,39 +217,84 @@ export default function Dashboard() {
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
   // Tạo danh sách các ngày có sự kiện
-  const getEventDays = (events, year, month) => {
+  const getEventDays = (events, ceremonies, year, month) => {
     const days = [];
-    console.log('Events:', events); // Kiểm tra dữ liệu events
 
+    // Xử lý events thông thường
     events.forEach((event) => {
       const fromDate = new Date(event.fromDate);
       const toDate = new Date(event.toDate);
 
-      console.log('Event From Date:', fromDate, 'To Date:', toDate); // Kiểm tra từ ngày và đến ngày
-
-      // Chỉ lấy các sự kiện thuộc tháng và năm hiện tại
       if (
         (fromDate.getMonth() === month && fromDate.getFullYear() === year) ||
         (toDate.getMonth() === month && toDate.getFullYear() === year)
       ) {
         let currentDate = new Date(fromDate);
-
         while (currentDate <= toDate) {
           if (
             currentDate.getMonth() === month &&
             currentDate.getFullYear() === year
           ) {
-            days.push(currentDate.getDate());
+            days.push({
+              day: currentDate.getDate(),
+              type: 'event',
+              title: event.eventName,
+            });
           }
           currentDate.setDate(currentDate.getDate() + 1);
         }
       }
     });
 
-    console.log('Event Days:', days); // Log danh sách ngày có sự kiện
+    // Xử lý ceremonies
+    ceremonies.forEach((ceremony) => {
+      // Kiểm tra xem có fromDate không
+      if (ceremony.fromDate) {
+        // Đảm bảo fromDate được parse đúng cách
+        let ceremonyDate;
+
+        // Kiểm tra định dạng của fromDate
+        if (typeof ceremony.fromDate === 'string') {
+          // Nếu là ISO string (ví dụ: "2024-01-15T00:00:00.000Z")
+          ceremonyDate = new Date(ceremony.fromDate);
+        } else if (ceremony.fromDate instanceof Date) {
+          // Nếu đã là đối tượng Date
+          ceremonyDate = ceremony.fromDate;
+        } else {
+          console.error('Invalid date format:', ceremony.fromDate);
+          return;
+        }
+
+        // Log để debug
+        console.log(
+          'Processing ceremony:',
+          ceremony.eventName,
+          'date:',
+          ceremonyDate,
+          'month:',
+          ceremonyDate.getMonth(),
+          'year:',
+          ceremonyDate.getFullYear()
+        );
+
+        // Kiểm tra tháng và năm
+        if (
+          ceremonyDate.getMonth() === month &&
+          ceremonyDate.getFullYear() === year
+        ) {
+          days.push({
+            day: ceremonyDate.getDate(),
+            type: 'ceremony',
+            title: ceremony.eventName,
+          });
+        }
+      }
+      console.log('ceremony:', days);
+    });
+
+    console.log('Final processed days:', days);
     return days;
   };
-
   // Render ngày trong lịch với đánh dấu sự kiện
   const renderCalendar = () => {
     const year = currentMonth.getFullYear();
@@ -225,33 +302,78 @@ export default function Dashboard() {
     const daysInMonth = getDaysInMonth(year, month);
     const firstDayOfMonth = getFirstDayOfMonth(year, month);
 
-    // Lấy danh sách các ngày có sự kiện trong tháng hiện tại
-    const eventDays = getEventDays(events, year, month);
+    const eventDays = getEventDays(events, ceremonies, year, month);
+    console.log('Event days for rendering:', eventDays);
 
     const calendarDays = [];
 
     // Các ô trống đầu tháng
     for (let i = 0; i < firstDayOfMonth; i++) {
       calendarDays.push(
-        <div
-          key={`empty-${i}`}
-          className='text-center p-1'
-        ></div>
+        <div key={`empty-${i}`} className='text-center p-1'></div>
       );
     }
 
     // Các ngày trong tháng
     for (let day = 1; day <= daysInMonth; day++) {
-      const isEventDay = eventDays.includes(day);
+      const dayEvents = eventDays.filter((event) => event.day === day);
+      const ceremonies = dayEvents.filter((event) => event.type === 'ceremony');
+      const events = dayEvents.filter((event) => event.type === 'event');
+
+      let backgroundColor = 'bg-gray-100'; // Mặc định màu xám nếu không có sự kiện
+
+      // Đổi màu tùy theo có sự kiện hay lễ hội
+      if (ceremonies.length > 0 && events.length > 0) {
+        backgroundColor = 'bg-[#94d487] text-white font-bold';
+      } else if (ceremonies.length > 0) {
+        backgroundColor = 'bg-[#ebdb96] text-white font-bold';
+      } else if (events.length > 0) {
+        backgroundColor = 'bg-[#6c84a6] text-white font-bold';
+      }
+
       calendarDays.push(
         <div
           key={day}
-          className={`text-center p-1 rounded ${
-            isEventDay ? 'bg-orange-400 text-white font-bold' : 'bg-gray-100'
-          }`}
-          aria-label={`Ngày ${day} trong lịch`}
+          className={`relative text-center p-1 rounded cursor-pointer ${backgroundColor} group`}
         >
           {day}
+          {(ceremonies.length > 1 || events.length > 1) && (
+            <span className='absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center'>
+              {dayEvents.length}
+            </span>
+          )}
+          {/* Popup hiển thị khi hover */}
+          {(ceremonies.length > 0 || events.length > 0) && (
+            <div
+              className='absolute left-1/2 top-full mt-2 transform -translate-x-1/2 p-3 bg-white border border-gray-300 rounded shadow-lg text-left text-sm z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none'
+              style={{ minWidth: '200px' }}
+            >
+              {ceremonies.length > 0 && (
+                <>
+                  <strong className='block text-[#ebdb96]'>Thánh Lễ:</strong>
+                  <ul className='mb-2'>
+                    {ceremonies.map((ceremony, index) => (
+                      <li key={`ceremony-${index}`} className='text-gray-700'>
+                        - {ceremony.title}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {events.length > 0 && (
+                <>
+                  <strong className='block text-[#6c84a6]'>Sự Kiện:</strong>
+                  <ul>
+                    {events.map((event, index) => (
+                      <li key={`event-${index}`} className='text-gray-700'>
+                        - {event.title}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
         </div>
       );
     }
@@ -271,10 +393,7 @@ export default function Dashboard() {
           placeholder='---Chọn tổ chức---'
         >
           {groups.map((group) => (
-            <Option
-              key={group.id}
-              value={group.id}
-            >
+            <Option key={group.id} value={group.id}>
               {group.groupName}
             </Option>
           ))}
@@ -317,10 +436,7 @@ export default function Dashboard() {
           </div>
           <div className='grid grid-cols-7 gap-2'>
             {daysOfWeek.map((day) => (
-              <div
-                key={day}
-                className='text-center font-semibold'
-              >
+              <div key={day} className='text-center font-semibold'>
                 {day}
               </div>
             ))}
@@ -336,10 +452,23 @@ export default function Dashboard() {
               events.map((event) => (
                 <li
                   key={event.id}
-                  className='p-2 bg-blue-100 rounded-md'
+                  className='relative p-2 bg-blue-100 rounded-md group'
                 >
                   {event.eventName} -{' '}
                   {new Date(event.fromDate).toLocaleTimeString()}
+                  <div className='absolute left-0 top-full mt-2 hidden w-64 p-4 bg-white rounded-lg shadow-md border border-gray-200 group-hover:block z-10'>
+                    <p className='text-sm font-semibold text-gray-800'>
+                      Tên sự kiện: {event.eventName}
+                    </p>
+                    <p className='text-sm text-gray-600'>
+                      Thời gian diễn ra: ngày{' '}
+                      {new Date(event.fromDate).toLocaleDateString('vi-VN')}{' '}
+                      {'('}
+                      {new Date(event.fromDate).toLocaleTimeString()} tới{' '}
+                      {new Date(event.toDate).toLocaleTimeString()}
+                      {')'}
+                    </p>
+                  </div>
                 </li>
               ))
             ) : (

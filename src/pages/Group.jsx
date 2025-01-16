@@ -3,7 +3,7 @@ import { Select, Table, Spin, Tabs, Input, Card, message } from 'antd';
 import useFetchGroups from '../hooks/useFetchGroups';
 import GroupUserAPI from '../apis/group_user_api';
 import TransactionAPI from '../apis/transaction_api';
-import BudgetAPI from '../apis/budget_api'; // Import API để lấy surplusOrDeficit
+import BudgetAPI from '../apis/budget_api';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,10 +16,10 @@ export default function Group() {
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [surplusOrDeficit, setSurplusOrDeficit] = useState(0); // State để lưu surplusOrDeficit
+  const [surplusOrDeficit, setSurplusOrDeficit] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('ascend');
-  const [userRole, setUserRole] = useState(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState('');
   const navigate = useNavigate();
 
   const handleViewHistory = () => {
@@ -47,11 +47,14 @@ export default function Group() {
     try {
       setLoading(true);
       const response = await GroupUserAPI.getGroupMembers(selectedGroup);
+      console.log(
+        'Members data:',
+        response.result.map((member) => ({
+          name: member.name,
+          groupRole: member.groupRole,
+        }))
+      );
       setMembers(response.result || []);
-      const user = response.result?.find((member) => member.role === 'Thủ quỹ');
-      if (user) {
-        setUserRole('Thủ quỹ');
-      }
     } catch (error) {
       console.error('Error fetching members:', error);
     } finally {
@@ -111,19 +114,78 @@ export default function Group() {
   );
 
   const sortedMembers = [...filteredMembers].sort((a, b) => {
-    if (sortOrder === 'ascend') {
-      return a.name.localeCompare(b.name);
-    }
-    return b.name.localeCompare(a.name);
+    // Đảm bảo Trưởng Nhóm xuất hiện đầu tiên, Thủ Quỹ đứng thứ hai
+    if (a.groupRole === 'Trưởng nhóm') return -1;
+    if (b.groupRole === 'Trưởng nhóm') return 1;
+    if (a.groupRole === 'Thủ quỹ') return -1;
+    if (b.groupRole === 'Thủ quỹ') return 1;
+    return a.name.localeCompare(b.name); // Sắp xếp các thành viên khác theo tên
   });
 
+  useEffect(() => {
+    // Fetch current user data when component mounts
+    const getCurrentUserEmail = () => {
+      // Thay thế bằng cách lấy email từ localStorage hoặc state management của bạn
+      return localStorage.getItem('userEmail');
+    };
+    setCurrentUserEmail(getCurrentUserEmail());
+  }, []);
+
   const memberColumns = [
-    { title: 'Tên Thành Viên', dataIndex: 'name', key: 'name' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Số Điện Thoại', dataIndex: 'phone', key: 'phone' },
-    { title: 'Vai Trò/Chức Vụ', dataIndex: 'groupRole', key: 'groupRole' },
-    { title: 'Trạng Thái', dataIndex: 'status', key: 'status' },
+    {
+      title: 'Tên Thành Viên',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+    },
+    {
+      title: 'Số Điện Thoại',
+      dataIndex: 'phone',
+      key: 'phone',
+    },
+    {
+      title: 'Vai Trò/Chức Vụ',
+      dataIndex: 'groupRole',
+      key: 'groupRole',
+      render: (groupRole) => (
+        <span
+          className={
+            groupRole === 'Trưởng nhóm'
+              ? 'bg-yellow-200 border-2 border-yellow-400 px-2 py-1 rounded'
+              : groupRole === 'Thủ quỹ'
+              ? 'bg-blue-100 border-2 border-blue-300 px-2 py-1 rounded'
+              : ''
+          }
+        >
+          {groupRole}
+        </span>
+      ),
+    },
+    {
+      title: 'Trạng Thái',
+      dataIndex: 'status',
+      key: 'status',
+    },
   ];
+
+  const getRowClassName = (record) => {
+    const isCurrentUser = record.email === currentUserEmail;
+
+    if (isCurrentUser) {
+      if (record.groupRole === 'Trưởng nhóm') {
+        return 'bg-yellow-50';
+      }
+      if (record.groupRole === 'Thủ quỹ') {
+        return 'bg-blue-50';
+      }
+      return 'bg-gray-200';
+    }
+    return ''; // Trả về chuỗi rỗng cho các hàng không phải người dùng hiện tại
+  };
 
   const transactionColumns = [
     { title: 'Số Giao Dịch', dataIndex: 'id', key: 'id' },
@@ -208,6 +270,7 @@ export default function Group() {
               dataSource={sortedMembers}
               rowKey='id'
               pagination={false}
+              rowClassName={getRowClassName}
             />
           </TabPane>
 

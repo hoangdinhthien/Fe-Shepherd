@@ -16,13 +16,15 @@ class AdminRequestAPI extends BaseAPI {
   updateAcceptRequest(requestId) {
     const url = `${this.url}/ApproveAccountRequest?requestId=${requestId}`;
     const body = { isAccepted: true };
-    console.log('Request URL:', url);
-    console.log('Request Body:', body);
     return super.putCustom(url, body, {
       headers: {
         'Content-Type': 'application/json',
       },
     });
+  }
+  updateForwardToCouncil(requestId) {
+    const url = `${this.url}/Forward?to=Council&requestId=${requestId}`;
+    return super.putCustom(url);
   }
 }
 

@@ -6,7 +6,7 @@ class EventAPI extends BaseAPI {
   }
 
   getEventsByGroup(params) {
-    const url = `${this.url}/calendar`; // => axios => base url + event/calendar (custom url)
+    const url = `${this.url}/calendar?&CalendarTypeEnum=1`; // => axios => base url + event/calendar (custom url)
     return super.getCustom(url, params); // => shortcut
   }
 
