@@ -16,6 +16,7 @@ export default function TaskCreatePopUp({
   activityId,
   activityName,
   currentUserId, // Add currentUserId prop
+  onTaskCreated, // Add onTaskCreated callback prop
 }) {
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
@@ -54,7 +55,7 @@ export default function TaskCreatePopUp({
       cost: parseFloat(price),
       activityID: activityId,
       groupID: selectedGroupId,
-      userID: userID,
+      userID: userID || null, // Ensure userID is null if not selected
     };
     console.log(JSON.stringify(taskData));
 
@@ -68,6 +69,7 @@ export default function TaskCreatePopUp({
         setDescription('');
         onClose();
         message.success('Công việc đã được tạo thành công');
+        onTaskCreated(); // Call the callback to re-fetch tasks
       } else {
         setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
         console.error('Failed to create task:', response.message);
@@ -115,9 +117,9 @@ export default function TaskCreatePopUp({
             <Select
               value={userID}
               onChange={(value) => setUserId(value)}
-              required
               placeholder='Chọn Người Phụ Trách'
               className='w-full'
+              // required
             >
               {users
                 .filter((user) => user.userID !== currentUserId) // Filter out current user

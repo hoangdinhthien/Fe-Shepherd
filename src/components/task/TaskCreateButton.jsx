@@ -7,6 +7,7 @@ export default function TaskCreateButton({
   selectedActivity,
   activityName,
   currentUserId, // Add currentUserId prop
+  onTaskCreated, // Add onTaskCreated callback prop
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -41,6 +42,7 @@ export default function TaskCreateButton({
         activityId={selectedActivity}
         activityName={activityName}
         currentUserId={currentUserId} // Pass currentUserId prop
+        onTaskCreated={onTaskCreated} // Pass onTaskCreated callback
       />
     </>
   );

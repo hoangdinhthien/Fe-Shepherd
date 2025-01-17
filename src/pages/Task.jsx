@@ -341,6 +341,7 @@ export default function Task() {
                   ?.activityName || ''
               }
               currentUserId={currentUser.user.id} // Pass currentUserId prop
+              onTaskCreated={fetchTasks} // Pass fetchTasks as callback
             />
           </div>
         )}
