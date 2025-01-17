@@ -48,8 +48,8 @@ const EventModal = ({
         <div className='p-4'>
           <img
             alt={selectedItem.eventName}
-            src={image}
-            className='w-full h-48 object-fill rounded-xl mb-4'
+            src={selectedItem.imageURL || image}
+            className='w-full h-80 object-fill rounded-xl mb-4'
           />
           <Title level={3}>
             {!isUpdate ? (

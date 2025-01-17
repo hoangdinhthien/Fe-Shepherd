@@ -30,7 +30,7 @@ const ActivityCards = ({ activities, showModal, setSelectedItem }) => {
               <div className='relative'>
                 <img
                   alt={item.activityName}
-                  src={ALT}
+                  src={item.imageURL || ALT}
                   className='w-full h-48 object-cover'
                 />
                 <div className='absolute bottom-2 left-2 rounded-xl bg-[#71BE63] max-w-[300px] shadow-lg overflow-ellipsis text-white font-bold p-2 px-3 text-sm'>

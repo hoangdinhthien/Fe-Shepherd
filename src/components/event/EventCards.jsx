@@ -20,7 +20,7 @@ const EventCards = ({ events, showModal, handleGoToActivities }) => {
           cover={
             <img
               alt={item.eventName}
-              src={ALT}
+              src={item.imageURL || ALT}
               className='w-full h-48 object-cover'
             />
           }

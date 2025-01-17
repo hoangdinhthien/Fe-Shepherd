@@ -42,7 +42,7 @@ const ActivityModal = ({
           <img
             alt={selectedItem.activityName}
             src={image}
-            className='w-full h-48 object-fill rounded-xl mb-4'
+            className='w-full h-80 object-fill rounded-xl mb-4'
           />
           <Title level={3}>
             {!isUpdate ? (
