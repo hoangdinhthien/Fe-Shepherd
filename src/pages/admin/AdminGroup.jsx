@@ -25,7 +25,7 @@ const AdminGroup = () => {
       setGroups(groupList);
       setFilteredGroups(groupList);
     } catch (error) {
-      console.error('Không thể lấy danh sách nhóm:', error.message);
+      console.error('Không thể lấy danh sách Đoàn Thể:', error.message);
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ const AdminGroup = () => {
 
   const handleGroupUpdated = (groupName) => {
     Modal.success({
-      content: `Cập nhật nhóm thành công: ${groupName}`,
+      content: `Cập nhật Đoàn Thể thành công: ${groupName}`,
     });
     fetchGroups();
     setIsEditModalOpen(false);
@@ -81,10 +81,10 @@ const AdminGroup = () => {
         fetchGroups();
         setIsCreateModalOpen(false);
       } else {
-        console.error(response.message || 'Không thể tạo nhóm.');
+        console.error(response.message || 'Không thể tạo Đoàn Thể.');
       }
     } catch (error) {
-      console.error('Lỗi khi tạo nhóm:', error.message);
+      console.error('Lỗi khi tạo Đoàn Thể:', error.message);
     }
   };
 
@@ -100,17 +100,17 @@ const AdminGroup = () => {
         if (response.success) {
           fetchGroups();
           Modal.success({
-            content: `Đã xóa nhóm: ${groupToDelete.groupName}`,
+            content: `Đã xóa Đoàn Thể: ${groupToDelete.groupName}`,
           });
         } else {
           Modal.error({
-            content: 'Không thể xóa nhóm. Vui lòng thử lại.',
+            content: 'Không thể xóa Đoàn Thể. Vui lòng thử lại.',
           });
         }
       } catch (error) {
-        console.error('Lỗi khi xóa nhóm:', error.message);
+        console.error('Lỗi khi xóa Đoàn Thể:', error.message);
         Modal.error({
-          content: 'Có lỗi xảy ra khi xóa nhóm.',
+          content: 'Có lỗi xảy ra khi xóa Đoàn Thể.',
         });
       }
     }
@@ -125,12 +125,12 @@ const AdminGroup = () => {
 
   const groupColumns = [
     {
-      title: 'Mã Nhóm',
+      title: 'Mã Đoàn Thể',
       dataIndex: 'id',
       key: 'id',
     },
     {
-      title: 'Tên Nhóm',
+      title: 'Tên Đoàn Thể',
       dataIndex: 'groupName',
       key: 'groupName',
     },
@@ -166,13 +166,13 @@ const AdminGroup = () => {
 
   return (
     <div className='admin-group-page' style={{ padding: '20px' }}>
-      <h2 className='text-2xl font-bold mb-6'>Quản lý Nhóm</h2>
+      <h2 className='text-2xl font-bold mb-6'>Quản lý Đoàn Thể</h2>
 
       <Spin spinning={loading} tip='Đang tải dữ liệu...'>
         <div className='flex justify-center items-center mb-6 space-x-6 w-full'>
           <div style={{ flex: 1 }}>
             <Input
-              placeholder='Tìm kiếm nhóm...'
+              placeholder='Tìm kiếm Đoàn Thể...'
               value={searchKeyword}
               onChange={handleSearchChange}
               style={{
@@ -186,7 +186,7 @@ const AdminGroup = () => {
 
           <div>
             <Button type='primary' onClick={handleOpenCreateModal}>
-              Tạo nhóm
+              Tạo Đoàn Thể
             </Button>
           </div>
         </div>
@@ -199,7 +199,7 @@ const AdminGroup = () => {
           bordered
           className='rounded-lg shadow-lg'
           rowClassName={
-            (record) => (record.priority ? 'bg-green-100' : '') // Bôi màu xanh lá cây nếu nhóm ưu tiên
+            (record) => (record.priority ? 'bg-green-100' : '') // Bôi màu xanh lá cây nếu Đoàn Thể ưu tiên
           }
         />
       </Spin>
@@ -213,7 +213,7 @@ const AdminGroup = () => {
         />
       )}
 
-      {/* Popup Tạo Nhóm */}
+      {/* Popup Tạo Đoàn Thể */}
       {isCreateModalOpen && (
         <GroupCreatePopUp
           isOpen={isCreateModalOpen}
@@ -232,7 +232,9 @@ const AdminGroup = () => {
         cancelText='Hủy'
         danger
       >
-        <p>Bạn có chắc chắn muốn xóa nhóm {groupToDelete?.groupName} không?</p>
+        <p>
+          Bạn có chắc chắn muốn xóa Đoàn Thể {groupToDelete?.groupName} không?
+        </p>
       </Modal>
     </div>
   );

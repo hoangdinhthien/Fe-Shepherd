@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import RequestAPI from '../../apis/admin/request_api';
 import { Pie } from 'react-chartjs-2';
 import { FaSearch } from 'react-icons/fa';
+import { message } from 'antd';
 
 const AdminRequest = () => {
   const navigate = useNavigate(); // Điều hướng
@@ -115,6 +116,89 @@ const AdminRequest = () => {
     setCurrentPage(page);
   };
 
+  const handleForwardToCouncil = async (requestId) => {
+    try {
+      console.log('Request ID:', requestId);
+
+      // Gọi API để cập nhật trạng thái request
+      const response = await RequestAPI.updateForwardToCouncil(requestId);
+
+      if (response.success) {
+        // Kiểm tra và cập nhật state cục bộ
+        const updatedRequests = requests.filter(
+          (request) => request.id !== requestId
+        );
+        setRequests(updatedRequests);
+        setFilteredRequests(updatedRequests);
+
+        // Hiển thị thông báo thành công
+        message.success(
+          `Yêu cầu ${requestId} đã được chuyển tiếp thành công tới Hội đồng.`
+        );
+        console.log(
+          `Request ${requestId} has been successfully forwarded to the Council.`
+        );
+      } else {
+        // Xử lý trường hợp API không thành công
+        message.error(
+          `Không thể chuyển tiếp yêu cầu ${requestId} tới Hội đồng: ${
+            response.message || 'Lỗi không xác định'
+          }`
+        );
+        console.error(
+          `Failed to forward request ${requestId} to the Council: ${
+            response.message || 'Unknown error'
+          }`
+        );
+      }
+    } catch (error) {
+      // Xử lý lỗi nếu có sự cố trong quá trình gọi API
+      message.error(
+        `Không thể chuyển tiếp yêu cầu ${requestId} tới Hội đồng: ${
+          error.message || 'Lỗi không xác định'
+        }`
+      );
+      console.error(
+        `Could not forward request ${requestId} to the Council: ${
+          error.message || error
+        }`
+      );
+    }
+  };
+
+  const handleMarkAsDone = async (requestId) => {
+    try {
+      // Gọi API để cập nhật trạng thái request
+      const response = await RequestAPI.updateAcceptRequest(requestId);
+
+      // Kiểm tra phản hồi từ API để xác nhận việc cập nhật thành công
+      if (response.success) {
+        // Cập nhật state cục bộ
+        const updatedRequests = requests.map((request) =>
+          request.id === requestId ? { ...request, isAccepted: true } : request
+        );
+        setRequests(updatedRequests);
+        setFilteredRequests(updatedRequests);
+        console.log(
+          `Request ${requestId} has been marked as done successfully.`
+        );
+      } else {
+        // Xử lý trường hợp API không thành công
+        console.error(
+          `Failed to update status for request ${requestId}: ${
+            response.message || 'Unknown error'
+          }`
+        );
+      }
+    } catch (error) {
+      // Xử lý lỗi nếu có sự cố trong quá trình gọi API
+      console.error(
+        `Không thể cập nhật trạng thái cho request ${requestId}:`,
+        error.message || error
+      );
+    }
+  };
+
   if (loading) return <p>Đang tải...</p>;
 
   return (
@@ -209,6 +293,7 @@ const AdminRequest = () => {
             <th style={{ border: '1px solid #ddd', padding: '8px' }}>
               Nội dung
             </th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Loại</th>
             <th style={{ border: '1px solid #ddd', padding: '8px' }}>
               Trạng thái
             </th>
@@ -231,6 +316,9 @@ const AdminRequest = () => {
               </td>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                 {request.content}
+              </td>
+              <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                {request.type}
               </td>
               <td
                 style={{
@@ -258,22 +346,38 @@ const AdminRequest = () => {
                 {new Date(request.createDate).toLocaleDateString('vi-VN')}
               </td>
               <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                {request.isAccepted === null &&
-                  request.type === 'Tạo tài khoản' && (
-                    <button
-                      style={{
-                        backgroundColor: '#4caf50',
-                        color: 'white',
-                        padding: '5px 10px',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => handleCreateAccount(request)}
-                    >
-                      Tạo tài khoản
-                    </button>
-                  )}
+                {request.isAccepted === null && (
+                  <>
+                    {request.type === 'Tạo tài khoản' ? (
+                      <button
+                        className='px-4 py-1 bg-green-600 text-white rounded-full text-xs font-bold leading-4'
+                        onClick={() => handleCreateAccount(request)}
+                      >
+                        Tạo tài khoản
+                      </button>
+                    ) : (
+                      request.type === 'Khác' && (
+                        <div className='flex justify-center space-x-5'>
+                          {/* Nút "Go Back" với viền */}
+                          <button
+                            className='px-4 py-1 text-green-600 border-2 border-green-600 rounded-full text-xs font-bold leading-4'
+                            onClick={() => handleForwardToCouncil(request.id)}
+                          >
+                            Chuyển tiếp
+                          </button>
+
+                          {/* Nút "Accept" không viền */}
+                          <button
+                            className='px-4 py-1 bg-green-600 text-white rounded-full text-xs font-bold leading-4'
+                            onClick={() => handleMarkAsDone(request.id)}
+                          >
+                            Đã xong
+                          </button>
+                        </div>
+                      )
+                    )}
+                  </>
+                )}
               </td>
             </tr>
           ))}
