@@ -11,12 +11,10 @@ class CeremoniesAPI extends BaseAPI {
     )}&CalendarTypeEnum=1`;
     return this.getCustom(url);
   }
-}
 
   getCeremonies(params) {
     const url = `${this.url}/calendar`;
     return super.getCustom(url, { params });
   }
-
-
+}
 export default new CeremoniesAPI();
