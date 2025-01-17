@@ -67,7 +67,6 @@ const Request = () => {
         res.result.map((item) => ({
           key: item.id,
           title: item.title,
-          // from: item.group.groupName,
           from: item.group ? item.group.groupName : null, // Check if group exists
           to: item.to,
           content: item.content,
@@ -77,11 +76,12 @@ const Request = () => {
           group: item.group,
           createdUser: item.createdUser,
           type: item.type,
+          isAccepted: item.isAccepted, // Add isAccepted field
         }))
       );
 
       setTotal(res.pagination.totalCount);
-      console.log('Request data:', res);
+      console.log('Request data:', res.result[0].isAccepted);
     } catch (error) {
       message.error(error.message);
       console.error(error);
@@ -103,7 +103,7 @@ const Request = () => {
     const isAccepted =
       status === 'Accepted' ? true : status === 'Rejected' ? false : null;
 
-    console.log('Navigating with isAccepted:', isAccepted);
+    console.log('Navigating with isAccepted:', isAccepted); // Log the isAccepted value
 
     if (record.type === 'Tạo tài khoản') {
       navigate(`/user/requestCreateAccountDetails`, {
@@ -127,8 +127,9 @@ const Request = () => {
         state: {
           request: {
             requestId: record.key,
-            isAccepted: isAccepted,
+            isAccepted: record.isAccepted, // Pass the isAccepted value from the record
             requestingGroup: record.from,
+            status: status, // Pass the status
           },
           currentUser: user, // Pass the current user
         },
@@ -140,19 +141,19 @@ const Request = () => {
 
   const getTime = (dateString) => {
     if (!dateString) return 'N/A';
-    return moment(dateString).format('DD/MM/YYYY - HH:mm');
+    return moment(dateString).format('DD/MM/YYYY [lúc] HH:mm');
   };
 
   const getStatusTag = (status) => {
     if (status === null || status === undefined)
-      return <Tag color='warning'>Pending</Tag>;
+      return <Tag color='warning'>Đang chờ</Tag>;
     if (status)
       return (
         <Tag
           icon={<CheckCircleOutlined />}
           color='success'
         >
-          Accepted
+          Đã chấp nhận
         </Tag>
       );
     if (!status)
@@ -161,7 +162,7 @@ const Request = () => {
           icon={<CloseCircleOutlined />}
           color='error'
         >
-          Rejected
+          Đã từ chối
         </Tag>
       );
   };
@@ -187,11 +188,21 @@ const Request = () => {
       dataIndex: 'to',
       sorter: (a, b) => a.to.localeCompare(b.to),
       filters: [
-        { text: 'Council', value: 'Council' },
-        { text: 'Admin', value: 'Admin' },
+        { text: 'Hội đồng', value: 'Council' },
+        { text: 'Quản trị viên', value: 'Admin' },
         // Add more filters as needed
       ],
       onFilter: (value, record) => record.to.includes(value),
+      render: (text) => {
+        switch (text) {
+          case 'Council':
+            return 'Hội đồng mục vụ';
+          case 'Admin':
+            return 'Quản trị viên';
+          default:
+            return text;
+        }
+      },
     },
     {
       title: 'Ngày Tạo',
@@ -202,13 +213,14 @@ const Request = () => {
     },
     {
       title: 'Trạng Thái',
-      dataIndex: 'status',
+      dataIndex: 'isAccepted',
       filters: [
-        { text: 'Accepted', value: 'Accepted' },
-        { text: 'Rejected', value: 'Rejected' },
-        { text: 'Pending', value: 'Pending' },
+        { text: 'Đã chấp nhận', value: true },
+        { text: 'Đã từ chối', value: false },
+        { text: 'Đang chờ', value: null },
       ],
-      onFilter: (value, record) => record.status.props.children === value,
+      onFilter: (value, record) => record.isAccepted === value,
+      render: (isAccepted) => getStatusTag(isAccepted),
     },
   ];
 

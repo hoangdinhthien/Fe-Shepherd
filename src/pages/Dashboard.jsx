@@ -96,7 +96,14 @@ export default function Dashboard() {
   // Chọn nhóm mặc định khi nhóm được tải về
   useEffect(() => {
     if (groups.length > 0 && !selectedGroup) {
-      setSelectedGroup(groups[0].id);
+      const leaderGroups = groups.filter((group) =>
+        user.listGroupRole.some(
+          (role) => role.groupId === group.id && role.roleName === 'Trưởng nhóm'
+        )
+      );
+      if (leaderGroups.length > 0) {
+        setSelectedGroup(leaderGroups[0].id);
+      }
     }
   }, [groups, selectedGroup]);
 
@@ -310,7 +317,10 @@ export default function Dashboard() {
     // Các ô trống đầu tháng
     for (let i = 0; i < firstDayOfMonth; i++) {
       calendarDays.push(
-        <div key={`empty-${i}`} className='text-center p-1'></div>
+        <div
+          key={`empty-${i}`}
+          className='text-center p-1'
+        ></div>
       );
     }
 
@@ -353,7 +363,10 @@ export default function Dashboard() {
                   <strong className='block text-[#ebdb96]'>Thánh Lễ:</strong>
                   <ul className='mb-2'>
                     {ceremonies.map((ceremony, index) => (
-                      <li key={`ceremony-${index}`} className='text-gray-700'>
+                      <li
+                        key={`ceremony-${index}`}
+                        className='text-gray-700'
+                      >
                         - {ceremony.title}
                       </li>
                     ))}
@@ -365,7 +378,10 @@ export default function Dashboard() {
                   <strong className='block text-[#6c84a6]'>Sự Kiện:</strong>
                   <ul>
                     {events.map((event, index) => (
-                      <li key={`event-${index}`} className='text-gray-700'>
+                      <li
+                        key={`event-${index}`}
+                        className='text-gray-700'
+                      >
                         - {event.title}
                       </li>
                     ))}
@@ -392,11 +408,21 @@ export default function Dashboard() {
           onChange={(value) => setSelectedGroup(value)}
           placeholder='---Chọn tổ chức---'
         >
-          {groups.map((group) => (
-            <Option key={group.id} value={group.id}>
-              {group.groupName}
-            </Option>
-          ))}
+          {groups
+            .filter((group) =>
+              user.listGroupRole.some(
+                (role) =>
+                  role.groupId === group.id && role.roleName === 'Trưởng nhóm'
+              )
+            )
+            .map((group) => (
+              <Option
+                key={group.id}
+                value={group.id}
+              >
+                {group.groupName}
+              </Option>
+            ))}
         </Select>
       </div>
 
@@ -436,7 +462,10 @@ export default function Dashboard() {
           </div>
           <div className='grid grid-cols-7 gap-2'>
             {daysOfWeek.map((day) => (
-              <div key={day} className='text-center font-semibold'>
+              <div
+                key={day}
+                className='text-center font-semibold'
+              >
                 {day}
               </div>
             ))}

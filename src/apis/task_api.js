@@ -35,7 +35,7 @@ class TaskAPI extends BaseAPI {
 
   // Update task's status
   updateTaskStatus(taskId, status) {
-    const url = `${this.url}/${taskId}/status`;
+    const url = `${this.url}/${taskId}`;
     return this.putCustom(url, { status });
   }
 

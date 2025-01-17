@@ -2,7 +2,7 @@ import { Divider, Pagination, Select, Tabs } from 'antd';
 import PropTypes from 'prop-types';
 
 const { Option } = Select;
-const filters = ['Tất Cả', 'Tháng này', 'Tháng sau'];
+const filters = ['Tháng trước', 'Tháng này', 'Tháng sau'];
 
 const EventHeader = ({
   setActiveTab,
@@ -14,8 +14,8 @@ const EventHeader = ({
   showEventDropdown = false,
   handleEventChange = () => {},
   events = [],
-  activeTab, // Receive activeTab as a prop
-  selectedItem, // Add selectedItem as a prop
+  activeTab,
+  selectedEventId,
 }) => {
   const tabItems = [
     {
@@ -43,7 +43,7 @@ const EventHeader = ({
   return (
     <div className='relative flex justify-between w-full items-center mb-0 mx-4'>
       <Tabs
-        activeKey={activeTab} // Ensure active tab is controlled by activeTab prop
+        activeKey={activeTab}
         onChange={(key) => {
           setActiveTab(key);
           setCurrentPage(1);
@@ -53,17 +53,13 @@ const EventHeader = ({
       />
 
       <div className='absolute right-12 top-0 flex items-center gap-8'>
-        {/* Show event dropdown only when in activities tab */}
         {activeTab === 'activities' && showEventDropdown && (
           <Select
-            value={
-              events.find((event) => event.id === selectedItem?.id)
-                ?.eventName || 'Chọn Sự Kiện'
-            }
+            value={selectedEventId ?? undefined}
             onChange={handleEventChange}
             size='large'
             className='w-[fit] bg-transparent font-bold'
-            // placeholder='Chọn sự kiện'
+            placeholder='Chọn sự kiện'
             variant='filled'
           >
             {events.length > 0 ? (
@@ -72,7 +68,7 @@ const EventHeader = ({
                   key={event.id}
                   value={event.id}
                 >
-                  {event.eventName} {/* Hiển thị tên sự kiện */}
+                  {event.eventName}
                 </Option>
               ))
             ) : (
@@ -81,7 +77,6 @@ const EventHeader = ({
           </Select>
         )}
 
-        {/* Sorting dropdown */}
         <Select
           value={`Sắp xếp theo: ${filters[filter]}`}
           onChange={(value) => {
@@ -91,7 +86,7 @@ const EventHeader = ({
           size='large'
           className='w-[fit] bg-transparent font-bold'
         >
-          <Option value={filters[0]}>Tất cả</Option>
+          <Option value={filters[0]}>Tháng trước</Option>
           <Option value={filters[1]}>Tháng này</Option>
           <Option value={filters[2]}>Tháng sau</Option>
         </Select>
@@ -117,7 +112,7 @@ EventHeader.propTypes = {
   handleEventChange: PropTypes.func,
   events: PropTypes.array,
   activeTab: PropTypes.string.isRequired,
-  selectedItem: PropTypes.object, // Add selectedItem to propTypes
+  selectedEventId: PropTypes.string,
 };
 
 export default EventHeader;

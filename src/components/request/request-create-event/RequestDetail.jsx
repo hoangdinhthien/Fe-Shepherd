@@ -17,13 +17,15 @@ export default function RequestDetail() {
   const [activityAcceptance, setActivityAcceptance] = useState({});
   const [eventComment, setEventComment] = useState('');
   const [userRole, setUserRole] = useState('');
+  const [loading, setLoading] = useState(false); // Add loading state
 
   // -----LOCATION-----
   const location = useLocation();
   const navigate = useNavigate(); // Initialize navigate
-  const { requestId, isAccepted, requestingGroup } = location.state.request;
+  const { requestId, requestingGroup, isAccepted } = location.state.request; // Destructure isAccepted
   const currentUser = location.state.currentUser; // Get the current user
-  console.log(`isAccepted:`, isAccepted);
+
+  console.log('Received isAccepted:', isAccepted); // Log the received isAccepted value
 
   // -----USE EFFECT-----
   useEffect(() => {
@@ -33,7 +35,10 @@ export default function RequestDetail() {
         const response = await request_api.getRequestDetails(requestId);
         if (response.success) {
           const data = response.data;
-          setRequestDetails(data);
+          setRequestDetails({
+            ...data,
+            isAccepted: isAccepted, // Include the isAccepted value
+          });
 
           // Fetch user name for createdBy
           if (data.createdBy) {
@@ -80,7 +85,7 @@ export default function RequestDetail() {
     };
 
     fetchRequestDetails();
-  }, [requestId]);
+  }, [requestId, isAccepted]); // Include isAccepted in the dependency array
 
   useEffect(() => {
     if (currentUser) {
@@ -90,7 +95,7 @@ export default function RequestDetail() {
 
   // -----FORMAT DATE TIME FUNCTION-----
   const formatDateTime = (date) => {
-    return date ? moment(date).format('DD/MM/YYYY - HH:mm') : 'N/A';
+    return date ? moment(date).format('DD/MM/YYYY [lúc] HH:mm') : 'N/A';
   };
 
   // -----FORMAT COST FUNCTION-----
@@ -228,6 +233,15 @@ export default function RequestDetail() {
       console.log('API Error:', error.response ? error.response.data : error); // Log detailed error
     }
   };
+
+  const handleNavigateToTask = (groupID, eventID, activityID) => {
+    setLoading(true); // Set loading state to true
+    navigate(
+      `/user/task?groupId=${groupID}&eventId=${eventID}&activityId=${activityID}`
+    );
+  };
+
+  console.log(`isAccepted:`, isAccepted);
 
   // -----RENDER-----
   return (
@@ -376,7 +390,8 @@ export default function RequestDetail() {
                 <div>
                   <p className='font-semibold text-gray-700'>Thời gian:</p>
                   <p className='text-gray-600'>
-                    {activity.startTime} - {activity.endTime}
+                    {formatDateTime(activity.startTime)} -{' '}
+                    {formatDateTime(activity.endTime)}
                     {userRole === 'Council' && (
                       <Checkbox
                         className='ml-2'
@@ -437,16 +452,24 @@ export default function RequestDetail() {
                       (userGroup) =>
                         userGroup.groupId === group.groupID &&
                         userGroup.roleName === 'Trưởng nhóm'
-                    ) && (
-                      <div className='mb-3 ml-3'>
-                        <Link
-                          to={`/user/task?groupId=${group.groupID}&activityId=${activity.id}`}
-                          className='text-blue-500 hover:underline'
-                        >
-                          Tạo công việc và bàn giao thành viên cho hoạt động này
-                        </Link>
-                      </div>
-                    )}
+                    ) &&
+                      isAccepted === true && ( // Check if the request is accepted
+                        <div className='mb-3 ml-3'>
+                          <button
+                            onClick={() =>
+                              handleNavigateToTask(
+                                group.groupID,
+                                requestDetails.id,
+                                activity.id
+                              )
+                            }
+                            className='text-blue-500 hover:underline'
+                          >
+                            Tạo công việc và bàn giao thành viên cho hoạt động
+                            này
+                          </button>
+                        </div>
+                      )}
                   </li>
                 ))}
               </ul>

@@ -6,6 +6,7 @@ export default function TaskCreateButton({
   selectedGroup,
   selectedActivity,
   activityName,
+  currentUserId, // Add currentUserId prop
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -39,6 +40,7 @@ export default function TaskCreateButton({
         groupId={selectedGroup}
         activityId={selectedActivity}
         activityName={activityName}
+        currentUserId={currentUserId} // Pass currentUserId prop
       />
     </>
   );
