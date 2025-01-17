@@ -396,6 +396,7 @@ export default function Dashboard() {
 
     return calendarDays;
   };
+  console.log(`user role:`, user.user.role);
 
   return (
     <div className='p-4 bg-transparent'>
@@ -409,12 +410,15 @@ export default function Dashboard() {
           placeholder='---Chọn tổ chức---'
         >
           {groups
-            .filter((group) =>
-              user.listGroupRole.some(
+            .filter((group) => {
+              if (user.user.role === 'Council') {
+                return true;
+              }
+              return user.listGroupRole.some(
                 (role) =>
                   role.groupId === group.id && role.roleName === 'Trưởng nhóm'
-              )
-            )
+              );
+            })
             .map((group) => (
               <Option
                 key={group.id}
