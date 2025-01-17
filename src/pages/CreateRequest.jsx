@@ -295,7 +295,7 @@ export default function CreateRequest() {
           name: accountData.name,
           phone: accountData.phone,
           email: accountData.email,
-          role: 'Thành viên', // Ensure role is set to 'Thành viên'
+          role: 'Member', // Ensure role is set to 'Member'
           password: accountData.password,
           groupId: currentUserGroup.id,
         };

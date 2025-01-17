@@ -131,19 +131,6 @@ export default function RequestCreateAccount({
           </Select>
         </div>
       </div>
-
-      {/* <div className='flex flex-col'>
-        <label className='mb-1 text-gray-700'>
-          Mô tả yêu cầu tạo tài khoản
-        </label>
-        <textarea
-          name='description'
-          placeholder='Mô tả yêu cầu tạo tài khoản'
-          className='w-full p-3 border border-gray-300 rounded-lg resize-none h-32 mb-4'
-          value={accountData.description}
-          onChange={handleChange}
-        ></textarea>
-      </div> */}
     </div>
   );
 }
