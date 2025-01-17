@@ -14,8 +14,8 @@ const EventHeader = ({
   showEventDropdown = false,
   handleEventChange = () => {},
   events = [],
-  activeTab, // Receive activeTab as a prop
-  selectedItem, // Add selectedItem as a prop
+  activeTab,
+  selectedEventId,
 }) => {
   const tabItems = [
     {
@@ -39,13 +39,11 @@ const EventHeader = ({
       label: <span className='font-bold'>Hoạt Động</span>,
     },
   ];
-  console.log('event:', events);
-  console.log('selectedItem:', selectedItem);
 
   return (
     <div className='relative flex justify-between w-full items-center mb-0 mx-4'>
       <Tabs
-        activeKey={activeTab} // Ensure active tab is controlled by activeTab prop
+        activeKey={activeTab}
         onChange={(key) => {
           setActiveTab(key);
           setCurrentPage(1);
@@ -55,10 +53,9 @@ const EventHeader = ({
       />
 
       <div className='absolute right-12 top-0 flex items-center gap-8'>
-        {/* Show event dropdown only when in activities tab */}
         {activeTab === 'activities' && showEventDropdown && (
           <Select
-            value={selectedItem?.eventName}
+            value={selectedEventId ?? undefined}
             onChange={handleEventChange}
             size='large'
             className='w-[fit] bg-transparent font-bold'
@@ -71,7 +68,7 @@ const EventHeader = ({
                   key={event.id}
                   value={event.id}
                 >
-                  {event.eventName} {/* Hiển thị tên sự kiện */}
+                  {event.eventName}
                 </Option>
               ))
             ) : (
@@ -80,7 +77,6 @@ const EventHeader = ({
           </Select>
         )}
 
-        {/* Sorting dropdown */}
         <Select
           value={`Sắp xếp theo: ${filters[filter]}`}
           onChange={(value) => {
@@ -116,7 +112,7 @@ EventHeader.propTypes = {
   handleEventChange: PropTypes.func,
   events: PropTypes.array,
   activeTab: PropTypes.string.isRequired,
-  selectedItem: PropTypes.object, // Add selectedItem to propTypes
+  selectedEventId: PropTypes.string,
 };
 
 export default EventHeader;

@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 
 const { Title, Paragraph } = Typography;
 
-const ActivityCards = ({ activities, showModal }) => {
+const ActivityCards = ({ activities, showModal, setSelectedItem }) => {
   return (
     <>
       {activities.map((item) =>
@@ -23,6 +23,7 @@ const ActivityCards = ({ activities, showModal }) => {
             hoverable
             className='rounded-2xl overflow-hidden shadow-md transition-transform transform hover:scale-105'
             onClick={() => {
+              setSelectedItem(item);
               showModal(item);
             }}
             cover={
@@ -79,6 +80,7 @@ ActivityCards.propTypes = {
     })
   ).isRequired,
   showModal: PropTypes.func.isRequired,
+  setSelectedItem: PropTypes.func.isRequired,
 };
 
 export default ActivityCards;

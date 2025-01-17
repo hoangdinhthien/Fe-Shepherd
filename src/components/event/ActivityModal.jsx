@@ -56,12 +56,6 @@ const ActivityModal = ({
                 className='border p-2 rounded-lg mb-4'
               />
             )}
-            {!isUpdate && (user.role === COUNCIL || user.role === PRIEST) && (
-              <EditOutlined
-                onClick={onUpdateClicked}
-                className='text-white ml-4 cursor-pointer p-2 rounded-xl bg-blue-500 hover:bg-blue-600 hover:text-white transition-colors duration-300 ease-in-out'
-              />
-            )}
             {isUpdate && (
               <CloseOutlined
                 onClick={() => {
@@ -128,10 +122,6 @@ ActivityModal.propTypes = {
   isModalVisible: PropTypes.bool.isRequired,
   handleModalClose: PropTypes.func.isRequired,
   selectedItem: PropTypes.object, // Make selectedItem optional
-  formData: PropTypes.object.isRequired,
-  setFormData: PropTypes.func.isRequired,
-  handleChange: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
 };
 
 export default ActivityModal;

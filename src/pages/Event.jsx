@@ -1,13 +1,10 @@
-import { CalendarFilled, FileTextFilled } from '@ant-design/icons';
 import { Spinner } from '@material-tailwind/react';
-import { Card, message, Typography, Button } from 'antd';
-import moment from 'moment';
+import { message, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import ActivityAPI from '../apis/activity/activity_api';
 import EventAPI from '../apis/event_api';
 import ALT from '../assets/welcome-img.png';
-import CreateActivityModal from '../components/event/CreateActivityModal';
 import EventHeader from '../components/event/EventHeader';
 import EventCards from '../components/event/EventCards';
 import ActivityCards from '../components/event/ActivityCards';
@@ -38,13 +35,14 @@ export default function EventActivityPage() {
 
   const [formData, setFormData] = useState({});
   const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState(null);
 
   const COUNCIL = import.meta.env.VITE_ROLE_COUNCIL;
 
   const filters = ['Tháng trước', 'Tháng này', 'Tháng sau']; // Update filter options
 
   const handleEventChange = (eventId) => {
-    setSelectedItem(null);
+    setSelectedEventId(eventId);
     fetchActivities(eventId);
   };
 
@@ -99,10 +97,13 @@ export default function EventActivityPage() {
     if (activeTab === 'events') {
       fetchEvents();
     } else if (activeTab === 'activities' && !isModalVisible) {
-      // fetchActivities(selectedItem?.id);
-      fetchActivities();
+      if (selectedEventId) {
+        fetchActivities(selectedEventId);
+      } else {
+        fetchActivities();
+      }
     }
-  }, [activeTab, currentPage, filter, selectedItem?.id, isModalVisible]);
+  }, [activeTab, currentPage, filter, selectedEventId, isModalVisible]);
 
   const fetchEvents = async () => {
     try {
@@ -158,17 +159,6 @@ export default function EventActivityPage() {
   };
 
   const showModal = (item) => {
-    if (activeTab === 'events') {
-      setIsUpdate(false);
-      setFormData({
-        activityName: '',
-        description: '',
-        startTime: null,
-        endTime: null,
-        groups: groups,
-        eventID: item.id,
-      });
-    }
     setSelectedItem(item);
     setIsModalVisible(true);
   };
@@ -177,16 +167,18 @@ export default function EventActivityPage() {
     setIsModalVisible(false);
     if (activeTab === 'events') {
       setSelectedItem(null);
-    }
-    // Remove the fetchActivities call to prevent API call on modal close
-    if (activeTab === 'activities') {
-      fetchActivities(null);
+    } else if (activeTab === 'activities') {
+      if (selectedEventId) {
+        fetchActivities(selectedEventId);
+      } else {
+        fetchActivities();
+      }
     }
   };
 
   const handleGoToActivities = (eventId) => {
     setActiveTab('activities');
-    setSelectedItem({ id: eventId });
+    setSelectedEventId(eventId);
     fetchActivities(eventId);
     console.log('Event ID:', eventId);
   };
@@ -205,7 +197,7 @@ export default function EventActivityPage() {
           handleEventChange={handleEventChange}
           events={events}
           activeTab={activeTab}
-          selectedItem={selectedItem}
+          selectedEventId={selectedEventId}
         />
 
         {(loading || activitiesLoading) && (
@@ -231,6 +223,7 @@ export default function EventActivityPage() {
               <ActivityCards
                 activities={filteredActivities}
                 showModal={showModal}
+                setSelectedItem={setSelectedItem}
               />
             )}
           </div>
