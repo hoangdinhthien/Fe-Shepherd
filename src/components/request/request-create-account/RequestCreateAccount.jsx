@@ -1,26 +1,30 @@
 // src/components/RequestCreateAccount.jsx
-import { Input, Tooltip } from 'antd';
+import { Input, Tooltip, Select } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 
 RequestCreateAccount.propTypes = {
   currentUserGroup: PropTypes.shape({
     groupName: PropTypes.string.isRequired,
+    groups: PropTypes.arrayOf(PropTypes.string).isRequired,
   }).isRequired,
   accountData: PropTypes.shape({
     name: PropTypes.string.isRequired,
     password: PropTypes.string.isRequired,
     email: PropTypes.string.isRequired,
     phone: PropTypes.string.isRequired,
+    group: PropTypes.string,
     // description: PropTypes.string,
   }).isRequired,
   setAccountData: PropTypes.func.isRequired,
+  currentUser: PropTypes.object.isRequired, // Add this line
 };
 
 export default function RequestCreateAccount({
   currentUserGroup,
   accountData,
   setAccountData,
+  currentUser, // Add this line
 }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,6 +33,12 @@ export default function RequestCreateAccount({
       [name]: value,
     }));
   };
+
+  const leaderGroups = currentUser.listGroupRole.filter(
+    (group) => group.roleName === 'Trưởng nhóm'
+  );
+
+  console.log(`currentUser`, currentUser);
 
   return (
     <div className='mb-6 p-4 bg-white shadow rounded-lg'>
@@ -102,14 +112,23 @@ export default function RequestCreateAccount({
         </div>
         <div className='flex flex-col'>
           <label className='mb-1 text-gray-700'>Đoàn Thể</label>
-          <Input
-            type='text'
-            placeholder='Đoàn Thể'
+          <Select
             className='h-12'
             size='large'
-            value={currentUserGroup.groupName}
-            disabled
-          />
+            value={accountData.group}
+            onChange={(value) =>
+              setAccountData((prevData) => ({ ...prevData, group: value }))
+            }
+          >
+            {leaderGroups.map((group) => (
+              <Select.Option
+                key={group.groupId}
+                value={group.groupName}
+              >
+                {group.groupName}
+              </Select.Option>
+            ))}
+          </Select>
         </div>
       </div>
 

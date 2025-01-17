@@ -77,11 +77,9 @@ const ActivityModal = ({
           {!isUpdate && (
             <div className='flex items-center text-gray-500 mb-2'>
               <CalendarOutlined className='mr-2' />
-              <span>
-                {moment(selectedItem.startDate).format('DD MMM YYYY')}
-              </span>
-              <span className='mx-5'>to</span>
-              <span>{moment(selectedItem.endDate).format('DD MMM YYYY')}</span>
+              <span>{moment(selectedItem.startDate).format('DD/MM/YYYY')}</span>
+              <span className='mx-5'>đến</span>
+              <span>{moment(selectedItem.endDate).format('DD/MM/YYYY')}</span>
             </div>
           )}
           {isUpdate && (

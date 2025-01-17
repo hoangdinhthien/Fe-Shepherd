@@ -180,7 +180,10 @@ export default function Header({
               content='Thông báo'
               placement='bottom'
             >
-              <button onClick={onNotificationClick}>
+              <button
+                id='noti-button'
+                onClick={onNotificationClick}
+              >
                 <div className='relative'>
                   <IoMdNotifications className='h-8 w-8 text-slate-700 duration-300 hover:scale-125' />
                   {notiCount > 0 && (

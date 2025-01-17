@@ -316,6 +316,7 @@ export default function Task() {
   const handleModalClose = () => {
     setIsModalVisible(false);
     setSelectedTask(null);
+    fetchTasks(); // Re-fetch tasks when the modal is closed
   };
 
   const handleNavigateToTask = (groupID, eventID, activityID) => {

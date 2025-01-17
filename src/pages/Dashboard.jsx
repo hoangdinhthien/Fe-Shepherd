@@ -70,39 +70,21 @@ export default function Dashboard() {
     ],
   };
 
-  const messages = [
-    {
-      id: 1,
-      text: 'Cuộc họp mới được lên lịch vào lúc 3 giờ chiều',
-      unread: true,
-    },
-    {
-      id: 2,
-      text: 'Cuộc họp mới được lên lịch vào lúc 3 giờ chiều',
-      unread: false,
-    },
-    {
-      id: 3,
-      text: 'Cuộc họp mới được lên lịch vào lúc 3 giờ chiều',
-      unread: true,
-    },
-    {
-      id: 4,
-      text: 'Cuộc họp mới được lên lịch vào lúc 3 giờ chiều',
-      unread: true,
-    },
-  ];
-
   // Chọn nhóm mặc định khi nhóm được tải về
   useEffect(() => {
     if (groups.length > 0 && !selectedGroup) {
-      const leaderGroups = groups.filter((group) =>
-        user.listGroupRole.some(
-          (role) => role.groupId === group.id && role.roleName === 'Trưởng nhóm'
-        )
-      );
-      if (leaderGroups.length > 0) {
-        setSelectedGroup(leaderGroups[0].id);
+      if (user.user.role === 'Council') {
+        setSelectedGroup(groups[0].id);
+      } else {
+        const leaderGroups = groups.filter((group) =>
+          user.listGroupRole.some(
+            (role) =>
+              role.groupId === group.id && role.roleName === 'Trưởng nhóm'
+          )
+        );
+        if (leaderGroups.length > 0) {
+          setSelectedGroup(leaderGroups[0].id);
+        }
       }
     }
   }, [groups, selectedGroup]);

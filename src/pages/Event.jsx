@@ -59,7 +59,7 @@ export default function EventActivityPage() {
       !formData.startTime ||
       !formData.endTime
     ) {
-      message.error('Please fill all the fields.');
+      message.error('Vui lòng điền đầy đủ thông tin.');
       return;
     }
 

@@ -1,8 +1,10 @@
 import { Modal, Button, Card, Divider, Input, Select, message } from 'antd';
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import GroupUserAPI from '../../apis/group_user_api';
 import CurrencyInput from 'react-currency-input-field';
 import TaskAPI from '../../apis/task_api';
+import { useSelector } from 'react-redux';
 
 const { Option } = Select;
 
@@ -15,6 +17,7 @@ const TaskDetail = ({
   const [isEditing, setIsEditing] = useState(false);
   const [taskDetails, setTaskDetails] = useState(selectedTask);
   const [users, setUsers] = useState([]);
+  const currentUser = useSelector((state) => state.user.currentUser); // Get current user
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -43,8 +46,8 @@ const TaskDetail = ({
     setTaskDetails({ ...taskDetails, [name]: value });
   };
 
-  const handleSelectChange = (value) => {
-    setTaskDetails({ ...taskDetails, userName: value });
+  const handleSelectChange = (value, option) => {
+    setTaskDetails({ ...taskDetails, userName: option.children });
   };
 
   const handleCancelEdit = () => {
@@ -61,8 +64,13 @@ const TaskDetail = ({
 
   const handleEditTask = async () => {
     try {
-      await TaskAPI.updateTask(taskDetails.id, taskDetails);
-      console.log(taskDetails);
+      const updatedTaskDetails = {
+        ...taskDetails,
+        userId: users.find((user) => user.name === taskDetails.userName)
+          ?.userID,
+      };
+      await TaskAPI.updateTask(taskDetails.id, updatedTaskDetails);
+      console.log(updatedTaskDetails);
 
       message.success('Task updated successfully');
       setIsEditing(false);
@@ -113,7 +121,7 @@ const TaskDetail = ({
           onClick={() => setIsModalVisible(false)}
           className='bg-gray-500 text-white hover:bg-gray-700'
         >
-          Close
+          Đóng
         </Button>,
       ]}
       width={750}
@@ -183,14 +191,16 @@ const TaskDetail = ({
                   onChange={handleSelectChange}
                   className='w-full h-10 rounded-lg mt-2'
                 >
-                  {users.map((user) => (
-                    <Option
-                      key={user.id}
-                      value={user.userID}
-                    >
-                      {user.name}
-                    </Option>
-                  ))}
+                  {users
+                    .filter((user) => user.name !== currentUser.user.name) // Filter out the leader's name
+                    .map((user) => (
+                      <Option
+                        key={user.id}
+                        value={user.userID}
+                      >
+                        {user.name}
+                      </Option>
+                    ))}
                 </Select>
               ) : (
                 <p className='text-gray-900 mt-2'>
@@ -244,6 +254,25 @@ const TaskDetail = ({
       </Card>
     </Modal>
   );
+};
+
+TaskDetail.propTypes = {
+  selectedTask: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    cost: PropTypes.number.isRequired,
+    userName: PropTypes.string,
+    status: PropTypes.string.isRequired,
+    groupId: PropTypes.number.isRequired,
+    activityName: PropTypes.string,
+    activityDescription: PropTypes.string,
+    eventName: PropTypes.string,
+    eventDescription: PropTypes.string,
+  }).isRequired,
+  isModalVisible: PropTypes.bool.isRequired,
+  setIsModalVisible: PropTypes.func.isRequired,
+  isGroupLeader: PropTypes.bool.isRequired,
 };
 
 export default TaskDetail;

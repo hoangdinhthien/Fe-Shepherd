@@ -15,8 +15,8 @@ const UserHome = () => {
   return (
     <div className='w-full h-screen flex flex-col items-center justify-center bg-gray-100'>
       <Card
-        className='shadow-lg rounded-lg p-3 bg-white'
-        style={{ width: '100%', maxWidth: '1300px', marginBottom: '100px' }}
+        className='shadow-xl rounded-lg p-3 bg-white'
+        style={{ width: '100%', maxWidth: '1100px', marginBottom: '100px' }}
       >
         <h1 className='text-4xl font-bold mb-6 text-center text-green-600'>
           Chào mừng đến với Shepherd
@@ -27,20 +27,11 @@ const UserHome = () => {
           className='w-full mb-6 rounded-lg'
         />
         <div className='text-center'>
-          <Button
-            type='primary'
-            size='large'
-            className='mr-2'
-            style={{ backgroundColor: '#38a169', borderColor: '#38a169' }}
-          >
-            Bắt đầu
-          </Button>
-          <Button
-            size='large'
-            style={{ color: '#38a169', borderColor: '#38a169' }}
-          >
-            Tìm hiểu thêm
-          </Button>
+          <p className='text-lg text-green-600'>
+            Phàm ai tuyên bố nhận Thầy trước mặt thiên hạ, thì Thầy cũng sẽ
+            tuyên bố nhận người ấy trước mặt Cha Thầy. Còn ai chối Thầy trước
+            mặt thiên hạ, thì Thầy cũng sẽ chối người ấy trước mặt Cha Thầy.
+          </p>
         </div>
       </Card>
     </div>

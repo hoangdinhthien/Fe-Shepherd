@@ -199,7 +199,7 @@ export default function CreateRequest() {
     e.preventDefault();
 
     if (!selectedRequestType) {
-      message.error('Please select a request type.');
+      message.error('Vui lòng chọn loại yêu cầu.');
       return;
     }
 
@@ -210,7 +210,7 @@ export default function CreateRequest() {
         !formData.eventName ||
         !formData.description
       ) {
-        message.error('Please fill all the fields.');
+        message.error('Vui lòng điền đầy đủ thông tin.');
         return;
       }
 
@@ -278,7 +278,7 @@ export default function CreateRequest() {
         !accountData.email ||
         !accountData.password
       ) {
-        message.error('Please fill all the fields.');
+        message.error('Vui lòng điền đầy đủ thông tin.');
         return;
       }
 
@@ -325,9 +325,7 @@ export default function CreateRequest() {
         !otherRequestData.content ||
         !currentUserGroup.id
       ) {
-        message.error(
-          'Please fill all the fields and ensure a group is selected.'
-        );
+        message.error('Vui lòng điền đầy đủ thông tin và chọn nhóm.');
         return;
       }
 
@@ -367,6 +365,8 @@ export default function CreateRequest() {
     }
   };
 
+  console.log(`currentUser`, currentUser.listGroupRole);
+
   return (
     <form
       className='p-6 max-w-6xl mx-auto '
@@ -381,7 +381,7 @@ export default function CreateRequest() {
           >
             <IoArrowBack className='text-2xl' />
           </Link>
-          <h1 className='text-2xl font-bold'>Tạo Sự Kiện</h1>
+          <h1 className='text-2xl font-bold'>Tạo Yêu Cầu</h1>
         </div>
       </div>
       <hr className='border-t border-gray-400 my-6' />
@@ -449,6 +449,7 @@ export default function CreateRequest() {
           currentUserGroup={currentUserGroup}
           accountData={accountData}
           setAccountData={setAccountData}
+          currentUser={currentUser} // Pass currentUser here
         />
       )}
 

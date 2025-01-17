@@ -80,6 +80,11 @@ export default function RequestCreateEvent({
   const handleActivityTimeChange = (index, dates) => {
     const [start, end] = dates;
 
+    if (!formData.fromDate || !formData.toDate) {
+      message.warning('Bạn phải chọn thời gian cho sự kiện trước.');
+      return;
+    }
+
     if (
       (start && start.isBefore(formData.fromDate)) ||
       (end && end.isAfter(formData.toDate))
@@ -305,6 +310,7 @@ export default function RequestCreateEvent({
               size='large'
               className='w-full mb-4'
               disabledDate={disabledActivityDate}
+              disabled={!formData.fromDate || !formData.toDate}
             />
 
             {/* Activity Date Disclaimer */}
