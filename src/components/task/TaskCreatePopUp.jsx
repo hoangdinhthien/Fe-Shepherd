@@ -15,6 +15,7 @@ export default function TaskCreatePopUp({
   groupId,
   activityId,
   activityName,
+  currentUserId, // Add currentUserId prop
 }) {
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
@@ -66,7 +67,7 @@ export default function TaskCreatePopUp({
         setUserId('');
         setDescription('');
         onClose();
-        message.success('Công việc đã đư��c tạo thành công');
+        message.success('Công việc đã được tạo thành công');
       } else {
         setErrorMessage('Không thể tạo công việc. Vui lòng thử lại.');
         console.error('Failed to create task:', response.message);
@@ -87,6 +88,8 @@ export default function TaskCreatePopUp({
       setPrice(value);
     }
   };
+
+  console.log('currentUserId:', currentUserId);
 
   return (
     <Modal
@@ -116,14 +119,16 @@ export default function TaskCreatePopUp({
               placeholder='Chọn Người Phụ Trách'
               className='w-full'
             >
-              {users.map((user) => (
-                <Option
-                  key={user.id}
-                  value={user.userID}
-                >
-                  {user.name}
-                </Option>
-              ))}
+              {users
+                .filter((user) => user.userID !== currentUserId) // Filter out current user
+                .map((user) => (
+                  <Option
+                    key={user.id}
+                    value={user.userID}
+                  >
+                    {user.name}
+                  </Option>
+                ))}
             </Select>
           </div>
           <div>

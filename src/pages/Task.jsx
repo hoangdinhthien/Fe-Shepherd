@@ -199,7 +199,7 @@ export default function Task() {
 
   useEffect(() => {
     if (selectedGroup && selectedEvent && selectedActivity !== null) {
-      fetchTasks();
+      fetchTasks().finally(() => setLoading(false)); // Set loading to false after fetching tasks
     }
   }, [fetchTasks, selectedGroup, selectedEvent, selectedActivity]);
 
@@ -318,6 +318,13 @@ export default function Task() {
     setSelectedTask(null);
   };
 
+  const handleNavigateToTask = (groupID, eventID, activityID) => {
+    setLoading(true); // Set loading state to true
+    navigate(
+      `/user/task?groupId=${groupID}&eventId=${eventID}&activityId=${activityID}`
+    );
+  };
+
   return (
     <div className='mx-auto p-4'>
       <h1 className='text-xl mb-3 font-semibold'>Công Việc Trong Tháng Này</h1>
@@ -332,6 +339,7 @@ export default function Task() {
                 activities.find((activity) => activity.id === selectedActivity)
                   ?.activityName || ''
               }
+              currentUserId={currentUser.user.id} // Pass currentUserId prop
             />
           </div>
         )}

@@ -17,13 +17,15 @@ export default function RequestDetail() {
   const [activityAcceptance, setActivityAcceptance] = useState({});
   const [eventComment, setEventComment] = useState('');
   const [userRole, setUserRole] = useState('');
+  const [loading, setLoading] = useState(false); // Add loading state
 
   // -----LOCATION-----
   const location = useLocation();
   const navigate = useNavigate(); // Initialize navigate
-  const { requestId, isAccepted, requestingGroup } = location.state.request;
+  const { requestId, requestingGroup, isAccepted } = location.state.request; // Destructure isAccepted
   const currentUser = location.state.currentUser; // Get the current user
-  console.log(`isAccepted:`, isAccepted);
+
+  console.log('Received isAccepted:', isAccepted); // Log the received isAccepted value
 
   // -----USE EFFECT-----
   useEffect(() => {
@@ -33,7 +35,10 @@ export default function RequestDetail() {
         const response = await request_api.getRequestDetails(requestId);
         if (response.success) {
           const data = response.data;
-          setRequestDetails(data);
+          setRequestDetails({
+            ...data,
+            isAccepted: isAccepted, // Include the isAccepted value
+          });
 
           // Fetch user name for createdBy
           if (data.createdBy) {
@@ -80,7 +85,7 @@ export default function RequestDetail() {
     };
 
     fetchRequestDetails();
-  }, [requestId]);
+  }, [requestId, isAccepted]); // Include isAccepted in the dependency array
 
   useEffect(() => {
     if (currentUser) {
@@ -229,7 +234,14 @@ export default function RequestDetail() {
     }
   };
 
-  console.log(`group names:`, groupNames);
+  const handleNavigateToTask = (groupID, eventID, activityID) => {
+    setLoading(true); // Set loading state to true
+    navigate(
+      `/user/task?groupId=${groupID}&eventId=${eventID}&activityId=${activityID}`
+    );
+  };
+
+  console.log(`isAccepted:`, isAccepted);
 
   // -----RENDER-----
   return (
@@ -441,15 +453,21 @@ export default function RequestDetail() {
                         userGroup.groupId === group.groupID &&
                         userGroup.roleName === 'Trưởng nhóm'
                     ) &&
-                      isAccepted && ( // Check if the request is accepted
+                      isAccepted === true && ( // Check if the request is accepted
                         <div className='mb-3 ml-3'>
-                          <Link
-                            to={`/user/task?groupId=${group.groupID}&eventId=${requestDetails.id}&activityId=${activity.id}`}
+                          <button
+                            onClick={() =>
+                              handleNavigateToTask(
+                                group.groupID,
+                                requestDetails.id,
+                                activity.id
+                              )
+                            }
                             className='text-blue-500 hover:underline'
                           >
                             Tạo công việc và bàn giao thành viên cho hoạt động
                             này
-                          </Link>
+                          </button>
                         </div>
                       )}
                   </li>

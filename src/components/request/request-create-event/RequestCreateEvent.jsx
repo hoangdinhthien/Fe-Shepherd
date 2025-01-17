@@ -165,6 +165,13 @@ export default function RequestCreateEvent({
     return current && current < moment().add(31, 'days').startOf('day');
   };
 
+  const disabledActivityDate = (current) => {
+    return (
+      (formData.fromDate && current.isBefore(formData.fromDate, 'day')) ||
+      (formData.toDate && current.isAfter(formData.toDate, 'day'))
+    );
+  };
+
   return (
     <>
       {/* Event Details Section */}
@@ -237,7 +244,7 @@ export default function RequestCreateEvent({
         </div>
 
         {/* Event Date Disclaimer */}
-        <p className='text-red-500 text-sm italic mb-4'>
+        <p className='text-red-500 text-sm italic mb-4 font-bold'>
           Lưu Ý: Bạn chỉ được phép Yêu Cầu Tạo Sự Kiện cho tháng sau.
         </p>
 
@@ -297,11 +304,11 @@ export default function RequestCreateEvent({
               ]}
               size='large'
               className='w-full mb-4'
-              disabledDate={disabledDate}
+              disabledDate={disabledActivityDate}
             />
 
             {/* Activity Date Disclaimer */}
-            <p className='text-red-500 text-sm italic mb-4'>
+            <p className='text-red-500 text-sm italic mb-4 font-bold'>
               Lưu Ý: Thời gian hoạt động phải nằm trong phạm vi thời gian của sự
               kiện.
             </p>
@@ -373,7 +380,7 @@ export default function RequestCreateEvent({
           </div>
         ))}
 
-        <p className='text-red-500 text-sm italic mb-4'>
+        <p className='text-red-500 text-sm italic mb-4 font-bold'>
           Lưu Ý: Bạn không được nhập chi phí vượt quá 100,000,000 VND cho mỗi
           đoàn thể và tổng chi phí không được vượt quá 1,000,000,000 VND.
         </p>

@@ -67,7 +67,6 @@ const Request = () => {
         res.result.map((item) => ({
           key: item.id,
           title: item.title,
-          // from: item.group.groupName,
           from: item.group ? item.group.groupName : null, // Check if group exists
           to: item.to,
           content: item.content,
@@ -82,7 +81,7 @@ const Request = () => {
       );
 
       setTotal(res.pagination.totalCount);
-      console.log('Request data:', res.result);
+      console.log('Request data:', res.result[0].isAccepted);
     } catch (error) {
       message.error(error.message);
       console.error(error);
@@ -104,7 +103,7 @@ const Request = () => {
     const isAccepted =
       status === 'Accepted' ? true : status === 'Rejected' ? false : null;
 
-    console.log('Navigating with isAccepted:', isAccepted);
+    console.log('Navigating with isAccepted:', isAccepted); // Log the isAccepted value
 
     if (record.type === 'Tạo tài khoản') {
       navigate(`/user/requestCreateAccountDetails`, {
@@ -128,7 +127,7 @@ const Request = () => {
         state: {
           request: {
             requestId: record.key,
-            isAccepted: isAccepted,
+            isAccepted: record.isAccepted, // Pass the isAccepted value from the record
             requestingGroup: record.from,
             status: status, // Pass the status
           },
