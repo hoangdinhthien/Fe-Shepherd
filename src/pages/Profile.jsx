@@ -45,7 +45,7 @@ export default function Profile() {
             <img
               alt='profile-img'
               src={
-                currentUser?.user?.profileImage ||
+                currentUser?.user?.imageURL ||
                 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
               }
               className='rounded-full h-24 w-24 object-cover shadow-lg'

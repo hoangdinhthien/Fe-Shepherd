@@ -24,7 +24,7 @@ export default function OtherRequest({
           value={otherRequestData.title}
           onChange={handleChange}
           className='border p-2 rounded w-full'
-          placeholder='Enter title'
+          placeholder='Nhập tiêu đề'
         />
       </div>
       <div className='mb-6'>
@@ -36,7 +36,7 @@ export default function OtherRequest({
           value={otherRequestData.content}
           onChange={handleChange}
           className='border p-2 rounded w-full'
-          placeholder='Enter content'
+          placeholder='Nhập nội dung'
         />
       </div>
     </div>
