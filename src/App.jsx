@@ -164,7 +164,7 @@ const AppRoutes = () => {
         <Route
           path='update-profile'
           element={<UpdateProfile />}
-          />
+        />
         <Route
           path='user'
           element={<AdminUser />}
@@ -258,7 +258,7 @@ const AppRoutes = () => {
         <Route
           path='update-profile'
           element={<UpdateProfile />}
-          />
+        />
         <Route
           path='budget-history'
           element={<BudgetHistory />}

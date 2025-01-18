@@ -16,16 +16,22 @@ class UserAPI extends BaseAPI {
     const url = `${this.url}/role`;
     return this.get(url);
   }
-   updateUserFirstTime(userData) {
+  updateUserFirstTime(userData) {
     const url = `${this.url}/FirstUpdate`;
     const body = {
       name: userData.name,
       phone: userData.phone,
       email: userData.email,
-      imageUrl : userData.imageUrl,
-      password : userData.password,
+      imageUrl: userData.imageUrl,
+      password: userData.password,
     };
     return this.putCustom(url, body);
+  }
+
+  //update profile
+  updateUser(userData) {
+    const url = `${this.url}`;
+    return this.putCustom(url, userData);
   }
 }
 
