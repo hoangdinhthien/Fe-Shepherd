@@ -8,6 +8,11 @@ class GroupUserAPI extends BaseAPI {
   getGroupMembers(groupId) {
     return super.getAll({ groupId });
   }
+
+  assignUserToGroup(payload) {
+    const url = `${this.url}`;
+    return super.postCustom(url, payload);
+  }
 }
 
 export default new GroupUserAPI();

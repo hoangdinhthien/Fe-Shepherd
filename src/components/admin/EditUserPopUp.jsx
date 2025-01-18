@@ -3,11 +3,14 @@ import React, { useEffect, useRef, useState } from 'react';
 const EditUserPopup = ({ isOpen, onClose, user, onUpdate }) => {
   const popupRef = useRef();
   const [formData, setFormData] = useState({
+    id: '',
     name: '',
     phone: '',
     email: '',
     role: '',
   });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const roleOptions = {
     Admin: 'Quản trị viên',
@@ -20,25 +23,61 @@ const EditUserPopup = ({ isOpen, onClose, user, onUpdate }) => {
   useEffect(() => {
     if (user) {
       setFormData({
+        id: user.id, // Đảm bảo id được giữ nguyên
         name: user.name || '',
         phone: user.phone || '',
         email: user.email || '',
         role: user.role || 'Member',
       });
+      setErrors({});
+    } else {
+      setFormData({
+        id: '',
+        name: '',
+        phone: '',
+        email: '',
+        role: 'Member',
+      });
+      setErrors({});
     }
   }, [user]);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popupRef.current && !popupRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [onClose]);
+    if (isOpen) {
+      const handleClickOutside = (event) => {
+        if (popupRef.current && !popupRef.current.contains(event.target)) {
+          onClose();
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name?.trim()) {
+      newErrors.name = 'Họ và tên không được để trống';
+    }
+
+    if (!formData.phone?.trim()) {
+      newErrors.phone = 'Số điện thoại không được để trống';
+    } else if (!/^[0-9]{10}$/.test(formData.phone.trim())) {
+      newErrors.phone = 'Số điện thoại không hợp lệ';
+    }
+
+    if (!formData.email?.trim()) {
+      newErrors.email = 'Email không được để trống';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email.trim())) {
+      newErrors.email = 'Email không hợp lệ';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,34 +85,79 @@ const EditUserPopup = ({ isOpen, onClose, user, onUpdate }) => {
       ...prev,
       [name]: value,
     }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const changedData = {};
-
-    if (formData.name !== user.name) {
-      changedData.name = formData.name;
-    }
-    if (formData.phone !== user.phone) {
-      changedData.phone = formData.phone;
-    }
-    if (formData.email !== user.email) {
-      changedData.email = formData.email;
-    }
-    if (formData.role !== user.role) {
-      changedData.role = formData.role;
+    if (!validateForm()) {
+      return;
     }
 
-    if (Object.keys(changedData).length > 0) {
-      onUpdate(changedData);
-    } else {
+    setIsSubmitting(true);
+    setErrors({}); // Xóa các lỗi trước khi gửi dữ liệu
+
+    try {
+      // Chỉ gửi các thay đổi cần thiết, nhưng luôn gửi lại id và email nếu không có thay đổi
+      const changedData = {
+        id: formData.id, // luôn gửi id
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        role: formData.role,
+      };
+
+      // Gửi yêu cầu API với tất cả dữ liệu, dù có thay đổi hay không
+      await onUpdate(changedData); // onUpdate sẽ gửi yêu cầu API
+
       onClose();
+    } catch (error) {
+      console.error('Error updating user:', error); // In log lỗi
+
+      // Kiểm tra lỗi phản hồi từ API
+      if (error.response?.data?.errors) {
+        const apiErrors = {};
+        Object.entries(error.response.data.errors).forEach(([key, value]) => {
+          apiErrors[key.toLowerCase()] = value[0]; // Lấy lỗi từ response API
+        });
+        setErrors(apiErrors); // Cập nhật trạng thái lỗi
+      } else {
+        // Nếu không có lỗi cụ thể từ API, hiển thị thông báo lỗi chung
+        setErrors({
+          submit: 'Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại.',
+        });
+      }
+    } finally {
+      setIsSubmitting(false); // Dừng trạng thái đang gửi
     }
   };
 
-  return (
+  const renderError = (fieldName) => {
+    if (errors[fieldName]) {
+      return (
+        <span
+          style={{
+            color: '#f44336',
+            fontSize: '12px',
+            marginTop: '4px',
+            display: 'block',
+            animation: 'shake 0.3s ease-in-out',
+          }}
+        >
+          {errors[fieldName]}
+        </span>
+      );
+    }
+    return null;
+  };
+
+  return isOpen ? (
     <div
       style={{
         position: 'fixed',
@@ -100,6 +184,19 @@ const EditUserPopup = ({ isOpen, onClose, user, onUpdate }) => {
         }}
       >
         <h2 style={{ margin: '0 0 20px' }}>Chỉnh sửa thông tin người dùng</h2>
+        {errors.submit && (
+          <div
+            style={{
+              backgroundColor: '#ffebee',
+              color: '#f44336',
+              padding: '10px',
+              borderRadius: '4px',
+              marginBottom: '15px',
+            }}
+          >
+            {errors.submit}
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '15px' }}>
             <label
@@ -122,9 +219,10 @@ const EditUserPopup = ({ isOpen, onClose, user, onUpdate }) => {
                 width: '100%',
                 padding: '8px',
                 borderRadius: '5px',
-                border: '1px solid #ccc',
+                border: errors.name ? '1px solid #f44336' : '1px solid #ccc',
               }}
             />
+            {renderError('name')}
           </div>
 
           <div style={{ marginBottom: '15px' }}>
@@ -148,9 +246,10 @@ const EditUserPopup = ({ isOpen, onClose, user, onUpdate }) => {
                 width: '100%',
                 padding: '8px',
                 borderRadius: '5px',
-                border: '1px solid #ccc',
+                border: errors.phone ? '1px solid #f44336' : '1px solid #ccc',
               }}
             />
+            {renderError('phone')}
           </div>
 
           <div style={{ marginBottom: '15px' }}>
@@ -174,9 +273,10 @@ const EditUserPopup = ({ isOpen, onClose, user, onUpdate }) => {
                 width: '100%',
                 padding: '8px',
                 borderRadius: '5px',
-                border: '1px solid #ccc',
+                border: errors.email ? '1px solid #f44336' : '1px solid #ccc',
               }}
             />
+            {renderError('email')}
           </div>
 
           <div style={{ marginBottom: '15px' }}>
@@ -209,7 +309,6 @@ const EditUserPopup = ({ isOpen, onClose, user, onUpdate }) => {
               ))}
             </select>
           </div>
-
           <div
             style={{
               display: 'flex',
@@ -219,28 +318,37 @@ const EditUserPopup = ({ isOpen, onClose, user, onUpdate }) => {
           >
             <button
               type='submit'
+              disabled={isSubmitting}
               style={{
                 padding: '10px 20px',
-                backgroundColor: '#4caf50',
+                backgroundColor: isSubmitting ? '#a5d6a7' : '#4caf50',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '5px',
-                cursor: 'pointer',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
               }}
             >
-              Lưu thay đổi
+              {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
             </button>
             <button
               type='button'
-              onClick={onClose}
+              onClick={() => {
+                if (
+                  !isSubmitting ||
+                  window.confirm('Bạn có chắc chắn muốn hủy bỏ thay đổi không?')
+                ) {
+                  onClose();
+                }
+              }}
+              disabled={isSubmitting}
               style={{
                 padding: '10px 20px',
                 backgroundColor: '#f44336',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '5px',
-                cursor: 'pointer',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
               }}
             >
@@ -250,7 +358,7 @@ const EditUserPopup = ({ isOpen, onClose, user, onUpdate }) => {
         </form>
       </div>
     </div>
-  );
+  ) : null;
 };
 
 export default EditUserPopup;

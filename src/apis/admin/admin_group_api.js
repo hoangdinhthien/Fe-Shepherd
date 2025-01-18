@@ -70,6 +70,11 @@ class AdminGroupAPI extends BaseAPI {
       return Object.values(response); // Chuyển đổi object thành mảng
     });
   }
+
+  getAllGroupsNotIncludeUser(userId) {
+    const url = `${this.url}?UserId=${userId}&NotIncludeUser=true`; // URL để lấy tất cả các nhóm
+    return super.getCustom(url); // Gọi phương thức GET từ BaseAPI
+  }
 }
 
 export default new AdminGroupAPI();

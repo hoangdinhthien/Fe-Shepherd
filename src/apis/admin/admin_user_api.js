@@ -24,12 +24,18 @@ class AdminUserAPI extends BaseAPI {
 
   updateUserById(userData) {
     const url = `${this.url}`;
+    // Đảm bảo dữ liệu được format đúng
     const body = {
-      name: userData.name,
-      phone: userData.phone,
-      email: userData.email,
-      role: userData.role,
+      id: userData.id,
+      name: userData.name?.trim(),
+      phone: userData.phone?.trim(),
+      email: userData.email?.trim(),
+      role: userData.role || 'Member',
     };
+
+    // Log data trước khi gửi
+    console.log('Updating user with data:', body);
+
     return this.putCustom(url, body);
   }
 

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import AdminUserAPI from '../../apis/admin/admin_user_api';
+import GroupUserAPI from '../../apis/group_user_api';
 import UserCreatePopUp from '../../components/admin/UserCreatePopUp';
 import { FaTimes } from 'react-icons/fa';
 import { Dropdown, Menu } from 'antd';
 import { FaEllipsisV } from 'react-icons/fa';
 import EditUserPopup from '../../components/admin/EditUserPopUp';
+import AssignUserToGroupPopUp from '../../components/admin/AssignUserToGroupPopUp';
 
 const AdminUser = () => {
   const location = useLocation();
@@ -24,6 +26,43 @@ const AdminUser = () => {
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+
+  const handleAssignToGroup = (user) => {
+    console.log('Selected user ID:', user?.id); // Sử dụng user trực tiếp thay vì selectedUser
+    setSelectedUser(user); // Cập nhật selectedUser thay vì selectedUsers
+    setIsAssignModalOpen(true);
+  };
+
+  const handleAssignUser = async (user, groupId) => {
+    try {
+      // Kiểm tra nếu người dùng chưa được chọn hoặc groupId không hợp lệ
+      if (!user || !groupId) {
+        console.error('Thông tin người dùng hoặc nhóm không hợp lệ.');
+        return;
+      }
+
+      // Gọi API để phân công người dùng vào nhóm
+      const response = await GroupUserAPI.assignUserToGroup([user.id], groupId);
+
+      // Kiểm tra nếu API phản hồi thành công
+      if (response && response.success) {
+        console.log('Người dùng đã được phân công vào nhóm thành công.');
+
+        // Cập nhật danh sách người dùng hoặc giao diện sau khi phân công
+        setIsAssignModalOpen(false); // Đóng modal
+        fetchUsers(); // Tải lại danh sách người dùng
+      } else {
+        console.error('Không thể phân công người dùng vào nhóm.');
+      }
+    } catch (error) {
+      console.error(
+        'Lỗi khi phân công người dùng vào nhóm:',
+        error.message || error
+      );
+    }
+  };
 
   const handleEditUser = async (user) => {
     try {
@@ -51,42 +90,29 @@ const AdminUser = () => {
     }
   };
 
-  const handleUpdateUser = async (updatedUser) => {
+  const handleUpdateUser = async (userData) => {
     try {
-      const changedFields = {};
+      // Chỉ lấy các trường được phép sửa và tự động điền các trường không cho phép sửa
+      const updatedUserData = {
+        id: userData.id, // id không được sửa, tự động điền
+        name: userData.name?.trim() || '', // Trường name có thể chỉnh sửa
+        phone: userData.phone?.trim() || '', // Trường phone có thể chỉnh sửa
+        email: userData.email?.trim() || '', // Trường email có thể chỉnh sửa
+        role: userData.role || 'Member', // Trường role có thể chỉnh sửa, nếu không có, mặc định là 'Member'
+        // imageURL và password không được phép sửa, vì vậy bỏ qua
+      };
 
-      if (updatedUser.name !== selectedUser.name) {
-        changedFields.name = updatedUser.name;
-      }
-      if (updatedUser.phone !== selectedUser.phone) {
-        changedFields.phone = updatedUser.phone;
-      }
-      if (updatedUser.email !== selectedUser.email) {
-        changedFields.email = updatedUser.email;
-      }
-      if (updatedUser.role !== selectedUser.role) {
-        changedFields.role = updatedUser.role;
-      }
+      console.log('Dữ liệu gửi lên API:', updatedUserData);
 
-      if (Object.keys(changedFields).length > 0) {
-        const response = await AdminUserAPI.updateUserById(
-          selectedUser.id,
-          changedFields
-        );
+      // Gửi dữ liệu đã cập nhật lên API
+      await AdminUserAPI.updateUserById(updatedUserData);
+      console.log(updatedUserData);
 
-        if (response && response.success) {
-          setIsEditModalOpen(false);
-          await fetchUsers(currentPage);
-          setShowSuccessPopup(true);
-          setTimeout(() => {
-            setShowSuccessPopup(false);
-          }, 3000);
-        }
-      } else {
-        setIsEditModalOpen(false);
-      }
+      // Refresh lại danh sách người dùng
+      fetchUsers();
     } catch (error) {
-      console.error('Lỗi khi cập nhật thông tin người dùng:', error);
+      console.error('Update failed in parent:', error);
+      throw error; // Đẩy lỗi ra để EditUserPopup xử lý
     }
   };
 
@@ -198,6 +224,9 @@ const AdminUser = () => {
         style={{ color: 'red' }}
       >
         Xóa người dùng
+      </Menu.Item>
+      <Menu.Item key='3' onClick={() => handleAssignToGroup(user)}>
+        Phân công vào nhóm khác
       </Menu.Item>
     </Menu>
   );
@@ -537,6 +566,15 @@ const AdminUser = () => {
           onClose={() => setIsEditModalOpen(false)}
           user={selectedUser}
           onUpdate={handleUpdateUser}
+        />
+      )}
+
+      {/* Hiển thị popup phân công người dùng vào đoàn thể */}
+      {isAssignModalOpen && (
+        <AssignUserToGroupPopUp
+          isOpen={isAssignModalOpen}
+          onClose={() => setIsAssignModalOpen(false)}
+          user={selectedUser} // Truyền userId nếu selectedUser tồn tại
         />
       )}
     </div>

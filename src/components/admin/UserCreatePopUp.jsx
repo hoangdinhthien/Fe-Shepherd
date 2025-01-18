@@ -226,7 +226,7 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
                     <option value='Member'>Thành viên</option>
                     <option value='ParishPriest'>Cha xứ</option>
                     <option value='Accountant'>Thủ quỹ</option>
-                    <option value='Admin'>Admin</option>
+                    <option value='Admin'>Quản trị viên</option>
                   </select>
                 </div>
                 <div className='mb-4'>
@@ -238,10 +238,7 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
                   >
                     <option value=''>Chọn đoàn thể</option>
                     {groups.map((group) => (
-                      <option
-                        key={group.id}
-                        value={group.id}
-                      >
+                      <option key={group.id} value={group.id}>
                         {group.groupName}
                       </option>
                     ))}
