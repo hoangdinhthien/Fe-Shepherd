@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import storageService from '../config/local_storage';
 import { logOut } from '../redux/user/userSlice';
 import { useNavigate } from 'react-router-dom';
+import UserAPI from '../apis/user_api';
 
 export default function Profile() {
   const { currentUser } = useSelector((state) => state.user);
@@ -10,7 +11,9 @@ export default function Profile() {
     name: currentUser?.user?.name || '',
     phone: currentUser?.user?.phone || '',
     email: currentUser?.user?.email || '',
+    password: '',
   });
+  const [isEditing, setIsEditing] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -20,6 +23,7 @@ export default function Profile() {
         name: currentUser.user.name || '',
         phone: currentUser.user.phone || '',
         email: currentUser.user.email || '',
+        password: '',
       });
     }
   }, [currentUser]);
@@ -28,6 +32,65 @@ export default function Profile() {
     storageService.removeAccessToken();
     dispatch(logOut());
     navigate('/');
+  };
+
+  const handleUpdateProfile = async () => {
+    const updatedData = {
+      id: currentUser.user.id,
+      name: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+      imageURL: currentUser.user.imageURL,
+      password: formData.password,
+    };
+    try {
+      await UserAPI.updateUser(updatedData);
+      alert('Profile updated successfully');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update profile', error);
+      alert('Failed to update profile');
+    }
+  };
+
+  // const handleUpdateProfile = async () => {
+  //   const updatedData = {
+  //     id: currentUser.user.id,
+  //     name: formData.name,
+  //     phone: formData.phone,
+  //     email: formData.email,
+  //     imageURL: currentUser.user.imageURL,
+  //     role: 'Member', // Default role
+  //     password: formData.password,
+  //   };
+  //   try {
+  //     await UserAPI.updateUser(updatedData);
+  //     alert('Profile updated successfully');
+  //     setIsEditing(false);
+
+  //     // Silently log out and log back in
+  //     const credentials = {
+  //       email: formData.email,
+  //       password: formData.password,
+  //     };
+  //     storageService.removeAccessToken();
+  //     dispatch(logOut());
+  //     const loginResponse = await AuthAPI.login(credentials);
+  //     storageService.setAccessToken(loginResponse.data.token);
+  //     const userResponse = await UserAPI.getUser({ id: currentUser.user.id });
+  //     dispatch(logIn(userResponse.data));
+  //   } catch (error) {
+  //     console.error('Failed to update profile', error);
+  //     alert('Failed to update profile');
+  //   }
+  // };
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [id]: value,
+    }));
   };
 
   return (
@@ -65,8 +128,11 @@ export default function Profile() {
               id='name'
               type='text'
               value={formData.name}
-              readOnly
-              className='w-full border p-3 rounded-lg bg-gray-100 mt-1 text-gray-700'
+              onChange={handleChange}
+              readOnly={!isEditing}
+              className={`w-full border p-3 rounded-lg mt-1 text-gray-700 ${
+                isEditing ? 'bg-white' : 'bg-gray-100'
+              }`}
             />
           </div>
 
@@ -82,8 +148,11 @@ export default function Profile() {
               id='phone'
               type='text'
               value={formData.phone}
-              readOnly
-              className='w-full border p-3 rounded-lg bg-gray-100 mt-1 text-gray-700'
+              onChange={handleChange}
+              readOnly={!isEditing}
+              className={`w-full border p-3 rounded-lg mt-1 text-gray-700 ${
+                isEditing ? 'bg-white' : 'bg-gray-100'
+              }`}
             />
           </div>
 
@@ -99,12 +168,15 @@ export default function Profile() {
               id='email'
               type='email'
               value={formData.email}
-              readOnly
-              className='w-full border p-3 rounded-lg bg-gray-100 mt-1 text-gray-700'
+              onChange={handleChange}
+              readOnly={!isEditing}
+              className={`w-full border p-3 rounded-lg mt-1 text-gray-700 ${
+                isEditing ? 'bg-white' : 'bg-gray-100'
+              }`}
             />
           </div>
 
-          {/* PASSWORD INPUT (Hidden) */}
+          {/* PASSWORD INPUT */}
           <div>
             <label
               htmlFor='password'
@@ -115,15 +187,41 @@ export default function Profile() {
             <input
               id='password'
               type='password'
-              value='********'
-              readOnly
-              className='w-full border p-3 rounded-lg bg-gray-100 mt-1 text-gray-700'
+              value={formData.password}
+              onChange={handleChange}
+              readOnly={!isEditing}
+              className={`w-full border p-3 rounded-lg mt-1 text-gray-700 ${
+                isEditing ? 'bg-white' : 'bg-gray-100'
+              }`}
             />
           </div>
         </form>
 
-        {/* SIGN OUT BUTTON */}
-        <div className='flex justify-center mt-8'>
+        {/* BUTTONS */}
+        <div className='flex justify-center mt-8 gap-4'>
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleUpdateProfile}
+                className='bg-green-600 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-green-700 transition duration-200 ease-in-out'
+              >
+                Cập nhật
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className='bg-gray-600 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200 ease-in-out'
+              >
+                Hủy
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className='bg-blue-600 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-200 ease-in-out'
+            >
+              Chỉnh sửa
+            </button>
+          )}
           <button
             onClick={logout}
             className='bg-red-600 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-red-700 transition duration-200 ease-in-out'
