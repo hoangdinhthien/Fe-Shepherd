@@ -29,6 +29,7 @@ const Request = () => {
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [groupFilters, setGroupFilters] = useState([]);
+  const [checkboxChecked, setCheckboxChecked] = useState(false);
 
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.currentUser);
@@ -121,7 +122,6 @@ const Request = () => {
           currentUser: user, // Pass the current user
         },
       });
-      console.log('Record:', record);
     } else if (record.type === 'Tạo sự kiện') {
       navigate(`/user/requestDetails`, {
         state: {
@@ -130,12 +130,15 @@ const Request = () => {
             isAccepted: record.isAccepted, // Pass the isAccepted value from the record
             requestingGroup: record.from,
             status: status, // Pass the status
+            createdUser: record.createdUser,
           },
           currentUser: user, // Pass the current user
         },
       });
     } else if (record.type === 'Khác') {
-      navigate(`/user/otherRequestDetails`, {});
+      navigate(`/user/otherRequestDetails`, {
+        state: { searchKey: record.key, createdUser: record.createdUser },
+      });
     }
   };
 
@@ -165,6 +168,21 @@ const Request = () => {
           Đã từ chối
         </Tag>
       );
+  };
+
+  const handleCheckboxChange = (activityId, checked) => {
+    setActivityAcceptance((prev) => ({
+      ...prev,
+      [activityId]: !checked,
+    }));
+
+    // Check if any checkbox is selected
+    const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+    const anyChecked = Array.from(allCheckboxes).some(
+      (checkbox) => checkbox.checked
+    );
+
+    setCheckboxChecked(anyChecked); // Update state based on whether any checkbox is checked
   };
 
   const cols = [

@@ -41,7 +41,7 @@ const ActivityModal = ({
         <div className='p-4'>
           <img
             alt={selectedItem.activityName}
-            src={image}
+            src={selectedItem.imageURL || image}
             className='w-full h-80 object-fill rounded-xl mb-4'
           />
           <Title level={3}>

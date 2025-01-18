@@ -2,10 +2,21 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import UserAPI from '../../../apis/user_api';
 import GroupAPI from '../../../apis/group_api';
-import { message, Tag, Divider, Button, Checkbox } from 'antd';
+import {
+  message,
+  Tag,
+  Divider,
+  Button,
+  Checkbox,
+  Modal,
+  Select,
+  Input,
+  DatePicker,
+} from 'antd';
 import { IoArrowBack } from 'react-icons/io5'; // Import IoArrowBack
 import moment from 'moment';
 import request_api from '../../../apis/request_api';
+import { validateActivityDates } from '../../../pages/CreateRequest';
 
 export default function RequestDetail() {
   // -----STATE-----
@@ -18,14 +29,14 @@ export default function RequestDetail() {
   const [eventComment, setEventComment] = useState('');
   const [userRole, setUserRole] = useState('');
   const [loading, setLoading] = useState(false); // Add loading state
+  const [editingActivity, setEditingActivity] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // -----LOCATION-----
   const location = useLocation();
   const navigate = useNavigate(); // Initialize navigate
   const { requestId, requestingGroup, isAccepted } = location.state.request; // Destructure isAccepted
   const currentUser = location.state.currentUser; // Get the current user
-
-  console.log('Received isAccepted:', isAccepted); // Log the received isAccepted value
 
   // -----USE EFFECT-----
   useEffect(() => {
@@ -183,7 +194,7 @@ export default function RequestDetail() {
         listActivities: requestDetails.activities.map((activity) => ({
           id: activity.id,
           comment: activityComments[activity.id] || '',
-          isAccepted: activityAcceptance[activity.id] === false,
+          isAccepted: activityAcceptance[activity.id] === true,
         })),
       },
     };
@@ -241,7 +252,114 @@ export default function RequestDetail() {
     );
   };
 
-  console.log(`isAccepted:`, isAccepted);
+  const openEditModal = (activity) => {
+    setEditingActivity({ ...activity, selectedGroups: activity.groups });
+    setShowEditModal(true);
+  };
+
+  const handleEditActivityChange = (field, value) => {
+    setEditingActivity((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleEditActivityTimeChange = (dates) => {
+    if (!dates) return;
+    const [start, end] = dates;
+    if (!requestDetails.fromDate || !requestDetails.toDate) {
+      message.warning('Bạn phải chọn thời gian cho sự kiện trước.');
+      return;
+    }
+    if (
+      (start && start.isBefore(moment(requestDetails.fromDate))) ||
+      (end && end.isAfter(moment(requestDetails.toDate)))
+    ) {
+      message.warning(
+        'Thời gian hoạt động phải nằm trong phạm vi của sự kiện.'
+      );
+      setEditingActivity((prev) => ({
+        ...prev,
+        startTime: null,
+        endTime: null,
+      }));
+      return;
+    }
+    if (!validateActivityDates(start, end)) {
+      setEditingActivity((prev) => ({
+        ...prev,
+        startTime: null,
+        endTime: null,
+      }));
+      return;
+    }
+    setEditingActivity((prev) => ({
+      ...prev,
+      startTime: start ? start.toISOString() : null,
+      endTime: end ? end.toISOString() : null,
+    }));
+  };
+
+  const handleEditActivityGroupChange = (groupID, cost) => {
+    // Update selectedGroups array
+    setEditingActivity((prev) => {
+      const updated = prev.selectedGroups.map((g) =>
+        g.groupID === groupID ? { ...g, cost: parseFloat(cost) || 0 } : g
+      );
+      return { ...prev, selectedGroups: updated };
+    });
+  };
+
+  const handleSaveEditedActivity = async () => {
+    try {
+      // Build final event data from requestDetails
+      const updatedEvent = {
+        id: requestDetails.id,
+        eventName: requestDetails.eventName,
+        description: requestDetails.description,
+        fromDate: requestDetails.fromDate,
+        toDate: requestDetails.toDate,
+        // ...other fields as needed...
+        listActivities: requestDetails.activities.map((act) => {
+          if (act.id === editingActivity.id) {
+            return {
+              ...act,
+              activityName: editingActivity.activityName,
+              description: editingActivity.description,
+              location: editingActivity.location,
+              startTime: editingActivity.startTime,
+              endTime: editingActivity.endTime,
+              groups: editingActivity.selectedGroups,
+              // Remove totalCost from the activity
+              totalCost: 0,
+            };
+          }
+
+          return act;
+        }),
+      };
+      // Identify which groupId belongs to "Trưởng nhóm" user for this activity
+      const groupId = editingActivity.selectedGroups[0]?.groupID || '';
+      const res = await request_api.modifyEventRequest(
+        groupId,
+        requestDetails.id,
+        updatedEvent
+      );
+      if (res.success) {
+        message.success('Activity modified successfully');
+        setShowEditModal(false);
+        setRequestDetails((prev) => ({ ...prev, ...updatedEvent }));
+      } else {
+        message.error(res.message || 'Failed to modify activity');
+      }
+    } catch (error) {
+      message.error('Error modifying activity');
+      console.log(error);
+      console.log('Modified Activity:', editingActivity);
+    }
+  };
+
+  // log the current user
+  console.log('Current User:', currentUser);
+  console.log(editingActivity);
+  console.log('Request Details:', requestDetails.activities);
 
   // -----RENDER-----
   return (
@@ -256,7 +374,9 @@ export default function RequestDetail() {
       <div className='flex justify-between items-center mb-4'>
         <div className='flex space-x-2'>
           <p className='font-semibold text-gray-700'>Yêu Cầu Được Tạo Bởi:</p>
-          <p className='text-gray-600'>{createdByName}</p>
+          <p className='text-gray-600'>
+            {createdByName || requestDetails.createdUser.name || 'Unknown'}
+          </p>
         </div>
         <div className='flex space-x-2'>
           <p className='font-semibold text-gray-700'>Đoàn Thể Yêu Cầu:</p>
@@ -354,14 +474,37 @@ export default function RequestDetail() {
         {requestDetails.activities.map((activity) => (
           <div key={activity.id}>
             {/* -----ACTIVITY NAME----- */}
-            <h3 className='text-xl font-semibold text-gray-800 mb-2'>
+            <h3
+              className={`text-xl font-semibold mb-2 ${
+                activity.isAccepted ? 'text-red-600' : 'text-gray-800'
+              }`}
+            >
               {activity.activityName}
+              {activity.isAccepted && (
+                <span className='text-sm text-red-600 ml-2'>
+                  (Nội dung cần phải sửa)
+                </span>
+              )}
               {/* -----CHECKBOX------ */}
-              {userRole === 'Council' && (
-                <Checkbox
-                  className='ml-2'
-                  onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
-                />
+              {(userRole === 'Council' ||
+                currentUser.listGroupRole?.some(
+                  (userGroup) => userGroup.roleName === 'Trưởng nhóm'
+                )) && (
+                <>
+                  <Checkbox
+                    className='ml-2'
+                    onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
+                    disabled={currentUser.listGroupRole?.some(
+                      (userGroup) => userGroup.roleName === 'Trưởng nhóm'
+                    )} // Disable checkbox for 'Trưởng nhóm'
+                    checked={activity.isAccepted} // Automatically check if activity is accepted
+                  />
+                  {userRole === 'Council' && (
+                    <p className='text-sm inline-block ml-2'>
+                      Đánh dấu vào hoạt động cần phải chỉnh sửa
+                    </p>
+                  )}
+                </>
               )}
             </h3>
             <li className='p-4 bg-gray-50 rounded-md shadow-sm'>
@@ -371,15 +514,7 @@ export default function RequestDetail() {
                   <p className='font-semibold text-gray-700'>
                     Mô tả hoạt động:
                   </p>
-                  <p className='text-gray-600'>
-                    {activity.description}
-                    {userRole === 'Council' && (
-                      <Checkbox
-                        className='ml-2'
-                        onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
-                      />
-                    )}
-                  </p>
+                  <p className='text-gray-600'>{activity.description}</p>
                 </div>
                 {/* -----ACTIVITY STATUS----- */}
                 <div>
@@ -392,12 +527,6 @@ export default function RequestDetail() {
                   <p className='text-gray-600'>
                     {formatDateTime(activity.startTime)} -{' '}
                     {formatDateTime(activity.endTime)}
-                    {userRole === 'Council' && (
-                      <Checkbox
-                        className='ml-2'
-                        onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
-                      />
-                    )}
                   </p>
                 </div>
                 <div>
@@ -441,12 +570,6 @@ export default function RequestDetail() {
                       {groupNames[group.groupID] || 'Unknown'}
                     </span>{' '}
                     - Chi Phí: {formatCost(group.cost)}
-                    {userRole === 'Council' && (
-                      <Checkbox
-                        className='ml-2'
-                        onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
-                      />
-                    )}
                     {/* -----NAVIGATE TO TASK BUTTON----- */}
                     {currentUser.listGroupRole?.some(
                       (userGroup) =>
@@ -494,6 +617,18 @@ export default function RequestDetail() {
                   />
                 </div>
               )}
+              {/* Button to open edit modal for "Trưởng nhóm" if isAccepted === true */}
+              {currentUser.listGroupRole?.some(
+                (role) => role.roleName === 'Trưởng nhóm'
+              ) &&
+                activity.isAccepted === true && (
+                  <Button
+                    className='ml-3'
+                    onClick={() => openEditModal(activity)}
+                  >
+                    Chỉnh sửa hoạt động
+                  </Button>
+                )}
             </li>
           </div>
         ))}
@@ -534,6 +669,76 @@ export default function RequestDetail() {
           </Button>
         </div>
       )}
+
+      <Modal
+        title='Chỉnh sửa hoạt động'
+        visible={showEditModal}
+        onCancel={() => setShowEditModal(false)}
+        onOk={handleSaveEditedActivity}
+      >
+        {editingActivity && (
+          <>
+            <Input
+              placeholder='Tên hoạt động'
+              value={editingActivity.activityName}
+              onChange={(e) =>
+                handleEditActivityChange('activityName', e.target.value)
+              }
+              className='mb-3'
+            />
+            <Input.TextArea
+              rows={2}
+              placeholder='Mô tả hoạt động'
+              value={editingActivity.description}
+              onChange={(e) =>
+                handleEditActivityChange('description', e.target.value)
+              }
+              className='mb-3'
+            />
+            <DatePicker.RangePicker
+              showTime
+              format='DD/MM/YYYY - HH:mm'
+              value={[
+                editingActivity.startTime
+                  ? moment(editingActivity.startTime)
+                  : null,
+                editingActivity.endTime
+                  ? moment(editingActivity.endTime)
+                  : null,
+              ]}
+              onChange={handleEditActivityTimeChange}
+              className='mb-3 w-full'
+            />
+            <Input
+              placeholder='Địa điểm hoạt động'
+              value={editingActivity.location}
+              onChange={(e) =>
+                handleEditActivityChange('location', e.target.value)
+              }
+              className='mb-3'
+            />
+            {editingActivity.selectedGroups?.map((grp) => (
+              <div
+                key={grp.groupID}
+                className='flex mb-2'
+              >
+                <span className='mr-2'>
+                  {groupNames[grp.groupID] || 'Unknown'}
+                </span>
+                <Input
+                  type='number'
+                  placeholder='Chi phí'
+                  value={grp.cost}
+                  onChange={(e) =>
+                    handleEditActivityGroupChange(grp.groupID, e.target.value)
+                  }
+                  className='w-32'
+                />
+              </div>
+            ))}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

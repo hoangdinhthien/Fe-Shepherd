@@ -12,6 +12,8 @@ export default function OtherRequestDetail({ searchKey }) {
   const [createdByName, setCreatedByName] = useState(''); // Add state for createdByName
   const navigate = useNavigate(); // Initialize navigate
 
+  console.log('searchKey:', searchKey);
+
   useEffect(() => {
     const fetchRequestDetails = async () => {
       try {
@@ -39,6 +41,8 @@ export default function OtherRequestDetail({ searchKey }) {
   if (!requestDetails) {
     return <div>Loading...</div>;
   }
+
+  console.log('other Request Details:', requestDetails);
 
   return (
     <div className='p-6 bg-white rounded-md shadow-md'>
@@ -88,10 +92,10 @@ export default function OtherRequestDetail({ searchKey }) {
           <p className='font-semibold text-gray-700'>Trạng Thái:</p>
           <Tag color={requestDetails.isAccepted ? 'success' : 'warning'}>
             {requestDetails.isAccepted === null
-              ? 'Pending'
+              ? 'Đang chờ'
               : requestDetails.isAccepted
-              ? 'Accepted'
-              : 'Rejected'}
+              ? 'Chấp Nhận'
+              : 'Từ Chối'}
           </Tag>
         </div>
       </div>

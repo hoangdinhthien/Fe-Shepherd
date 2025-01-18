@@ -20,7 +20,7 @@ class EventAPI extends BaseAPI {
   //   return super.getCustom(url);
   // }
   getEventsByGroupForTask(groupId) {
-    const url = `${this.url}/calendar?GroupId=${groupId}&CalendarTypeEnum=1`;
+    const url = `${this.url}/calendar?GroupId=${groupId}&CalendarTypeEnum=2`;
     return super.getCustom(url);
   }
 

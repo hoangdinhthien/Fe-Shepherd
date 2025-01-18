@@ -27,11 +27,11 @@ const UserHome = () => {
           className='w-full mb-6 rounded-lg'
         />
         <div className='text-center'>
-          <p className='text-lg text-green-600'>
+          <span className='text-lg text-green-300 italic font-bold'>
             Phàm ai tuyên bố nhận Thầy trước mặt thiên hạ, thì Thầy cũng sẽ
             tuyên bố nhận người ấy trước mặt Cha Thầy. Còn ai chối Thầy trước
             mặt thiên hạ, thì Thầy cũng sẽ chối người ấy trước mặt Cha Thầy.
-          </p>
+          </span>
         </div>
       </Card>
     </div>

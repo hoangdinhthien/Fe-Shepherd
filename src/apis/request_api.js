@@ -43,6 +43,12 @@ class RequestAPI extends BaseAPI {
     const url = `${this.url}/ApproveEventRequest?requestId=${requestId}`;
     return super.putCustom(url, data);
   }
+
+  // modify event request
+  modifyEventRequest(groupId, requestId, data) {
+    const url = `${this.url}/ModifyEvent?groupId=${groupId}&requestId=${requestId}`;
+    return super.putCustom(url, data);
+  }
 }
 
 export default new RequestAPI();
