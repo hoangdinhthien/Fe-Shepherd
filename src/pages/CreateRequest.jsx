@@ -3,7 +3,7 @@ import { Select, message } from 'antd';
 import { IoArrowBack } from 'react-icons/io5';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 import group_api from '../apis/group_api';
 import RequestAPI from '../apis/request_api';
 import moment from 'moment';
@@ -50,6 +50,7 @@ export default function CreateRequest() {
   const rehydrated = useSelector((state) => state._persist?.rehydrated);
 
   const navigate = useNavigate();
+  const location = useLocation(); // Initialize useLocation
 
   const [formData, setFormData] = useState({
     eventName: '',
@@ -122,7 +123,23 @@ export default function CreateRequest() {
       fetchRequestTypes();
       fetchLocations();
     }
-  }, [currentUser, rehydrated]);
+
+    // Pre-select request type and pre-fill event details if provided in navigation state
+    if (location.state?.preselectedType) {
+      setSelectedRequestType(location.state.preselectedType);
+    }
+
+    if (location.state?.eventDetails) {
+      setFormData((prev) => ({
+        ...prev,
+        eventName: location.state.eventDetails.eventName,
+        description: location.state.eventDetails.description,
+        fromDate: moment(location.state.eventDetails.fromDate),
+        toDate: moment(location.state.eventDetails.toDate),
+      }));
+      setSelectedGroup(location.state.eventDetails.selectedGroup);
+    }
+  }, [currentUser, rehydrated, location.state]);
 
   const handleGroupChange = (value) => {
     setSelectedGroup(value);

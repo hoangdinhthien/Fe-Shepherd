@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import storageService from '../config/local_storage';
-import { logOut } from '../redux/user/userSlice';
+import { logOut, logIn } from '../redux/user/userSlice';
 import { useNavigate } from 'react-router-dom';
 import UserAPI from '../apis/user_api';
+import ImageAPI from '../apis/image_api';
 
 export default function Profile() {
   const { currentUser } = useSelector((state) => state.user);
@@ -12,6 +13,7 @@ export default function Profile() {
     phone: currentUser?.user?.phone || '',
     email: currentUser?.user?.email || '',
     password: '',
+    role: currentUser?.user?.role || 'Member',
   });
   const [isEditing, setIsEditing] = useState(false);
   const dispatch = useDispatch();
@@ -23,7 +25,7 @@ export default function Profile() {
         name: currentUser.user.name || '',
         phone: currentUser.user.phone || '',
         email: currentUser.user.email || '',
-        password: '',
+        password: currentUser.user.password || '',
       });
     }
   }, [currentUser]);
@@ -42,54 +44,46 @@ export default function Profile() {
       email: formData.email,
       imageURL: currentUser.user.imageURL,
       password: formData.password,
+      role: currentUser.role || 'Member', // Default role
     };
+
     try {
+      if (formData.imageFile) {
+        const uploadResponse = await ImageAPI.uploadImageMultipart(
+          formData.imageFile
+        );
+        updatedData.imageURL = uploadResponse.data;
+      }
+
       await UserAPI.updateUser(updatedData);
-      alert('Profile updated successfully');
       setIsEditing(false);
+
+      // Update current user in local storage
+      storageService.removeCurrentUser();
+      const updatedUser = { ...currentUser, user: updatedData };
+      storageService.setCurrentUser(updatedUser);
+      console.log(`updatedUser`, updatedUser);
+
+      // Update current user in Redux store
+      dispatch(logIn(updatedUser));
     } catch (error) {
       console.error('Failed to update profile', error);
-      alert('Failed to update profile');
     }
   };
-
-  // const handleUpdateProfile = async () => {
-  //   const updatedData = {
-  //     id: currentUser.user.id,
-  //     name: formData.name,
-  //     phone: formData.phone,
-  //     email: formData.email,
-  //     imageURL: currentUser.user.imageURL,
-  //     role: 'Member', // Default role
-  //     password: formData.password,
-  //   };
-  //   try {
-  //     await UserAPI.updateUser(updatedData);
-  //     alert('Profile updated successfully');
-  //     setIsEditing(false);
-
-  //     // Silently log out and log back in
-  //     const credentials = {
-  //       email: formData.email,
-  //       password: formData.password,
-  //     };
-  //     storageService.removeAccessToken();
-  //     dispatch(logOut());
-  //     const loginResponse = await AuthAPI.login(credentials);
-  //     storageService.setAccessToken(loginResponse.data.token);
-  //     const userResponse = await UserAPI.getUser({ id: currentUser.user.id });
-  //     dispatch(logIn(userResponse.data));
-  //   } catch (error) {
-  //     console.error('Failed to update profile', error);
-  //     alert('Failed to update profile');
-  //   }
-  // };
 
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
       [id]: value,
+    }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setFormData((prevData) => ({
+      ...prevData,
+      imageFile: file,
     }));
   };
 
@@ -114,6 +108,14 @@ export default function Profile() {
               className='rounded-full h-24 w-24 object-cover shadow-lg'
             />
             <span className='text-gray-600 mt-2'>{formData.name}</span>
+            {isEditing && (
+              <input
+                type='file'
+                accept='image/*'
+                onChange={handleImageChange}
+                className='mt-2'
+              />
+            )}
           </div>
 
           {/* NAME INPUT */}

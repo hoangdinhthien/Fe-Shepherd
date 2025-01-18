@@ -115,10 +115,10 @@ export default function RequestCreateAccountDetail() {
           <p className='font-semibold text-gray-700'>Trạng Thái:</p>
           <Tag color={request.isAccepted ? 'success' : 'warning'}>
             {request.isAccepted === null
-              ? 'Pending'
+              ? 'Đang chờ'
               : request.isAccepted
-              ? 'Accepted'
-              : 'Rejected'}
+              ? 'Chấp nhận'
+              : 'Từ chối'}
           </Tag>
         </div>
       </div>

@@ -5,7 +5,6 @@ import { logOut } from '../redux/user/userSlice';
 import { useNavigate } from 'react-router-dom';
 import UserAPI from '../apis/user_api';
 import ImageAPI from '../apis/image_api';
-
 export default function UpdateProfile() {
   const { currentUser } = useSelector((state) => state.user);
   const [formData, setFormData] = useState({
@@ -17,7 +16,6 @@ export default function UpdateProfile() {
   });
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   useEffect(() => {
     if (currentUser) {
       setFormData({
@@ -29,17 +27,14 @@ export default function UpdateProfile() {
       });
     }
   }, [currentUser]);
-
   const logout = () => {
     storageService.removeAccessToken();
     dispatch(logOut());
     navigate('/');
   };
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -51,7 +46,6 @@ export default function UpdateProfile() {
         .catch((err) => console.log(err));
     }
   };
-
   const handleUpdate = async () => {
     const userData = {
       name: formData.name,
@@ -60,22 +54,21 @@ export default function UpdateProfile() {
       imageURL: formData.image,
       password: formData.password,
     };
-    
+
     console.log(userData);
     const result = await UserAPI.updateUserFirstTime(userData)
       .then((response) => {
         const { data } = response;
         if (data) {
-        //   dispatch(logIn(data));
+          //   dispatch(logIn(data));
           navigate('/profile');
         }
       })
       .catch((error) => {
         console.log('error', error);
       });
-      console.log(result);
+    console.log(result);
   };
-
   return (
     <div className='mt-5 flex items-center justify-center bg-gray-100'>
       <div className='p-6 max-w-lg w-full bg-white shadow-2xl rounded-lg border'>
@@ -83,7 +76,6 @@ export default function UpdateProfile() {
         <h1 className='text-3xl font-semibold text-center my-7 text-gray-800'>
           Trang Cá Nhân
         </h1>
-
         {/* USER INFORMATION FORM */}
         <form className='flex flex-col gap-6'>
           {/* PROFILE IMAGE */}
@@ -96,10 +88,12 @@ export default function UpdateProfile() {
               }
               className='rounded-full h-24 w-24 object-cover shadow-lg'
             />
-            <input type='file' onChange={handleFileChange} />
+            <input
+              type='file'
+              onChange={handleFileChange}
+            />
             <span className='text-gray-600 mt-2'>{formData.name}</span>
           </div>
-
           {/* NAME INPUT */}
           <div>
             <label
@@ -116,7 +110,6 @@ export default function UpdateProfile() {
               className='w-full border p-3 rounded-lg bg-gray-100 mt-1 text-gray-700'
             />
           </div>
-
           {/* PHONE INPUT */}
           <div>
             <label
@@ -133,7 +126,6 @@ export default function UpdateProfile() {
               className='w-full border p-3 rounded-lg bg-gray-100 mt-1 text-gray-700'
             />
           </div>
-
           {/* EMAIL INPUT */}
           <div>
             <label
@@ -150,7 +142,6 @@ export default function UpdateProfile() {
               className='w-full border p-3 rounded-lg bg-gray-100 mt-1 text-gray-700'
             />
           </div>
-
           {/* PASSWORD INPUT (Hidden) */}
           <div>
             <label
@@ -167,7 +158,6 @@ export default function UpdateProfile() {
             />
           </div>
         </form>
-
         {/* SAVE BUTTON */}
         <div className='flex justify-center mt-8'>
           <button
@@ -177,7 +167,6 @@ export default function UpdateProfile() {
             Cập nhập
           </button>
         </div>
-
         {/* SIGN OUT BUTTON */}
         <div className='flex justify-center mt-8'>
           <button

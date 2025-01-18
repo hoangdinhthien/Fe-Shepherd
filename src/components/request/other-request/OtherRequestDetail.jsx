@@ -13,6 +13,7 @@ export default function OtherRequestDetail({ searchKey }) {
   const navigate = useNavigate(); // Initialize navigate
 
   console.log('searchKey:', searchKey);
+  console.log(requestDetails);
 
   useEffect(() => {
     const fetchRequestDetails = async () => {
