@@ -7,9 +7,9 @@ class ImageAPI extends BaseAPI {
 
   uploadImageMultipart(file) {
     const data = new FormData();
-    data.append('image', file);
+    data.append('file', file);
     const endpoint = `${this.url}/Upload`;
-    return this.putCustom(endpoint, data, {
+    return this.postCustom(endpoint, data, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
