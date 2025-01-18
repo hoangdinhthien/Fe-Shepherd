@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import NotificationPopup from '../components/NotificationPopup';
 import Sidebar from '../components/Sidebar';
@@ -13,6 +13,7 @@ import notification_api from '../apis/notification_api';
 export default function LayoutMain() {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notifications, setNotifications] = useState([]);
@@ -31,8 +32,10 @@ export default function LayoutMain() {
       } else {
         console.error('No token found in storage.');
       }
+    } else if (currentUser.isActive !== 'Active') {
+      navigate('/user/update-profile');
     }
-  }, [currentUser, dispatch]);
+  }, [currentUser, dispatch, navigate]);
 
   const removeNotification = (id) => {
     setNotifications((prevNotifications) =>

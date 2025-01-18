@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import OAuth from '../components/OAuth';
 import AuthAPI from '../apis/auth_api';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
 import storageService from '../config/local_storage';
