@@ -4,7 +4,7 @@ class AdminCalendarAPI extends BaseAPI {
   getAllCeremonies(fromDate) {
     const url = `/ceremony/calendar?ChosenDate=${encodeURIComponent(
       fromDate
-    )}&CalendarTypeEnum=1&IncludePreset=true`;
+    )}&CalendarTypeEnum=0&IncludePreset=true`;
     return this.getCustom(url);
   }
 
