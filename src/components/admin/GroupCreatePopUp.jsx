@@ -51,7 +51,7 @@ const GroupCreatePopUp = ({ isOpen, onClose, onGroupCreated }) => {
 
       if (response.success) {
         if (typeof onGroupCreated === 'function') {
-          onGroupCreated(response.data.newGroup); // Gọi hàm onGroupCreated nếu có
+          onGroupCreated(); // Gọi hàm onGroupCreated nếu có
         }
         onClose(); // Đóng popup sau khi tạo nhóm thành công
       } else {

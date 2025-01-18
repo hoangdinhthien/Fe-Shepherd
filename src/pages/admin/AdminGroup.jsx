@@ -406,29 +406,17 @@ const AdminGroup = () => {
     setEditingGroup(null);
   };
 
-  const handleCreateGroup = async (newGroup) => {
-    try {
-      const response = await AdminGroupAPI.createGroup(newGroup);
-      if (response.success) {
-        notification.success({
-          message: 'Thành công',
-          description: 'Tạo Đoàn Thể mới thành công',
-        });
-        fetchGroups();
-        setIsCreateModalOpen(false);
-      } else {
-        notification.error({
-          message: 'Lỗi',
-          description: response.message || 'Không thể tạo Đoàn Thể.',
-        });
-      }
-    } catch (error) {
-      console.error('Lỗi khi tạo Đoàn Thể:', error);
-      notification.error({
-        message: 'Lỗi',
-        description: 'Có lỗi xảy ra khi tạo Đoàn Thể.',
-      });
-    }
+  const handleCreateGroup = async () => {
+    notification.success({
+      message: 'Thành công',
+      description: 'Tạo Đoàn Thể mới thành công',
+    });
+    fetchGroups();
+    setIsCreateModalOpen(false);
+    // notification.error({
+    //   message: 'Lỗi',
+    //   description: response.message || 'Không thể tạo Đoàn Thể.',
+    // });
   };
 
   const groupColumns = [

@@ -15,6 +15,7 @@ class AdminGroupAPI extends BaseAPI {
     const url = `${this.url}`;
     try {
       const response = await super.postCustom(url, groupData);
+      console.log('Response', response);
       return response; // Trả về dữ liệu từ API
     } catch (error) {
       console.error(
