@@ -4,7 +4,7 @@ import moment from 'moment';
 import 'moment/locale/vi';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Modal, Typography, message, Spin } from 'antd';
-import MyCalendarAPI from '../../apis/admin/admin_calendar_api';
+import AdminCalendarAPI from '../../apis/admin/admin_calendar_api';
 import EventAPI from '../../apis/event_api';
 import CalendarHeaderBar from '../../components/calendar/CalendarHeaderBar';
 
@@ -14,12 +14,13 @@ moment.locale('vi');
 const localizer = momentLocalizer(moment);
 
 const MyCalendar = () => {
-  const [events, setEvents] = useState([]);
+ const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentDate, setCurrentDate] = useState(moment().toDate());
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
 
   const handleModalClose = () => {
     setIsModalVisible(false);
@@ -33,8 +34,8 @@ const MyCalendar = () => {
     for (let i = 1; i <= numWeeks; i++) {
       const weekStart = moment(startOfYear)
         .add(i - 1, 'weeks')
-        .startOf('week');
-      const weekEnd = moment(weekStart).endOf('week');
+        .startOf('week'); // Bây giờ sẽ bắt đầu từ Chủ nhật
+      const weekEnd = moment(weekStart).endOf('week'); // Kết thúc vào thứ 7
       weeks.push({
         weekNumber: i,
         year: weekStart.year(),
@@ -48,7 +49,7 @@ const MyCalendar = () => {
     return weeks;
   };
 
-  const weeks = useMemo(() => generateWeeks(), []); // useMemo to avoid re-creating the weeks array
+  const [weeks] = useState(() => generateWeeks());
   const [selectedWeek, setSelectedWeek] = useState({
     week: moment().week(),
     year: moment().year(),
@@ -61,14 +62,21 @@ const MyCalendar = () => {
 
     try {
       // Tính toán `fromDate` (ngày đầu tuần hiện tại)
-      const fromDate = moment(currentDate).startOf('week').toISOString();
+      const fromDate = moment(currentDate)
+        .startOf('week')
+        .startOf('day')
+        .format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+
+      console.log('Date: ', fromDate);
 
       // Fetch ceremonies với `fromDate`
-      const ceremoniesResponse = await MyCalendarAPI.getAllCeremonies(
+      const ceremoniesResponse = await AdminCalendarAPI.getAllCeremonies(
         fromDate
       );
+      console.log('Date: ', fromDate);
       const eventsResponse = await EventAPI.getEventsByGroup({
-        UserOnly: true
+        UserOnly: true,
+        CalendarTypeEnum: 1,
       });
 
       // Xử lý dữ liệu ceremonies
@@ -137,6 +145,10 @@ const MyCalendar = () => {
   const handleEventSelect = useCallback((event) => {
     setSelectedEvent(event);
     setIsModalVisible(true);
+  }, []);
+
+  const handleEditButtonClick = useCallback(() => {
+    setIsEditPopupVisible(true);
   }, []);
 
   const eventPropGetter = useCallback((event) => {
@@ -209,6 +221,7 @@ const MyCalendar = () => {
                 setSelectedWeek({ week: weekNumber, year });
               }
             }}
+            handleEditButtonClick={handleEditButtonClick}
           />
         ),
       },
@@ -220,6 +233,7 @@ const MyCalendar = () => {
       eventPropGetter,
       selectedWeek,
       weeks,
+      handleEditButtonClick,
     ]
   );
 

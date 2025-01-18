@@ -7,7 +7,7 @@ moment.locale('vi');
 
 const { Option } = Select;
 
-const CustomAdminHeaderBar = ({
+const CalendarHeaderBar = ({
   onNavigate,
   selectedWeek,
   handleWeekChange,
@@ -28,6 +28,18 @@ const CustomAdminHeaderBar = ({
         width: '97%',
       }}
     >
+      <div className='rbc-btn-group'>
+        <button type='button' onClick={() => onNavigate('PREV')}>
+          Tuần Trước
+        </button>
+        <button type='button' onClick={() => onNavigate('TODAY')}>
+          Tuần Này
+        </button>
+        <button type='button' onClick={() => onNavigate('NEXT')}>
+          Tuần Sau
+        </button>
+      </div>
+      
       <Select
         value={
           weeks.find(
@@ -75,23 +87,11 @@ const CustomAdminHeaderBar = ({
           </Option>
         ))}
       </Select>
-
-      <div className='rbc-btn-group'>
-        <button type='button' onClick={() => onNavigate('PREV')}>
-          Tuần Trước
-        </button>
-        <button type='button' onClick={() => onNavigate('TODAY')}>
-          Tuần Này
-        </button>
-        <button type='button' onClick={() => onNavigate('NEXT')}>
-          Tuần Sau
-        </button>
-      </div>
     </div>
   );
 };
 
-CustomAdminHeaderBar.propTypes = {
+CalendarHeaderBar.propTypes = {
   onNavigate: PropTypes.func.isRequired,
   currentWeek: PropTypes.number,
   selectedWeek: PropTypes.shape({
@@ -108,4 +108,4 @@ CustomAdminHeaderBar.propTypes = {
   ),
 };
 
-export default CustomAdminHeaderBar;
+export default CalendarHeaderBar;
