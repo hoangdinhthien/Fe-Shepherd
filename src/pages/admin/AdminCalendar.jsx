@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
+moment.updateLocale('vi', {
+  week: {
+    dow: 0, // 0 = Sunday is the first day of the week
+    doy: 6, // First week of year must contain 1 January (6 = Sunday)
+  },
+});
 import 'moment/locale/vi';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Modal, Typography, message, Spin } from 'antd';
@@ -35,8 +41,8 @@ const AdminCalendar = () => {
     for (let i = 1; i <= numWeeks; i++) {
       const weekStart = moment(startOfYear)
         .add(i - 1, 'weeks')
-        .startOf('week');
-      const weekEnd = moment(weekStart).endOf('week');
+        .startOf('week'); // Bây giờ sẽ bắt đầu từ Chủ nhật
+      const weekEnd = moment(weekStart).endOf('week'); // Kết thúc vào thứ 7
       weeks.push({
         weekNumber: i,
         year: weekStart.year(),
@@ -63,12 +69,18 @@ const AdminCalendar = () => {
 
     try {
       // Tính toán `fromDate` (ngày đầu tuần hiện tại)
-      const fromDate = moment(currentDate).startOf('week').toISOString();
+      const fromDate = moment(currentDate)
+        .startOf('week')
+        .startOf('day')
+        .format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+
+      console.log('Date: ', fromDate);
 
       // Fetch ceremonies với `fromDate`
       const ceremoniesResponse = await AdminCalendarAPI.getAllCeremonies(
         fromDate
       );
+      console.log('Date: ', fromDate);
       const eventsResponse = await EventAPI.getEventsByGroup();
 
       // Xử lý dữ liệu ceremonies

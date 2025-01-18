@@ -10,7 +10,7 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('Thành viên');
+  const [role, setRole] = useState('Member');
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
@@ -43,7 +43,7 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
             setPhone(user.phone || '');
             setEmail(user.email || '');
             setPassword(user.password || '');
-            setRole(user.role || 'Thành viên');
+            setRole(user.role || 'Member');
             setSelectedGroupId(user.groupId || ''); // Đặt giá trị mặc định của đoàn thể
           }
         }
@@ -61,7 +61,7 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
       setPhone('');
       setEmail('');
       setPassword('');
-      setRole('Thành viên');
+      setRole('Member');
       setSelectedGroupId('');
     }
   }, [requestId]);
@@ -223,10 +223,10 @@ const UserCreatePopUp = ({ isOpen, onClose, onUserCreated }) => {
                     onChange={(e) => setRole(e.target.value)}
                     className='w-full p-2 border rounded'
                   >
-                    <option value='Thành viên'>Thành viên</option>
-                    <option value='Cha xứ'>Cha xứ</option>
-                    <option value='Thủ quỹ'>Thủ quỹ</option>
-                    <option value='Admin'>Admin</option>
+                    <option value='Member'>Thành viên</option>
+                    <option value='ParishPriest'>Cha xứ</option>
+                    <option value='Accountant'>Thủ quỹ</option>
+                    <option value='Admin'>Quản trị viên</option>
                   </select>
                 </div>
                 <div className='mb-4'>
