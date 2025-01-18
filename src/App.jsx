@@ -13,6 +13,7 @@ import CreateRequest from './pages/CreateRequest';
 import Dashboard from './pages/Dashboard';
 import Group from './pages/Group';
 import Profile from './pages/Profile';
+import UpdateProfile from './pages/UpdateProfile';
 import Request from './pages/Request';
 import SignIn from './pages/SignIn';
 import WelcomePage from './pages/Welcome';
@@ -161,6 +162,10 @@ const AppRoutes = () => {
           element={<Profile />}
         />
         <Route
+          path='update-profile'
+          element={<UpdateProfile />}
+          />
+        <Route
           path='user'
           element={<AdminUser />}
         />
@@ -250,6 +255,10 @@ const AppRoutes = () => {
           path='profile'
           element={<Profile />}
         />
+        <Route
+          path='update-profile'
+          element={<UpdateProfile />}
+          />
         <Route
           path='budget-history'
           element={<BudgetHistory />}
