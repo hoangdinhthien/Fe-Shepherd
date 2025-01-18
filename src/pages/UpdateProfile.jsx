@@ -60,20 +60,20 @@ export default function UpdateProfile() {
       imageURL: formData.image,
       password: formData.password,
     };
-    
+
     console.log(userData);
     const result = await UserAPI.updateUserFirstTime(userData)
       .then((response) => {
         const { data } = response;
         if (data) {
-        //   dispatch(logIn(data));
-          navigate('/profile');
+          //   dispatch(logIn(data));
+          navigate('/user/profile');
         }
       })
       .catch((error) => {
         console.log('error', error);
       });
-      console.log(result);
+    console.log(result);
   };
 
   return (
@@ -96,7 +96,10 @@ export default function UpdateProfile() {
               }
               className='rounded-full h-24 w-24 object-cover shadow-lg'
             />
-            <input type='file' onChange={handleFileChange} />
+            <input
+              type='file'
+              onChange={handleFileChange}
+            />
             <span className='text-gray-600 mt-2'>{formData.name}</span>
           </div>
 

@@ -278,7 +278,7 @@ const Request = () => {
             <div>
               <p className='italic inline-flex font-bold'>
                 <span className='text-gray-600 font-semibold mr-1'>
-                  Content:
+                  Nội dung:
                 </span>
                 {record.content}
               </p>
@@ -286,37 +286,19 @@ const Request = () => {
                 <ul className='list-disc ml-7 my-2'>
                   <li>
                     <ul>
-                      <p className='font-semibold'>Requested From:</p>
+                      <p className='font-semibold'>Yêu cầu từ:</p>
                       <li>
                         &ndash;{' '}
                         <p className='inline-flex'>
-                          <span className='text-gray-600 mx-1'>Group:</span>
+                          <span className='text-gray-600 mx-1'>Đoàn thể:</span>
                           {record.group.groupName}
                         </p>
                       </li>
                       <li>
                         &ndash;{' '}
                         <p className='inline-flex'>
-                          <span className='text-gray-600 mx-1'>
-                            Description:
-                          </span>
+                          <span className='text-gray-600 mx-1'>Mô tả:</span>
                           {record.group.description}
-                        </p>
-                      </li>
-                      <li>
-                        &ndash;{' '}
-                        <p className='inline-flex'>
-                          <span className='text-gray-600 mx-1'>Members:</span>
-                          {record.group.memberCount}
-                        </p>
-                      </li>
-                      <li>
-                        &ndash;{' '}
-                        <p className='inline-flex'>
-                          <span className='text-gray-600 mx-1'>Priority:</span>
-                          <Tag color='processing'>
-                            {record.group.priority ? 'true' : 'false'}
-                          </Tag>
                         </p>
                       </li>
                     </ul>
@@ -331,37 +313,43 @@ const Request = () => {
                       <li>
                         &ndash;{' '}
                         <p className='inline-flex'>
-                          <span className='text-gray-600 mx-1'>Name:</span>
+                          <span className='text-gray-600 mx-1'>
+                            Tên sự kiện:
+                          </span>
                           {record.event.eventName ?? 'N/A'}
                         </p>
                       </li>
                       <li>
                         &ndash;{' '}
                         <p className='inline-flex'>
-                          <span className='text-gray-600 mx-1'>
-                            Description:
-                          </span>
+                          <span className='text-gray-600 mx-1'>Mô tả:</span>
                           {record.event.description ?? 'N/A'}
                         </p>
                       </li>
                       <li>
                         &ndash;{' '}
                         <p className='inline-flex'>
-                          <span className='text-gray-600 mx-1'>From:</span>
+                          <span className='text-gray-600 mx-1'>
+                            Thời gian bắt đầu:
+                          </span>
                           {getTime(record.event.fromDate)}
                         </p>
                       </li>
                       <li>
                         &ndash;{' '}
                         <p className='inline-flex'>
-                          <span className='text-gray-600 mx-1'>To:</span>
+                          <span className='text-gray-600 mx-1'>
+                            Thời gian kết thúc:
+                          </span>
                           {getTime(record.event.toDate)}
                         </p>
                       </li>
                       <li>
                         &ndash;{' '}
                         <p className='inline-flex'>
-                          <span className='text-gray-600 mx-1'>Status:</span>
+                          <span className='text-gray-600 mx-1'>
+                            Trạng thái:
+                          </span>
                           <Tag color='processing'>
                             {record.event.status ?? 'N/A'}
                           </Tag>

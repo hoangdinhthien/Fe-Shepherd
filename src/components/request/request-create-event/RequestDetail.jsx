@@ -132,10 +132,10 @@ export default function RequestDetail() {
     requestDetails.totalCost ?? calculateTotalActivityCost();
 
   // -----HANDLE CHECKBOX CHANGE FUNCTION-----
-  const handleCheckboxChange = (activityId, checked) => {
+  const handleCheckboxChange = (activityId) => {
     setActivityAcceptance((prev) => ({
       ...prev,
-      [activityId]: !checked,
+      [activityId]: !prev[activityId], // Toggle the checkbox state
     }));
 
     // Check if any checkbox is selected
@@ -359,7 +359,7 @@ export default function RequestDetail() {
   // log the current user
   console.log('Current User:', currentUser);
   console.log(editingActivity);
-  console.log('Request Details:', requestDetails.activities);
+  console.log('Request Details:', requestDetails);
 
   // -----RENDER-----
   return (
@@ -480,30 +480,28 @@ export default function RequestDetail() {
               }`}
             >
               {activity.activityName}
-              {activity.isAccepted && (
+              {/* {activity.isAccepted && (
                 <span className='text-sm text-red-600 ml-2'>
                   (Nội dung cần phải sửa)
                 </span>
-              )}
+              )} */}
               {/* -----CHECKBOX------ */}
-              {(userRole === 'Council' ||
-                currentUser.listGroupRole?.some(
-                  (userGroup) => userGroup.roleName === 'Trưởng nhóm'
-                )) && (
+              {userRole === 'Council' && (
+                // ||
+                //   currentUser.listGroupRole?.some(
+                //     (userGroup) => userGroup.roleName === 'Trưởng nhóm'
+                //   )
                 <>
                   <Checkbox
                     className='ml-2'
                     onChange={() => handleCheckboxChange(activity.id)} // Handle checkbox state change
-                    disabled={currentUser.listGroupRole?.some(
-                      (userGroup) => userGroup.roleName === 'Trưởng nhóm'
-                    )} // Disable checkbox for 'Trưởng nhóm'
-                    checked={activity.isAccepted} // Automatically check if activity is accepted
+                    checked={activityAcceptance[activity.id] || false} // Use state to control checkbox
                   />
-                  {userRole === 'Council' && (
+                  {/* {userRole === 'Council' && (
                     <p className='text-sm inline-block ml-2'>
                       Đánh dấu vào hoạt động cần phải chỉnh sửa
                     </p>
-                  )}
+                  )} */}
                 </>
               )}
             </h3>
@@ -618,7 +616,7 @@ export default function RequestDetail() {
                 </div>
               )}
               {/* Button to open edit modal for "Trưởng nhóm" if isAccepted === true */}
-              {currentUser.listGroupRole?.some(
+              {/* {currentUser.listGroupRole?.some(
                 (role) => role.roleName === 'Trưởng nhóm'
               ) &&
                 activity.isAccepted === true && (
@@ -627,6 +625,29 @@ export default function RequestDetail() {
                     onClick={() => openEditModal(activity)}
                   >
                     Chỉnh sửa hoạt động
+                  </Button>
+                )} */}
+              {currentUser.listGroupRole?.some(
+                (role) => role.roleName === 'Trưởng nhóm'
+              ) &&
+                activity.isAccepted === true && (
+                  <Button
+                    className='ml-3'
+                    onClick={() =>
+                      navigate('/user/create-request', {
+                        state: {
+                          preselectedType: 'Tạo sự kiện',
+                          eventDetails: {
+                            eventName: requestDetails.eventName,
+                            description: requestDetails.description,
+                            fromDate: requestDetails.fromDate,
+                            toDate: requestDetails.toDate,
+                          },
+                        },
+                      })
+                    }
+                  >
+                    Tạo lại yêu cầu
                   </Button>
                 )}
             </li>
@@ -653,13 +674,13 @@ export default function RequestDetail() {
           >
             Chấp Nhận Yêu Cầu
           </Button>
-          <Button
+          {/* <Button
             type='primary'
             className='bg-orange-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-md'
             onClick={handleResubmit}
           >
             Gửi Lại Yêu Cầu
-          </Button>
+          </Button> */}
           <Button
             type='primary'
             className='bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded-md'
