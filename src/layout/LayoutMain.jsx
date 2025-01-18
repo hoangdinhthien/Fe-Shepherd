@@ -32,9 +32,10 @@ export default function LayoutMain() {
       } else {
         console.error('No token found in storage.');
       }
-    } else if (currentUser.isActive !== 'Active') {
-      navigate('/user/update-profile');
     }
+    // else if (currentUser.isActive !== 'Active') {
+    //   navigate('/user/update-profile');
+    // }
   }, [currentUser, dispatch, navigate]);
 
   const removeNotification = (id) => {

@@ -54,8 +54,11 @@ export default function Profile() {
         );
         updatedData.imageURL = uploadResponse.data;
       }
-
-      await UserAPI.updateUser(updatedData);
+      if (currentUser.isAcctive === 'Inactive') {
+        await UserAPI.updateUserFirstTime(updatedData);
+      } else {
+        await UserAPI.updateUser(updatedData);
+      }
       setIsEditing(false);
 
       // Update current user in local storage
